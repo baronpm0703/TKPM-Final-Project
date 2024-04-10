@@ -1,7 +1,12 @@
 package com.psvm.server.models;
 
+import com.psvm.server.models.objects.DBObject;
+import org.sqlite.core.DB;
+
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class DBQuery {
 	private final Connection dbConn;
@@ -19,72 +24,215 @@ public class DBQuery {
 
 	}
 
-	/* Insert statement */
-	// Insert a row
-	public void doInsert(String tableName, Object[] data) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < data.length; i++) {
-			if (data[i].getClass() == String.class) {
-				String temp = "\"" + data[i] + "\"";
-				sb.append(temp);
-			}
-			else sb.append(data[i]);
-
-			if (i < data.length - 1) sb.append(", ");
-		}
-
+	public void close() {
 		try {
-			dbAction.executeUpdate("INSERT INTO " + tableName + " VALUES (" + sb.toString() + ");");
+			dbConn.close();
+		} catch (SQLException exc) {
+			System.out.println("Exception thrown while returning connection to pool in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
+		}
+	}
+
+	/* Insert */
+	// No overwrite
+	public void doInsert(String tableName, DBObject[] data) {
+		try {
+			for (DBObject datum: data) {
+				Map<String, Object> columns = datum.getAllColumns();
+
+				StringBuilder insertInto = new StringBuilder();
+				StringBuilder values = new StringBuilder();
+				insertInto.append("(");
+				values.append("(");
+				int i = 0;
+				for (String columnName: columns.keySet()) {
+					insertInto.append(columnName);
+					Object value = columns.get(columnName);
+					if (value.getClass() == String.class) {
+						String temp = "\"" + value + "\"";
+						values.append(temp);
+					}
+					else values.append(value);
+
+					if (i < columns.size() - 1) {
+						insertInto.append(", ");
+						values.append(", ");
+					}
+					i++;
+				}
+				insertInto.append(")");
+				values.append(")");
+
+				dbAction.executeUpdate("INSERT INTO " + tableName + insertInto.toString() + " VALUES " + values.toString() + ";");
+			}
+
+			dbConn.commit();
 		}
 		catch (SQLException exc) {
 			System.out.println("Exception thrown while performing Insert in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
 		}
-	}
-	// Insert with specific attributes. Unspecified ones are assigned null, and throw exception if null is assigned to non-null attributes
-	public void doInsert(String tableName, HashMap<String, Object> data) {
-//		StringBuilder sbAttr = new StringBuilder();
-//		StringBuilder sbValue = new StringBuilder();
-//		for (int i = 0; i < data.keySet().size(); i++) {
-//			String attrName = "\"" = data.keySet().
-//			sbAttr.append()
-//			if (data[i].getClass() == String.class) {
-//				String temp = "\"" + data[i] + "\"";
-//				sb.append(temp);
-//			}
-//			else sb.append(data[i]);
-//
-//			if (i < data.keySet().size() - 1) sbValue.append(", ");
-//		}
-//
-//		try (Statement stmt = dbConn.createStatement()) {
-//			stmt.executeUpdate("INSERT INTO " + tableName + " VALUES (" + sb.toString() + ");");
-//		}
-//		catch (SQLException exc) {
-//			System.out.println("Error: " + exc.getMessage());
-//		}
-	}
-
-	// Update statement
-	public void doUpdate(String tableName, HashMap<String, String> where, HashMap<String, Object> newData) {
 
 	}
+	// Allow overwriting (if a PRIMARY KEY constraint failure is caught, overwrite the corresponding row)
+	public void doInsert(String tableName, DBObject[] data, boolean overwrite) {
+		DBObject currentDBObject = null;
+		try {
+			for (DBObject datum: data) {
+				currentDBObject = datum;
+				Map<String, Object> columns = datum.getAllColumns();
 
-	// Delete statement
-	public void doDelete(String tableName, HashMap<String, Object> where) {
+				StringBuilder insertInto = new StringBuilder();
+				StringBuilder values = new StringBuilder();
+				insertInto.append("(");
+				values.append("(");
+				int i = 0;
+				for (String columnName: columns.keySet()) {
+					insertInto.append(columnName);
+					Object value = columns.get(columnName);
+					if (value.getClass() == String.class) {
+						String temp = "\"" + value + "\"";
+						values.append(temp);
+					}
+					else values.append(value);
 
+					if (i < columns.size() - 1) {
+						insertInto.append(", ");
+						values.append(", ");
+					}
+					i++;
+				}
+				insertInto.append(")");
+				values.append(")");
+
+				dbAction.executeUpdate("INSERT INTO " + tableName + insertInto.toString() + " VALUES " + values.toString() + ";");
+			}
+
+			dbConn.commit();
+		}
+		catch (SQLException exc) {
+			if (overwrite) {
+				doUpdate(tableName, currentDBObject);
+				return;
+			}
+			System.out.println("Exception thrown while performing Insert in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
+		}
 	}
 
-	// Select statement
-	public ResultSet doQuery(String tableName) {
+	/* Update */
+	void doUpdate(String tableName, DBObject data) {
+		try {
+			DatabaseMetaData dbMeta = dbConn.getMetaData();
+			ResultSet primaryKeys = dbMeta.getPrimaryKeys(null, null, tableName);
+
+			StringBuilder where = new StringBuilder();
+			int i = 0;
+			while (primaryKeys.next()) {
+				if (i > 0) where.append(" AND ");
+				i++;
+
+				String primaryKey = primaryKeys.getString(4);
+				Object temp = data.getColumn(primaryKey);
+				String whereCriterion = primaryKey + "=";
+				if (temp.getClass() == String.class) {
+					whereCriterion += "\"" + temp + "\"";
+				}
+				else whereCriterion += temp;
+
+				where.append(whereCriterion);
+
+			}
+
+			Map<String, Object> columns = data.getAllColumns();
+			StringBuilder values = new StringBuilder();
+			int j = 0;
+			for (String columnName: columns.keySet()) {
+				Object value = columns.get(columnName);
+				String attr = columnName + "=";
+				values.append(attr);
+				if (value.getClass() == String.class) {
+					String temp = "\"" + value + "\"";
+					values.append(temp);
+				}
+				else values.append(value);
+
+				if (j < columns.size() - 1) {
+					values.append(", ");
+				}
+				j++;
+			}
+			System.out.println(values);
+			dbAction.executeUpdate("UPDATE " + tableName + " SET " + values.toString() + " WHERE " + where.toString() + ";");
+			dbConn.commit();
+		}
+		catch (NullPointerException exc) {
+			System.out.println("Exception thrown while performing Update in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
+		}
+		catch (SQLException exc) {
+			System.out.println("Exception thrown while performing Update in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
+		}
+	}
+
+	/* Delete */
+	public void doDeleteAll(String tableName) {
+		try {
+			dbAction.executeUpdate("DELETE FROM " + tableName);
+			dbConn.commit();
+		}
+		catch (SQLException exc) {
+			System.out.println("Exception thrown while performing Query in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
+		}
+	}
+	public void doDelete(String tableName, Map<String, Object> where) {
+		try {
+			StringBuilder whereString = new StringBuilder();
+			int j = 0;
+			for (String whereAttr: where.keySet()) {
+				String condition = whereAttr + "=";
+				Object whereValue = where.get(whereAttr);
+				if (whereValue.getClass() == String.class) {
+					String temp = "\"" + whereValue + "\"";
+					condition += temp + " ";
+				}
+				else condition += whereValue;
+				whereString.append(condition);
+
+				if (j < where.size() - 1) whereString.append(" and ");
+				j++;
+			}
+
+			dbAction.executeUpdate("DELETE FROM " + tableName + " WHERE " + whereString.toString());
+			dbConn.commit();
+		}
+		catch (SQLException exc) {
+			System.out.println("Exception thrown while performing Query in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
+		}
+	}
+
+	/* Select */
+	static public ArrayList<DBObject> extractQuery(ResultSet rs) {
 		try{
-			return dbAction.executeQuery("select * from " + tableName);
+			ArrayList<DBObject> dbObjects = new ArrayList<>();
+
+			while (rs.next()) {
+				Map<String, Object> rsData = new HashMap<>();
+
+				ResultSetMetaData rsMeta = rs.getMetaData();
+				for (int i = 1; i <= rsMeta.getColumnCount(); i++) {
+					rsData.put(rsMeta.getColumnLabel(i), rs.getObject(i));
+				}
+
+				DBObject dbObject = new DBObject();
+				dbObject.setColumnValues(rsData);
+				dbObjects.add(dbObject);
+			}
+
+			return dbObjects;
 		}
 		catch (SQLException exc) {
-			System.out.println("Exception thrown while performing Query in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
+			System.out.println("Exception thrown while processing ResultSet in " + DBQuery.class.getSimpleName() + ": " + exc.getMessage());
 			return null;
 		}
 	}
-	public ResultSet doQuery(String tableName, String[] attributes) {
+	public ArrayList<DBObject> doQuery(String tableName, String[] attributes) {
 		try {
 			StringBuilder attrString = new StringBuilder();
 			for (int i = 0; i < attributes.length; i++) {
@@ -93,32 +241,43 @@ public class DBQuery {
 				if (i < attributes.length - 1) attrString.append(", ");
 			}
 
-			return dbAction.executeQuery("select " + attrString.toString() + " from " + tableName);
+			ResultSet rs = dbAction.executeQuery("SELECT " + attrString.toString() + " FROM " + tableName);
+
+			return extractQuery(rs);
 		}
 		catch (SQLException exc) {
 			System.out.println("Exception thrown while performing Query in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
 			return null;
 		}
 	}
-	public ResultSet doQuery(String tableName, HashMap<String, Object> where) {
+	public ArrayList<DBObject> doQuery(String tableName, Map<String, Object> where) {
 		try {
 			StringBuilder whereString = new StringBuilder();
 			int j = 0;
 			for (String whereAttr: where.keySet()) {
-				String condition = whereAttr + "=" + where.get(whereAttr) + " ";
+				String condition = whereAttr + "=";
+				Object whereValue = where.get(whereAttr);
+				if (whereValue.getClass() == String.class) {
+					String temp = "\"" + whereValue + "\"";
+					condition += temp + " ";
+				}
+				else condition += whereValue;
 				whereString.append(condition);
+
 				if (j < where.size() - 1) whereString.append(" and ");
 				j++;
 			}
 
-			return dbAction.executeQuery("select * from " + tableName + " where " + whereString.toString());
+			ResultSet rs = dbAction.executeQuery("SELECT * FROM " + tableName + " WHERE " + whereString.toString());
+
+			return extractQuery(rs);
 		}
 		catch (SQLException exc) {
 			System.out.println("Exception thrown while performing Query in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
 			return null;
 		}
 	}
-	public ResultSet doQuery(String tableName, String[] attributes, HashMap<String, Object> where) {
+	public ArrayList<DBObject> doQuery(String tableName, String[] attributes, Map<String, Object> where) {
 		try {
 			StringBuilder attrString = new StringBuilder();
 			for (int i = 0; i < attributes.length; i++) {
@@ -130,13 +289,22 @@ public class DBQuery {
 			StringBuilder whereString = new StringBuilder();
 			int j = 0;
 			for (String whereAttr: where.keySet()) {
-				String condition = whereAttr + "=" + where.get(whereAttr) + " ";
+				String condition = whereAttr + "=";
+				Object whereValue = where.get(whereAttr);
+				if (whereValue.getClass() == String.class) {
+					String temp = "\"" + whereValue + "\"";
+					condition += temp + " ";
+				}
+				else condition += whereValue;
 				whereString.append(condition);
+
 				if (j < where.size() - 1) whereString.append(" and ");
 				j++;
 			}
 
-			return dbAction.executeQuery("select " + attrString.toString() + " from " + tableName + " where " + whereString.toString());
+			ResultSet rs = dbAction.executeQuery("SELECT " + attrString.toString() + " FROM " + tableName + " WHERE " + whereString.toString());
+
+			return extractQuery(rs);
 		}
 		catch (SQLException exc) {
 			System.out.println("Exception thrown while performing Query in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
@@ -144,10 +312,11 @@ public class DBQuery {
 		}
 	}
 
-	// Raw SQL
+	/* Raw SQL */
 	public void doRawStatement(String rawSQL) {
 		try {
 			dbAction.executeUpdate(rawSQL);
+			dbConn.commit();
 		}
 		catch (SQLException exc) {
 			System.out.println("Error: " + exc.getMessage());
@@ -163,31 +332,32 @@ public class DBQuery {
 		}
 	}
 
-	// Print a table in the database
-//	public void printTable(String tableName, String... attributes) {
-//		synchronized (db) {
-//			try (Statement stmt = db.createStatement()) {
-//				stmt.setQueryTimeout(30);
-//				StringBuilder queryAttributes = new StringBuilder();
-//				for (String attribute: attributes) {
-//					queryAttributes.append(attribute + ",");
-//				}
-//
-//				ResultSet rs = stmt.executeQuery(
-//						"select " + (queryAttributes.isEmpty() ? "*" : queryAttributes.toString()) + " from " + tableName
-//				);
-//
-//				// Get table columns
-//				ResultSetMetaData rsMeta = rs.getMetaData();
-//				String columns = "";
-//				for (int i = 0; i < rsMeta.getColumnCount(); i++) {
-//					columns += String.format("%-15s | ", rsMeta.getColumnName(i));
-//				}
-//				System.out.println(columns);
-//			}
-//			catch (SQLException exc) {
-//				System.out.println("Error: " + exc.getMessage());
-//			}
-//		}
-//	}
+	/* Displaying/debugging */
+	public static void printResult(ResultSet rs) {
+		try {
+			// Print column names
+			ResultSetMetaData rsMeta = rs.getMetaData();
+			ArrayList<String> attrList = new ArrayList<>();
+			StringBuilder tableAttr = new StringBuilder();
+			StringBuilder divider = new StringBuilder();
+			for (int i = 1; i <= rsMeta.getColumnCount(); i++) {
+				tableAttr.append(String.format("%-15s | ", rsMeta.getColumnLabel(i)));
+				divider.append(String.format("%-15s | ", ' ').replace(' ', '-'));
+				attrList.add(rsMeta.getColumnName(i));
+			}
+			System.out.println(tableAttr.toString());
+			System.out.println(divider.toString());
+
+			while (rs.next()) {
+				StringBuilder row = new StringBuilder();
+				for (String attr: attrList) {
+					row.append(String.format("%-15s | ", rs.getObject(attr)));
+				}
+				System.out.println(row);
+			}
+		}
+		catch (SQLException exc) {
+			System.out.println("Exception thrown while accessing ResultSet in " + DBQuery.class.getSimpleName() + ": " + exc.getMessage());
+		}
+	}
 }

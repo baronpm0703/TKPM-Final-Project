@@ -1,6 +1,12 @@
 package com.psvm.server.models;
 
+import com.psvm.server.models.objects.*;
+import org.sqlite.core.DB;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 class DBThread extends Thread {
 	DBQuery dbConn;
@@ -14,11 +20,25 @@ class DBThread extends Thread {
 		super.run();
 		try {
 			dbConn = new DBQuery(DBConnection.getConnection());
-			dbConn.doInsert("ConversationMember", new Object[] {"CV000001", "concac", 1});
-			System.out.println(getName());
+			DBConversationMember test = new DBConversationMember();
+			test.setColumnValues("CV000002", "b", false);
+//			dbConn.doDelete("ConversationMember",
+//					Map.of(
+//							"MemberId", "2men"
+//					));
+			dbConn.doInsert("ConversationMember", new DBConversationMember[] {test}, true);
+//			ArrayList<DBObject> queryResult = dbConn.doQuery("ConversationMember",
+//					new String[] {"MemberId"},
+//					Map.of(
+//						"IsAdmin", 1
+//					)
+//			);
+//			System.out.println(queryResult.get(0).getAllColumns());
 		}
 		catch (SQLException exc) {
-
+		}
+		finally {
+			dbConn.close();		// Return connection to connection pool
 		}
 	}
 }
@@ -30,8 +50,8 @@ public class DBTest {
 //		dbq.printTable("ConversationMessage");
 //		HooYahDB db = new HooYahDB("Thread #1");
 		DBThread thread = new DBThread("Thread 1");
-		DBThread thread2 = new DBThread("Thread 2");
-		DBThread thread3 = new DBThread("Thread 3");
-		DBThread thread4 = new DBThread("Thread 4");
+//		DBThread thread2 = new DBThread("Thread 2");
+//		DBThread thread3 = new DBThread("Thread 3");
+//		DBThread thread4 = new DBThread("Thread 4");
 	}
 }

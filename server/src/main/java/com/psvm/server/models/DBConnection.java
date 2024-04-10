@@ -11,6 +11,8 @@ public class DBConnection {
 	private static BasicDataSource ds = new BasicDataSource();
 
 	static {
+		ds.setDefaultAutoCommit(false);
+		ds.setDriverClassName("org.sqlite.JDBC");
 		ds.setUrl("jdbc:sqlite:" + currentDir + dbRelativePath);
 		ds.setMaxTotal(MAX_CONNECTION);
 		ds.setMinIdle(MAX_CONNECTION);
