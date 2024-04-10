@@ -1,25 +1,18 @@
 package com.psvm.server.view;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 public class Header extends JPanel {
     Header(){
-        this.setLayout(new BorderLayout());
-        this.setSize(1440,56);
-        //border color
-        this.setBorder(BorderFactory.createLineBorder(Color.decode("#CDD5DE")));
-        this.setOpaque(false);
+
+        setLayout(new BorderLayout());
+
         //Logo on the left
         ImageIcon originalLogoIcon = new ImageIcon("src/main/resources/icon/logo-with-name.png");
         Image scaledLogo = originalLogoIcon.getImage().getScaledInstance(150, 56, Image.SCALE_SMOOTH);
         ImageIcon logoIcon = new ImageIcon(scaledLogo);
 
         JLabel logoLabel = new JLabel(logoIcon);
-        logoLabel.setBorder(new EmptyBorder(0,10,0,0));
         add(logoLabel, BorderLayout.WEST);
 
         //Button and avatar on the right
@@ -33,25 +26,9 @@ public class Header extends JPanel {
         buttonsPanel.add(avatar);
         add(buttonsPanel,BorderLayout.EAST);
 
-        //Set up button actions
-        setting.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null,"setting");
-            }
-        });
-        more.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
-        avatar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
+        //border color
+        this.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        this.setOpaque(false);
     }
 
     private JButton createImageButton(String imagePath){
