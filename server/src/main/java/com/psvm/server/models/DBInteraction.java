@@ -1,18 +1,17 @@
 package com.psvm.server.models;
 
 import com.psvm.server.models.objects.DBObject;
-import org.sqlite.core.DB;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DBQuery {
+public class DBInteraction {
 	private final Connection dbConn;
 	private Statement dbAction;
 
-	DBQuery(Connection connection) {
+	DBInteraction(Connection connection) {
 		dbConn = connection;
 		try {
 			dbAction = dbConn.createStatement();
@@ -228,7 +227,7 @@ public class DBQuery {
 			return dbObjects;
 		}
 		catch (SQLException exc) {
-			System.out.println("Exception thrown while processing ResultSet in " + DBQuery.class.getSimpleName() + ": " + exc.getMessage());
+			System.out.println("Exception thrown while processing ResultSet in " + DBInteraction.class.getSimpleName() + ": " + exc.getMessage());
 			return null;
 		}
 	}
@@ -333,6 +332,15 @@ public class DBQuery {
 	}
 
 	/* Displaying/debugging */
+	// Get current connection id
+	public void getConnectionId() {
+		try {
+			System.out.println(dbConn.getClientInfo());
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	// Print result in table form
 	public static void printResult(ResultSet rs) {
 		try {
 			// Print column names
@@ -357,7 +365,7 @@ public class DBQuery {
 			}
 		}
 		catch (SQLException exc) {
-			System.out.println("Exception thrown while accessing ResultSet in " + DBQuery.class.getSimpleName() + ": " + exc.getMessage());
+			System.out.println("Exception thrown while accessing ResultSet in " + DBInteraction.class.getSimpleName() + ": " + exc.getMessage());
 		}
 	}
 }

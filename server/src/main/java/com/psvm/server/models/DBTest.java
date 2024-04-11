@@ -1,15 +1,13 @@
 package com.psvm.server.models;
 
 import com.psvm.server.models.objects.*;
-import org.sqlite.core.DB;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 class DBThread extends Thread {
-	DBQuery dbConn;
+	DBInteraction dbConn;
 	DBThread(String name) {
 		super(name);
 		start();
@@ -19,9 +17,10 @@ class DBThread extends Thread {
 	public void run() {
 		super.run();
 		try {
-			dbConn = new DBQuery(DBConnection.getConnection());
+			dbConn = new DBInteraction(DBConnection.getConnection());
+			dbConn.getConnectionId();
 			DBConversationMember test = new DBConversationMember();
-			test.setColumnValues("CV000002", "b", false);
+			test.setColumnValues("CV000002", "b", true);
 //			dbConn.doDelete("ConversationMember",
 //					Map.of(
 //							"MemberId", "2men"
@@ -50,8 +49,8 @@ public class DBTest {
 //		dbq.printTable("ConversationMessage");
 //		HooYahDB db = new HooYahDB("Thread #1");
 		DBThread thread = new DBThread("Thread 1");
-//		DBThread thread2 = new DBThread("Thread 2");
-//		DBThread thread3 = new DBThread("Thread 3");
-//		DBThread thread4 = new DBThread("Thread 4");
+		DBThread thread2 = new DBThread("Thread 2");
+		DBThread thread3 = new DBThread("Thread 3");
+		DBThread thread4 = new DBThread("Thread 4");
 	}
 }
