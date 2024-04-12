@@ -4,9 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MainFrame {
+    private JFrame jfrm;
     MainFrame(){
         // Create a new JFrame container.
-        JFrame jfrm = new JFrame("hooYah");
+        jfrm = new JFrame("hooYah");
         jfrm.setLayout(new BorderLayout());
         jfrm.setLocationRelativeTo(null);
         jfrm.getContentPane().setBackground(Color.decode("#FDFDFD"));
@@ -26,19 +27,36 @@ public class MainFrame {
         //header.setSize(1440,56);
         jfrm.add(header,BorderLayout.NORTH);
 
-
+        //Content
+        ContentPane contentPane = new ContentPane();
+        jfrm.add(contentPane,BorderLayout.CENTER);
         //SideMenu
-        SideMenu sideMenu = new SideMenu();
+        SideMenu sideMenu = new SideMenu(contentPane);
         jfrm.add(sideMenu,BorderLayout.WEST);
+
 
         // Display the frame.
         jfrm.setVisible(true);
+    }
+    public int getFrameWidth() {
+        return jfrm.getWidth();
+    }
+
+    // Method to get the current frame height
+    public int getFrameHeight() {
+        return jfrm.getHeight();
     }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new MainFrame();
+                MainFrame mainFrame = new MainFrame();
+
+                int width = mainFrame.getFrameWidth();
+                int height = mainFrame.getFrameHeight();
+
+                System.out.println("Current Frame Width: " + width);
+                System.out.println("Current Frame Height: " + height);
             }
         });
     }

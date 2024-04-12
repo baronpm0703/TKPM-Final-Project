@@ -7,12 +7,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 class SideMenu extends JPanel{
+    private ContentPane contentPane;
     private JButton selectedButton;
-    SideMenu(){
+    private JButton currentButton;
+
+    SideMenu(ContentPane contentPane){
+        this.contentPane = contentPane;
         //left sideMenu
         this.setLayout(new GridLayout(9,1,0,0));
         this.setBackground(null);
-        this.setSize(250,680);
+        this.setSize(280,680);
         this.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(0, 0, 0, 0),
                 BorderFactory.createMatteBorder(0, 0, 0, 1, Color.decode("#CDD5DE"))
@@ -90,6 +94,12 @@ class SideMenu extends JPanel{
                     selectedButton.setBackground(null);
                 }
 
+                if (button.getText().trim().equals("Danh sách người dùng")){
+                    contentPane.renderDSDangNhap();
+                }
+                if (button.getText().trim().equals("Danh sách nhóm chat")){
+                    //contentPane.updateContent("Content for Option 2");
+                }
                 // Set the color of the current button
                 button.setBackground(Color.decode("#2FB7F1"));
 
