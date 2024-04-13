@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MainFrame {
-    private JFrame jfrm;
+    private final JFrame jfrm;
     MainFrame(){
         // Create a new JFrame container.
         jfrm = new JFrame("hooYah");

@@ -1,0 +1,615 @@
+package com.psvm.server.view;
+
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
+import javax.swing.table.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.List;
+
+
+class OptionPanel extends JPanel{
+    DSNguoiDungTable table;
+    OptionPanel(DSNguoiDungTable table){
+        this.table = table;
+        this.setLayout(new BorderLayout());
+        this.setOpaque(false);
+        //this.setBorder(new EmptyBorder(10,10,10,10));
+
+        //Filter panel
+        JPanel filterPanel = new JPanel();
+        filterPanel.setLayout(new FlowLayout());
+        filterPanel.setOpaque(false);
+        //filterPanel.setBackground(Color.RED);
+        filterPanel.setBorder(new EmptyBorder(0,0,0,100));
+        //filterPanel.setSize(990,180);
+        //Filter field
+        JTextField nameField = new JTextField();
+        nameField.setColumns(20);
+        JTextField usernameField = new JTextField();
+        usernameField.setColumns(10);
+        String[] statuses = {"","Online","Offline","Banned"};
+        JComboBox<String> statusField = new JComboBox<>(statuses);
+
+        //Filter button
+        JButton filterButton = new JButton("       Lọc       ");
+        filterButton.setFocusPainted(false);
+        //Filter button logic
+        filterButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String nameFilter = nameField.getText();
+                String usernameFilter = usernameField.getText();
+                String statusFilter = (String) statusField.getSelectedItem();
+                System.out.println(nameFilter);
+                System.out.println(usernameFilter);
+                System.out.println(statusFilter);
+                table.filterTable(usernameFilter,nameFilter,statusFilter);
+            }
+        });
+        //Add to filter Panel
+        filterPanel.add(new JLabel("Tên Đăng nhập: "));
+        filterPanel.add(usernameField);
+        filterPanel.add(new JLabel("Tên: "));
+        filterPanel.add(nameField);
+        filterPanel.add(new JLabel("Trạng thái: "));
+        filterPanel.add(statusField);
+        filterPanel.add(filterButton);
+
+        //Utilities Panel
+        JPanel utilities = new JPanel();
+        utilities.setOpaque(false);
+        //Add new user
+        JButton addUser = new JButton("Thêm người dùng");
+        addUser.setFocusPainted(false);
+        addUser.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                table.add();
+            }
+        });
+        utilities.add(addUser);
+
+        //Add to Option Panel
+        this.add(filterPanel,BorderLayout.WEST);
+        this.add(utilities,BorderLayout.EAST);
+    }
+}
+class DSNguoiDungTable extends JTable{
+    //private MySQLData mySQLData; //Biến để lưu database, coi cách gọi database của tao trong Example/Table
+    // Cần dòng này để gọi dữ liệu từ database
+    // Khi trả dữ về thì trả với dạng List<Object[]> (ArrayList)
+    // Coi trong folder EXAMPLE, MySQLData
+    private final DefaultTableModel model;
+    private final int columnCount;
+    int index = 1;
+    DefaultTableModel getTableModel(){
+        return model;
+    }
+    DSNguoiDungTable(String[] columnNames){
+        super(new DefaultTableModel(columnNames,0));
+        this.model = (DefaultTableModel) this.getModel();
+        int iconHeight = new ImageIcon("src/main/resources/icon/more_vert.png").getIconHeight();
+        this.setRowHeight(iconHeight);
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        this.setDefaultRenderer(Object.class, centerRenderer);
+        // Enable sorting
+        this.setAutoCreateRowSorter(true);
+
+        //Example data
+        List<Object[]> userAccountData = new ArrayList<>();
+
+        Object[] acc1 = {"haimen","Nguyễn Anh Khoa","123 Nguyen Thi Phuong, HA noi","21/10/2002","Nam","2men@gmail.com","21/02/2003","Online"};
+        Object[] acc2 = {"aaimen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","21/10/2003","Online"};
+        Object[] acc3 = {"aaiasdfasdfmen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","21/10/2003","Online"};
+        //Đống bên dưới này sửa sao cho nó hiện từ cái SQL date sang Date là được, không cần phải là String (Ngày ko phải là String mà là Date, còn lại String hết (hay sao đó tuỳ) ), vì mảng là Object[]
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        try{
+            Date date1 = dateFormat.parse((String) acc1[acc1.length-2]);
+            Date date2 = dateFormat.parse((String) acc2[acc2.length-2]);
+            Date date3 = dateFormat.parse((String) acc2[acc3.length-2]);
+            System.out.println(dateFormat.format(date1));
+            System.out.println(dateFormat.format(date2));
+            acc1[acc1.length-2] = dateFormat.format(date1);
+            acc2[acc2.length-2] = dateFormat.format(date2);
+            acc3[acc2.length-2] = dateFormat.format(date3);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+        userAccountData.add(acc1);
+        userAccountData.add(acc2);
+        userAccountData.add(acc3);
+
+
+        //Add data to table
+        for (Object[] row: userAccountData){
+            Object[] newRow = new Object[row.length + 1];
+            newRow[0] = index++;
+            System.arraycopy(row,0,newRow,1,row.length);
+            this.model.addRow(newRow);
+        }
+
+
+        // Add a custom renderer and editor for the last column
+        this.getColumnModel().getColumn(columnNames.length - 1).setCellRenderer(new ButtonRenderer());
+        this.getColumnModel().getColumn(columnNames.length - 1).setCellEditor(new ButtonEditor(new JCheckBox()));
+
+
+
+        //formatting table
+        setColumnWidthToFitContent();
+        //add columnCount for later use
+        this.columnCount = this.getColumnCount();
+
+    }
+    void filterTable(String username, String name , String status){
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+                List<RowFilter<Object, Object>> filters = new ArrayList<>();
+                if (!username.isEmpty()) filters.add(RowFilter.regexFilter(username,1));
+                if (!name.isEmpty()) filters.add(RowFilter.regexFilter(name,2));
+                if (!status.isEmpty()) filters.add(RowFilter.regexFilter(status,columnCount-2));
+                if (!filters.isEmpty()){
+                    RowFilter<Object,Object> combinedFilter = RowFilter.andFilter(filters);
+                    sorter.setRowFilter(combinedFilter);
+                }
+                else sorter.setRowFilter(null);
+                setRowSorter(sorter);
+            }
+        });
+    }
+    void refreshTable() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+//                List<Object[]> updatedData = mySQLData.getAllStudent();
+//                model.setRowCount(0);
+//                for (Object[] row : updatedData) {
+//                    model.addRow(row);
+//                }
+            }
+        });
+    }
+    void add() {
+        JDialog addDialog = new JDialog();
+        addDialog.setTitle("Thêm người dùng");
+        addDialog.setLayout(new GridLayout(8, 2, 10, 10));
+        addDialog.getRootPane().setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Components for the dialog
+        JTextField usernameField = new JTextField();
+        JTextField fullNameField = new JTextField();
+        JTextField addressField = new JTextField();
+        JTextField dobField = new JTextField();
+        JTextField genderField = new JTextField();
+        JTextField emailField = new JTextField();
+        JTextField creationDateField = new JTextField();
+        JButton addButton = new JButton("Thêm");
+
+        addDialog.add(new JLabel("Username:"));
+        addDialog.add(usernameField);
+        addDialog.add(new JLabel("Họ Tên:"));
+        addDialog.add(fullNameField);
+        addDialog.add(new JLabel("Địa chỉ:"));
+        addDialog.add(addressField);
+        addDialog.add(new JLabel("Ngày sinh (DD/MM/YYYY):"));
+        addDialog.add(dobField);
+        addDialog.add(new JLabel("Giới tính:"));
+        addDialog.add(genderField);
+        addDialog.add(new JLabel("Email:"));
+        addDialog.add(emailField);
+        addDialog.add(new JLabel("Ngày tạo TK (DD/MM/YYYY):"));
+        addDialog.add(creationDateField);
+        //Trạng thái thì không tạo vì mới tạo làm gì đã online.
+//        String[] statuses = {"","Online","Offline","Banned"};
+//        JComboBox<String> statusField = new JComboBox<>(statuses);
+//        addDialog.add(new JLabel("Trạng thái:"));
+//        addDialog.add(statusField);
+        addDialog.add(new JLabel());
+        addDialog.add(addButton);
+
+        addButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Get data
+                String username = usernameField.getText();
+                String fullName = fullNameField.getText();
+                String address = addressField.getText();
+                String dobString = dobField.getText();
+                String gender = genderField.getText();
+                String email = emailField.getText();
+                String creationDateString = creationDateField.getText();
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                Date dob;
+                Date creationDate;
+
+                try {
+                    dob = dateFormat.parse(dobString);
+                    creationDate = dateFormat.parse(creationDateString);
+                } catch (ParseException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "Sai format ngày", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;  // Exit the method if there's an error
+                }
+                java.sql.Date finalDob = new java.sql.Date(dob.getTime());
+                java.sql.Date finalCreationDate = new java.sql.Date(creationDate.getTime());
+                Object[] newData = {index++,username, fullName, address, dateFormat.format(finalDob), gender, email, dateFormat.format(finalCreationDate),"Offline"};
+                // Add vào database ở đây, nhớ sửa ngày tháng năm cho đúng.
+                // mySQLData.addStudent(newData);
+                model.addRow(newData);
+                addDialog.dispose();
+            }
+        });
+
+        addDialog.pack();
+        addDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        addDialog.setLocationRelativeTo(null);
+        addDialog.setVisible(true);
+    }
+
+
+    void showPopupMenu(JButton button) {
+        JPopupMenu popupMenu = new JPopupMenu();
+
+        JMenuItem update = new JMenuItem("Cập nhật thông tin");
+        JMenuItem delete = new JMenuItem("Xoá");
+        JMenuItem lockUnlocked = new JMenuItem("Khoá/Mở khoá");
+        JMenuItem loginHistory = new JMenuItem("Lịch sử đăng nhập");
+        JMenuItem friendList = new JMenuItem("Danh sách bạn bè");
+        update.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Create a new JDialog for updating the selected row
+                JDialog updateDialog = new JDialog();
+                updateDialog.setTitle("Cập nhật người dùng");
+                updateDialog.setLayout(new GridLayout(8, 2, 10, 10));
+                updateDialog.getRootPane().setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+                // Components for the dialog
+                JTextField usernameField = new JTextField();
+                JTextField fullNameField = new JTextField();
+                JTextField addressField = new JTextField();
+                JTextField dobField = new JTextField();
+                JTextField genderField = new JTextField();
+                JTextField emailField = new JTextField();
+                JTextField creationDateField = new JTextField();
+                JButton updateButton = new JButton("Cập nhật");
+
+                // Get the selected row index
+                int selectedRow = getSelectedRow();
+
+                // Check if a row is selected
+                if (selectedRow == -1) {
+                    JOptionPane.showMessageDialog(null, "Chọn một dòng để cập nhật", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Populate text fields with data from the selected row
+                usernameField.setText((String) getValueAt(selectedRow, 1));
+                fullNameField.setText((String) getValueAt(selectedRow, 2));
+                addressField.setText((String) getValueAt(selectedRow, 3));
+                dobField.setText((String) getValueAt(selectedRow, 4));
+                genderField.setText((String) getValueAt(selectedRow, 5));
+                emailField.setText((String) getValueAt(selectedRow, 6));
+                creationDateField.setText((String) getValueAt(selectedRow, 7));
+
+                // Add components to the dialog
+                updateDialog.add(new JLabel("Username:"));
+                updateDialog.add(usernameField);
+                updateDialog.add(new JLabel("Họ Tên:"));
+                updateDialog.add(fullNameField);
+                updateDialog.add(new JLabel("Địa chỉ:"));
+                updateDialog.add(addressField);
+                updateDialog.add(new JLabel("Ngày sinh (DD/MM/YYYY):"));
+                updateDialog.add(dobField);
+                updateDialog.add(new JLabel("Giới tính:"));
+                updateDialog.add(genderField);
+                updateDialog.add(new JLabel("Email:"));
+                updateDialog.add(emailField);
+                updateDialog.add(new JLabel("Ngày tạo TK (DD/MM/YYYY):"));
+                updateDialog.add(creationDateField);
+                // Trạng thái thì không tạo vì mới tạo làm gì đã online.
+                // String[] statuses = {"","Online","Offline","Banned"};
+                // JComboBox<String> statusField = new JComboBox<>(statuses);
+                // updateDialog.add(new JLabel("Trạng thái:"));
+                // updateDialog.add(statusField);
+                updateDialog.add(new JLabel());
+                updateDialog.add(updateButton);
+
+                // Add action listener for the update button
+                updateButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // Get data from the text fields
+                        String updatedUsername = usernameField.getText();
+                        String updatedFullName = fullNameField.getText();
+                        String updatedAddress = addressField.getText();
+                        String updatedDob = dobField.getText();
+                        String updatedGender = genderField.getText();
+                        String updatedEmail = emailField.getText();
+                        String updatedCreationDate = creationDateField.getText();
+
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                        Date dob ;
+                        Date creationDate;
+
+                        try {
+                            dob = dateFormat.parse(updatedDob);
+                            creationDate = dateFormat.parse(updatedCreationDate);
+                        } catch (ParseException ex) {
+                            ex.printStackTrace();
+                            JOptionPane.showMessageDialog(null, "Sai format ngày", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                            return;  // Exit the method if there's an error
+                        }
+                        java.sql.Date finalDob = new java.sql.Date(dob.getTime());
+                        java.sql.Date finalCreationDate = new java.sql.Date(creationDate.getTime());
+                        // Update data in the selected row
+                        getModel().setValueAt(updatedUsername, selectedRow, 1);
+                        getModel().setValueAt(updatedFullName, selectedRow, 2);
+                        getModel().setValueAt(updatedAddress, selectedRow, 3);
+                        getModel().setValueAt(dateFormat.format(finalDob), selectedRow, 4);
+                        getModel().setValueAt(updatedGender, selectedRow, 5);
+                        getModel().setValueAt(updatedEmail, selectedRow, 6);
+                        getModel().setValueAt(dateFormat.format(finalCreationDate), selectedRow, 7);
+
+                        // Gọi database ở đây
+//                        Object[] newData = {studentID,firstName,lastName,finalDob,address};
+//                        mySQLData.updateStudent(oldDataPrimaryKey,newData);
+                        updateDialog.dispose();
+                    }
+                });
+
+                updateDialog.pack();
+                updateDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                updateDialog.setLocationRelativeTo(null);
+                updateDialog.setVisible(true);
+            }
+        });
+        delete.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = getSelectedRow();
+
+                //Cái này t dùng để gọi khoá chính, thay bằng cái khác đi
+                //String selectedStudentID = (String) model.getValueAt(selectedRow, 0);
+
+                int confirm = JOptionPane.showConfirmDialog(
+                        null,
+                        "Bạn có chắc là xoá người dùng này?",
+                        "Xác nhận xoá",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    //gọi database ở đây
+                    //mySQLData.deleteStudent(selectedStudentID);
+                    model.removeRow(selectedRow);
+                    updateIndexColumn();
+                }
+            }
+        });
+        //cái này tao chỉnh từ Online/Offline sang Banned và ngược lại. Logic khác thì nói tao
+        lockUnlocked.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = getSelectedRow();
+                String curStatus = (String) getValueAt(selectedRow,8);
+                if (!Objects.equals(curStatus, "Banned")){
+                    int confirm = JOptionPane.showConfirmDialog(
+                            null,
+                            "Bạn có chắc là khoá người dùng này?",
+                            "Xác nhận khoá",
+                            JOptionPane.YES_NO_OPTION
+                    );
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        //gọi database ở đây
+                        //mySQLData.deleteStudent(selectedStudentID);
+                        setValueAt("Banned",selectedRow,8);
+                    }
+                }
+                else{
+                    int confirm = JOptionPane.showConfirmDialog(
+                            null,
+                            "Bạn có chắc là mở khoá người dùng này?",
+                            "Xác nhận mở khoá",
+                            JOptionPane.YES_NO_OPTION
+                    );
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        //gọi database ở đây
+                        //mySQLData.deleteStudent(selectedStudentID);
+                        setValueAt("Offline",selectedRow,8);
+                    }
+                }
+
+            }
+        });
+        loginHistory.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = getSelectedRow();
+
+                JDialog historyDialog = new JDialog();
+                historyDialog.setTitle("Lịch sử đăng nhập");
+                //Login history table
+                String[] historyColumns = {"Ngày","Giờ"};
+                JTable historyTable = new JTable(new DefaultTableModel(historyColumns,0));
+                DefaultTableModel historyModel = (DefaultTableModel) historyTable.getModel();
+                //data mẫu, cần hàm gọi data từ db;
+                List<Object[]>historyData = new ArrayList<>();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+
+
+                //Đống này để đổi từ ngày qua string như bên trên (add, update cac thu)
+//                Date date = null;
+//
+//                try {
+//                    dob = dateFormat.parse(updatedDob);
+//                } catch (ParseException ex) {
+//                    ex.printStackTrace();
+//                    JOptionPane.showMessageDialog(null, "Sai format ngày", "Lỗi", JOptionPane.ERROR_MESSAGE);
+//                    return;  // Exit the method if there's an error
+//                }
+
+                Object[] data1 = {"01/01/2004","15:04"};
+                Object[] data2 = {"01/01/2005","21:04"};
+
+                historyData.add(data1);
+                historyData.add(data2);
+
+                for (Object[] row: historyData){
+                    historyModel.addRow(row);
+                }
+                DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+                centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+                historyTable.setDefaultRenderer(Object.class, centerRenderer);
+                // Add to scrollPane
+                JScrollPane historyScrollPane = new JScrollPane();
+                historyScrollPane.setViewportView(historyTable); // Set the JTable as the view for JScrollPane
+
+                // Add to dialog
+                historyDialog.add(historyScrollPane);
+
+                historyDialog.pack();
+                historyDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                historyDialog.setLocationRelativeTo(null);
+                historyDialog.setVisible(true);
+            }
+        });
+        friendList.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = getSelectedRow();
+
+                JDialog friendDialog = new JDialog();
+                friendDialog.setTitle("Dach sách bạn bè");
+                //Login history table
+                String[] friendColumns = {"Họ tên","Trạng thái"};
+                JTable friendsTable = new JTable(new DefaultTableModel(friendColumns,0));
+                DefaultTableModel friendModel = (DefaultTableModel) friendsTable.getModel();
+                //data mẫu, cần hàm gọi data từ db;
+                List<Object[]>friendData = new ArrayList<>();
+
+
+                Object[] data1 = {"evilwomenmakemeactunwise","banned"};
+                Object[] data2 = {"ifevilwhyhot?","online"};
+
+                friendData.add(data1);
+                friendData.add(data2);
+
+                for (Object[] row: friendData){
+                    friendModel.addRow(row);
+                }
+                DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+                centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+                friendsTable.setDefaultRenderer(Object.class, centerRenderer);
+                // Add to scrollPane
+                JScrollPane friendScrollPane = new JScrollPane();
+                friendScrollPane.setViewportView(friendsTable); // Set the JTable as the view for JScrollPane
+
+                // Add to dialog
+                friendDialog.add(friendScrollPane);
+
+                friendDialog.pack();
+                friendDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                friendDialog.setLocationRelativeTo(null);
+                friendDialog.setVisible(true);
+            }
+        });
+        // add to popup menu
+        popupMenu.add(update);
+        popupMenu.add(delete);
+        popupMenu.add(lockUnlocked);
+        popupMenu.add(loginHistory);
+        popupMenu.add(friendList);
+
+        // Show the popup menu at the cell's location
+        popupMenu.show(this, button.getX(), button.getY());
+    }
+
+    private void setColumnWidthToFitContent() {
+        for (int column = 0; column < this.getColumnCount(); column++) {
+            int maxwidth = 0;
+            for (int row = 0; row < this.getRowCount(); row++) {
+                TableCellRenderer renderer = this.getCellRenderer(row, column);
+                Component comp = prepareRenderer(renderer, row, column);
+                maxwidth = Math.max(comp.getPreferredSize().width, maxwidth);
+            }
+            TableColumn tableColumn = getColumnModel().getColumn(column);
+            tableColumn.setPreferredWidth(maxwidth);
+        }
+    }
+    private void updateIndexColumn() {
+        for (int i = 0; i < this.getRowCount(); i++) {
+            this.setValueAt(i + 1, i, 0); // Update the index column
+        }
+        index = getRowCount() + 1;
+    }
+    // Custom renderer for the button column
+    // Custom editor for the button column
+    private class ButtonEditor extends DefaultCellEditor {
+
+        private JButton button;
+        public ButtonEditor(JCheckBox checkBox) {
+            super(checkBox);
+            button = new JButton();
+            // Add action listener to handle button clicks
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    fireEditingStopped();
+                    // Handle button click action
+                    // ...
+                    //Popup menu when clicked
+                    showPopupMenu(button);
+                }
+            });
+        }
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            // Set the button text and icon (replace "Icon" with your actual icon)
+            button.setIcon(new ImageIcon("src/main/resources/icon/more_vert.png"));
+            // Customize the button as needed
+            // ...
+            return button;
+        }
+
+    }
+    private static class ButtonRenderer extends JButton implements TableCellRenderer {
+        public ButtonRenderer() {
+            setOpaque(false);
+            setBorderPainted(false);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            // Set the button text and icon (replace "Icon" with your actual icon)
+            setIcon(new ImageIcon("src/main/resources/icon/more_vert.png"));
+
+            // Customize the button as needed
+            // ...
+//            if (isSelected) {
+////                setForeground(table.getSelectionForeground());
+////                setBackground(table.getSelectionBackground());
+//            } else {
+//                // setForeground(table.getForeground());
+//                // setBackground(UIManager.getColor("Button.background"));
+//                //setContentAreaFilled(false);
+//            }
+            return this;
+        }
+    }
+
+}

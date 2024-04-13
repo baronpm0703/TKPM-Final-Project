@@ -7,9 +7,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 class SideMenu extends JPanel{
-    private ContentPane contentPane;
+    private final ContentPane contentPane;
     private JButton selectedButton;
-    private JButton currentButton;
+    //private JButton currentButton;
 
     SideMenu(ContentPane contentPane){
         this.contentPane = contentPane;
@@ -36,6 +36,7 @@ class SideMenu extends JPanel{
 
         // Add action listeners to change button color
         addColorChangeActionListener(dsNguoiDung);
+        dsNguoiDung.doClick();
         addColorChangeActionListener(dsNhomChat);
         addColorChangeActionListener(dsLienLac);
         addColorChangeActionListener(dsSpam);
@@ -95,7 +96,7 @@ class SideMenu extends JPanel{
                 }
 
                 if (button.getText().trim().equals("Danh sách người dùng")){
-                    contentPane.renderDSDangNhap();
+                    contentPane.renderDSNguoiDung();
                 }
                 if (button.getText().trim().equals("Danh sách nhóm chat")){
                     //contentPane.updateContent("Content for Option 2");

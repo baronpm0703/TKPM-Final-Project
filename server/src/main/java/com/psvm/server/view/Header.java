@@ -37,7 +37,8 @@ public class Header extends JPanel {
         setting.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null,"setting");
+
+                //JOptionPane.showMessageDialog(null,"setting");
             }
         });
         more.addActionListener(new ActionListener() {

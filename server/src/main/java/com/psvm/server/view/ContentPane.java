@@ -16,14 +16,15 @@ public class ContentPane extends JPanel {
             this.remove(c);
         }
     }
-    void renderDSDangNhap() {
+    void renderDSNguoiDung() {
         removeComponent();
         String[] columnNames = {"STT","Tên đăng nhập","Họ tên","Địa chỉ","Ngày sinh","Giới tính","Email","Ngày tạo TK","Trạng thái","Khác"};
         this.setLayout(new BorderLayout());
-        DSDangNhapTable table = new DSDangNhapTable(columnNames);
+        DSNguoiDungTable table = new DSNguoiDungTable(columnNames);
         OptionPanel optionPanel = new OptionPanel(table);
         this.add(optionPanel,BorderLayout.NORTH);
-        JScrollPane scrollPane = new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(table);
         this.add(scrollPane,BorderLayout.CENTER);
         this.revalidate();
         this.repaint();
