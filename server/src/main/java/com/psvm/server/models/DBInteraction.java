@@ -6,13 +6,14 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 
 public class DBInteraction {
 	private final int PRIMARY_KEY_CONTRAINT_ERROR = 0;
 	private final Connection dbConn;
 	private Statement dbAction;
 
-	DBInteraction(Connection connection) {
+	public DBInteraction(Connection connection) throws SQLException {
 		dbConn = connection;
 		try {
 			dbAction = dbConn.createStatement();
@@ -295,6 +296,43 @@ public class DBInteraction {
 			System.out.println("Error: " + exc.getMessage());
 			return null;
 		}
+	}
+	public void doPreparedStatement(String preparedSQL, Vector<Object> questionMarks) throws SQLException {
+		PreparedStatement preparedStatement = dbConn.prepareStatement(preparedSQL);
+
+		for (int i = 1; i <= questionMarks.size(); i++) {
+			Object value = questionMarks.get(i - 1);
+
+			if (value.getClass() == String.class)
+				preparedStatement.setString(i, value.toString());
+			else if (value.getClass() == Integer.class)
+				preparedStatement.setInt(i, (int)value);
+			else if (value.getClass() == Boolean.class)
+				preparedStatement.setBoolean(i, (boolean) value);
+			else
+				preparedStatement.setTimestamp(i, new Timestamp((long) value));
+		}
+
+		preparedStatement.executeUpdate();
+		dbConn.commit();
+	}
+	public ResultSet doPreparedQuery(String preparedSQL, Vector<Object> questionMarks) throws SQLException {
+		PreparedStatement preparedStatement = dbConn.prepareStatement(preparedSQL);
+
+		for (int i = 1; i <= questionMarks.size(); i++) {
+			Object value = questionMarks.get(i - 1);
+
+			if (value.getClass() == String.class)
+				preparedStatement.setString(i, value.toString());
+			else if (value.getClass() == Integer.class)
+				preparedStatement.setInt(i, (int)value);
+			else if (value.getClass() == Boolean.class)
+				preparedStatement.setBoolean(i, (boolean) value);
+			else
+				preparedStatement.setTimestamp(i, new Timestamp((long) value));
+		}
+
+		return preparedStatement.executeQuery();
 	}
 
 	/* Displaying/debugging */
