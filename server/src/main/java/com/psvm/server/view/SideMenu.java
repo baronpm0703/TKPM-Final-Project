@@ -94,13 +94,33 @@ class SideMenu extends JPanel{
                     // Reset the color of the previously selected button
                     selectedButton.setBackground(null);
                 }
+                switch (button.getText().trim()){
+                    case "Danh sách người dùng":
+                        contentPane.renderDSNguoiDung();
+                        break;
+                    case "Danh sách nhóm chat":
+                        contentPane.renderDSNhomChat();
+                        break;
+                    case "Danh sách liên lạc của người dùng":
+                        break;
+                    case "Báo cáo spam":
+                        break;
+                    case "Danh sách người dùng đăng nhập":
+                        contentPane.renderDSNguoiDungDangNhap();
+                        break;
+                    case "Danh sách người dùng đăng ký":
+                        break;
+                    case "Biểu đồ người dùng đăng ký":
+                        break;
+                    case "Danh sách hoạt động của người dùng":
+                        break;
+                    case "Biểu đồ hoạt động của người dùng":
+                        break;
+                    default:
+                        contentPane.renderDSNguoiDung();
+                        break;
+                }
 
-                if (button.getText().trim().equals("Danh sách người dùng")){
-                    contentPane.renderDSNguoiDung();
-                }
-                if (button.getText().trim().equals("Danh sách nhóm chat")){
-                    //contentPane.updateContent("Content for Option 2");
-                }
                 // Set the color of the current button
                 button.setBackground(Color.decode("#2FB7F1"));
 

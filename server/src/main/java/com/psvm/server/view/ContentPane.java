@@ -21,7 +21,33 @@ public class ContentPane extends JPanel {
         String[] columnNames = {"STT","Tên đăng nhập","Họ tên","Địa chỉ","Ngày sinh","Giới tính","Email","Ngày tạo TK","Trạng thái","Khác"};
         this.setLayout(new BorderLayout());
         DSNguoiDungTable table = new DSNguoiDungTable(columnNames);
-        OptionPanel optionPanel = new OptionPanel(table);
+        OptionPanelDSNguoiDung optionPanel = new OptionPanelDSNguoiDung(table);
+        this.add(optionPanel,BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(table);
+        this.add(scrollPane,BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
+    void renderDSNguoiDungDangNhap(){
+        removeComponent();
+        String[] columnNames = {"STT","Tên đăng nhập","Họ tên","Thời gian"};
+        this.setLayout(new BorderLayout());
+        DSNguoiDungDangNhapHeader header = new DSNguoiDungDangNhapHeader();
+        this.add(header,BorderLayout.NORTH);
+        DSNguoiDungDangNhap table = new DSNguoiDungDangNhap(columnNames);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(table);
+        this.add(scrollPane,BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
+    void renderDSNhomChat(){
+        removeComponent();
+        String[] columnNames = {"STT","Tên","Thời gian tạo","Xem thêm"};
+        this.setLayout(new BorderLayout());
+        DSNhomChatTable table = new DSNhomChatTable(columnNames);
+        OptionPanelDSNhomChat optionPanel = new OptionPanelDSNhomChat(table);
         this.add(optionPanel,BorderLayout.NORTH);
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(table);

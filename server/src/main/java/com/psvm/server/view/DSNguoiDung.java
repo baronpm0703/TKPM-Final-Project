@@ -8,18 +8,24 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.Serial;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.List;
 
 
-class OptionPanel extends JPanel{
+class OptionPanelDSNguoiDung extends JPanel{
     DSNguoiDungTable table;
-    OptionPanel(DSNguoiDungTable table){
+    OptionPanelDSNguoiDung(DSNguoiDungTable table){
         this.table = table;
         this.setLayout(new BorderLayout());
         this.setOpaque(false);
+
         //this.setBorder(new EmptyBorder(10,10,10,10));
 
         //Filter panel
@@ -94,7 +100,9 @@ class DSNguoiDungTable extends JTable{
     }
     DSNguoiDungTable(String[] columnNames){
         super(new DefaultTableModel(columnNames,0));
+        //Formating the table
         this.model = (DefaultTableModel) this.getModel();
+        this.setDefaultEditor(Object.class,null);
         int iconHeight = new ImageIcon("src/main/resources/icon/more_vert.png").getIconHeight();
         this.setRowHeight(iconHeight);
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -104,25 +112,23 @@ class DSNguoiDungTable extends JTable{
         this.setAutoCreateRowSorter(true);
 
         //Example data
+        // CHỖ NÀY ĐỌC KĨ VÀO CHO TAO
+        // TẤT cả ngày ở mySQL phải là SQL date, khi gọi hàm ở database, nhớ chuyển nó về LocalDate để add vào data
         List<Object[]> userAccountData = new ArrayList<>();
-
+        //LocalDate mới sort được, string ko sort đc
         Object[] acc1 = {"haimen","Nguyễn Anh Khoa","123 Nguyen Thi Phuong, HA noi","21/10/2002","Nam","2men@gmail.com","21/02/2003","Online"};
-        Object[] acc2 = {"aaimen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","21/10/2003","Online"};
-        Object[] acc3 = {"aaiasdfasdfmen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","21/10/2003","Online"};
-        //Đống bên dưới này sửa sao cho nó hiện từ cái SQL date sang Date là được, không cần phải là String (Ngày ko phải là String mà là Date, còn lại String hết (hay sao đó tuỳ) ), vì mảng là Object[]
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        try{
-            Date date1 = dateFormat.parse((String) acc1[acc1.length-2]);
-            Date date2 = dateFormat.parse((String) acc2[acc2.length-2]);
-            Date date3 = dateFormat.parse((String) acc2[acc3.length-2]);
-            System.out.println(dateFormat.format(date1));
-            System.out.println(dateFormat.format(date2));
-            acc1[acc1.length-2] = dateFormat.format(date1);
-            acc2[acc2.length-2] = dateFormat.format(date2);
-            acc3[acc2.length-2] = dateFormat.format(date3);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+        Object[] acc2 = {"aaimen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","23/01/2003","Online"};
+        Object[] acc3 = {"aaiasdfasdfmen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","24/10/2003","Online"};
+        LocalDate date1 = LocalDate.of(2004,11, 5);
+        LocalDate date2 = LocalDate.of(2004,12, 3);
+        LocalDate date3 = LocalDate.of(2004,12, 4);
+
+        acc1[3] = date1;
+        acc2[3] = date2;
+        acc3[3] = date3;
+        acc1[6] = date1;
+        acc2[6] = date2;
+        acc3[6] = date3;
         userAccountData.add(acc1);
         userAccountData.add(acc2);
         userAccountData.add(acc3);
@@ -140,7 +146,22 @@ class DSNguoiDungTable extends JTable{
         // Add a custom renderer and editor for the last column
         this.getColumnModel().getColumn(columnNames.length - 1).setCellRenderer(new ButtonRenderer());
         this.getColumnModel().getColumn(columnNames.length - 1).setCellEditor(new ButtonEditor(new JCheckBox()));
-
+        //Renderer for "time" column
+        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DefaultTableCellRenderer dateTimeRenderer = new DefaultTableCellRenderer() {
+            @Serial
+            private static final long serialVersionUID = 1L;
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                if (value instanceof LocalDate) {
+                    value = ((LocalDate) value).format(myFormatObj);
+                }
+                setHorizontalAlignment(SwingConstants.CENTER);
+                return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            }
+        };
+        getColumnModel().getColumn(4).setCellRenderer(dateTimeRenderer);
+        getColumnModel().getColumn(7).setCellRenderer(dateTimeRenderer);
 
 
         //formatting table
@@ -229,21 +250,22 @@ class DSNguoiDungTable extends JTable{
                 String email = emailField.getText();
                 String creationDateString = creationDateField.getText();
 
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                Date dob;
-                Date creationDate;
+                DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                LocalDate dob;
+                LocalDate creationDate;
 
                 try {
-                    dob = dateFormat.parse(dobString);
-                    creationDate = dateFormat.parse(creationDateString);
-                } catch (ParseException ex) {
+                    dob = LocalDate.parse(dobString, dateFormat);
+                    creationDate = LocalDate.parse(creationDateString, dateFormat);
+                } catch (DateTimeParseException ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(null, "Sai format ngày", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     return;  // Exit the method if there's an error
                 }
-                java.sql.Date finalDob = new java.sql.Date(dob.getTime());
-                java.sql.Date finalCreationDate = new java.sql.Date(creationDate.getTime());
-                Object[] newData = {index++,username, fullName, address, dateFormat.format(finalDob), gender, email, dateFormat.format(finalCreationDate),"Offline"};
+                java.sql.Date finalDob = java.sql.Date.valueOf(dob); // 2 cái này để thêm vào database vì nó là sql Date
+                java.sql.Date finalCreationDate = java.sql.Date.valueOf(creationDate);
+                Object[] newData = {index++,username, fullName, address, dob, gender, email, creationDate,"Offline"};
+
                 // Add vào database ở đây, nhớ sửa ngày tháng năm cho đúng.
                 // mySQLData.addStudent(newData);
                 model.addRow(newData);
@@ -293,15 +315,17 @@ class DSNguoiDungTable extends JTable{
                     JOptionPane.showMessageDialog(null, "Chọn một dòng để cập nhật", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-
+                DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 // Populate text fields with data from the selected row
                 usernameField.setText((String) getValueAt(selectedRow, 1));
                 fullNameField.setText((String) getValueAt(selectedRow, 2));
                 addressField.setText((String) getValueAt(selectedRow, 3));
-                dobField.setText((String) getValueAt(selectedRow, 4));
+                LocalDate dob = (LocalDate) getValueAt(selectedRow, 4);
+                dobField.setText(dob.format(dateFormat));
                 genderField.setText((String) getValueAt(selectedRow, 5));
                 emailField.setText((String) getValueAt(selectedRow, 6));
-                creationDateField.setText((String) getValueAt(selectedRow, 7));
+                LocalDate creationDate = (LocalDate) getValueAt(selectedRow, 7);
+                creationDateField.setText(creationDate.format(dateFormat));
 
                 // Add components to the dialog
                 updateDialog.add(new JLabel("Username:"));
@@ -339,28 +363,27 @@ class DSNguoiDungTable extends JTable{
                         String updatedEmail = emailField.getText();
                         String updatedCreationDate = creationDateField.getText();
 
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                        Date dob ;
-                        Date creationDate;
+                        LocalDate dob;
+                        LocalDate creationDate;
 
                         try {
-                            dob = dateFormat.parse(updatedDob);
-                            creationDate = dateFormat.parse(updatedCreationDate);
-                        } catch (ParseException ex) {
+                            dob = LocalDate.parse(updatedDob, dateFormat);
+                            creationDate = LocalDate.parse(updatedCreationDate, dateFormat);
+                        } catch (DateTimeParseException ex) {
                             ex.printStackTrace();
                             JOptionPane.showMessageDialog(null, "Sai format ngày", "Lỗi", JOptionPane.ERROR_MESSAGE);
                             return;  // Exit the method if there's an error
                         }
-                        java.sql.Date finalDob = new java.sql.Date(dob.getTime());
-                        java.sql.Date finalCreationDate = new java.sql.Date(creationDate.getTime());
+                        java.sql.Date finalDob = java.sql.Date.valueOf(dob); // 2 cái này để thêm vào database vì nó là sql Date
+                        java.sql.Date finalCreationDate = java.sql.Date.valueOf(creationDate);
                         // Update data in the selected row
                         getModel().setValueAt(updatedUsername, selectedRow, 1);
                         getModel().setValueAt(updatedFullName, selectedRow, 2);
                         getModel().setValueAt(updatedAddress, selectedRow, 3);
-                        getModel().setValueAt(dateFormat.format(finalDob), selectedRow, 4);
+                        getModel().setValueAt(dob, selectedRow, 4);
                         getModel().setValueAt(updatedGender, selectedRow, 5);
                         getModel().setValueAt(updatedEmail, selectedRow, 6);
-                        getModel().setValueAt(dateFormat.format(finalCreationDate), selectedRow, 7);
+                        getModel().setValueAt(creationDate, selectedRow, 7);
 
                         // Gọi database ở đây
 //                        Object[] newData = {studentID,firstName,lastName,finalDob,address};
@@ -597,7 +620,6 @@ class DSNguoiDungTable extends JTable{
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             // Set the button text and icon (replace "Icon" with your actual icon)
             setIcon(new ImageIcon("src/main/resources/icon/more_vert.png"));
-
             // Customize the button as needed
             // ...
 //            if (isSelected) {
