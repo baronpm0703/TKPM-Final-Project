@@ -1,10 +1,9 @@
 package com.psvm.server.models;
 
+import com.psvm.server.settings.Path;
 import com.psvm.server.models.objects.*;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Map;
 
 class DBThread extends Thread {
 	DBInteraction dbConn;
@@ -48,9 +47,9 @@ public class DBTest {
 //		DBQuery dbq = new DBQuery(dbc.getDatabase());
 //		dbq.printTable("ConversationMessage");
 //		HooYahDB db = new HooYahDB("Thread #1");
-		DBThread thread = new DBThread("Thread 1");
-		DBThread thread2 = new DBThread("Thread 2");
-		DBThread thread3 = new DBThread("Thread 3");
-		DBThread thread4 = new DBThread("Thread 4");
+//		DBThread thread = new DBThread("Thread 1");
+//		DBThread thread2 = new DBThread("Thread 2");
+//		DBThread thread3 = new DBThread("Thread 3");
+//		DBThread thread4 = new DBThread("Thread 4");
 	}
 }
