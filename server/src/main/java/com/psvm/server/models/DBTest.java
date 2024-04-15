@@ -25,7 +25,7 @@ class DBThread extends Thread {
 //					Map.of(
 //							"MemberId", "2men"
 //					));
-			dbConn.doInsert("ConversationMember", new DBConversationMember[] {test}, true);
+			dbConn.doInsert("ConversationMember", new DBConversationMember[] {test}, false);
 //			ArrayList<DBObject> queryResult = dbConn.doQuery("ConversationMember",
 //					new String[] {"MemberId"},
 //					Map.of(

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DBInteraction {
+	private final int PRIMARY_KEY_CONTRAINT_ERROR = 0;
 	private final Connection dbConn;
 	private Statement dbAction;
 
@@ -15,7 +16,7 @@ public class DBInteraction {
 		dbConn = connection;
 		try {
 			dbAction = dbConn.createStatement();
-			dbAction.executeUpdate("PRAGMA foreign_keys = ON;");
+//			dbAction.executeUpdate("PRAGMA foreign_keys = ON;");
 		}
 		catch (SQLException exc) {
 			System.out.println("Exception thrown while creating statement in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
@@ -34,42 +35,7 @@ public class DBInteraction {
 	/* Insert */
 	// No overwrite
 	public void doInsert(String tableName, DBObject[] data) {
-		try {
-			for (DBObject datum: data) {
-				Map<String, Object> columns = datum.getAllColumns();
-
-				StringBuilder insertInto = new StringBuilder();
-				StringBuilder values = new StringBuilder();
-				insertInto.append("(");
-				values.append("(");
-				int i = 0;
-				for (String columnName: columns.keySet()) {
-					insertInto.append(columnName);
-					Object value = columns.get(columnName);
-					if (value.getClass() == String.class) {
-						String temp = "\"" + value + "\"";
-						values.append(temp);
-					}
-					else values.append(value);
-
-					if (i < columns.size() - 1) {
-						insertInto.append(", ");
-						values.append(", ");
-					}
-					i++;
-				}
-				insertInto.append(")");
-				values.append(")");
-
-				dbAction.executeUpdate("INSERT INTO " + tableName + insertInto.toString() + " VALUES " + values.toString() + ";");
-			}
-
-			dbConn.commit();
-		}
-		catch (SQLException exc) {
-			System.out.println("Exception thrown while performing Insert in " + this.getClass().getSimpleName() + ": " + exc.getMessage());
-		}
-
+		doInsert(tableName, data, false);
 	}
 	// Allow overwriting (if a PRIMARY KEY constraint failure is caught, overwrite the corresponding row)
 	public void doInsert(String tableName, DBObject[] data, boolean overwrite) {
