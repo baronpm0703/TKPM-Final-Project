@@ -5,6 +5,9 @@ import com.psvm.server.models.DBInteraction;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Vector;
 
 public class DBWrapper {
@@ -18,10 +21,40 @@ public class DBWrapper {
 		}
 	}
 
-	public ResultSet getFriendList(String currentUsername) throws SQLException {
-		String sql = "SELECT FriendId FROM Friend WHERE UserId=?";
+	public void respondFriendRequest(String currentUsername, String senderId) throws SQLException {
+		// Remove first sql line (before first semicolon) when done testing
+		String sql1 = "INSERT INTO FriendRequest (SenderId, TargetId, Datetime) VALUES (?, ?, current_timestamp());";
+		String sql2 = "UPDATE FriendRequest SET Status=1 WHERE SenderId=? AND TargetId=? ORDER BY Datetime DESC LIMIT 1;";
+		String[] sqls = {sql1, sql2};
+
+		Vector<Object> questionMark1 = new Vector<>();
+		questionMark1.add(senderId);
+		questionMark1.add(currentUsername);
+		Vector<Object> questionMark2 = new Vector<>();
+		questionMark2.add(senderId);
+		questionMark2.add(currentUsername);
+		Vector<Object>[] questionMarks = new Vector[] {questionMark1, questionMark2};
+
+		dbConn.doBatchPreparedStatement(sqls, questionMarks);
+	}
+
+	public void removeFriend(String currentUsername, String friendId) throws SQLException {
+		String sql = "DELETE FROM Friend WHERE (UserId=? AND FriendId=?) OR (UserId=? AND FriendId=?)";
 
 		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(currentUsername);
+		questionMarks.add(friendId);
+		questionMarks.add(friendId);
+		questionMarks.add(currentUsername);
+
+		dbConn.doPreparedStatement(sql, questionMarks);
+	}
+
+	public ResultSet getFriendList(String currentUsername) throws SQLException {
+		String sql = "SELECT FriendId FROM Friend WHERE UserId=? OR FriendId=?";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(currentUsername);
 		questionMarks.add(currentUsername);
 
 		return dbConn.doPreparedQuery(sql, questionMarks);

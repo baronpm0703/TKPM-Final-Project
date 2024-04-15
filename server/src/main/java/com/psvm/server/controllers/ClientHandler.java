@@ -44,10 +44,34 @@ public class ClientHandler implements Runnable {
 				SocketRequest request = (SocketRequest) handlerIn.readObject();
 
 				switch (request.getTalkCode()) {
+					case "4c": {
+						Map<String, Object> data = request.getData();
+						try {
+							db.respondFriendRequest(data.get("username").toString(), data.get("senderId").toString());
+							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+						} catch (SQLException e) {
+							System.out.println(e.getMessage());
+							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+						}
+
+						break;
+					}
+					case "4d": {
+						Map<String, Object> data = request.getData();
+						try {
+							db.removeFriend(data.get("username").toString(), data.get("friendId").toString());
+							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+						} catch (SQLException e) {
+							System.out.println(e.getMessage());
+							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+						}
+
+						break;
+					}
 					case "5": {
 						Map<String, Object> data = request.getData();
 						try {
-							ResultSet queryResult = db.getFriendList(data.get("currentUsr").toString());
+							ResultSet queryResult = db.getFriendList(data.get("username").toString());
 							ResultSetMetaData queryResultMeta;
 							queryResultMeta = queryResult.getMetaData();
 
@@ -57,7 +81,8 @@ public class ClientHandler implements Runnable {
 									responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
 								}
 							}
-							System.out.println(responseData);
+
+							queryResult.getStatement().close();
 							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
 						} catch (SQLException e) {
 							System.out.println(e.getMessage());
