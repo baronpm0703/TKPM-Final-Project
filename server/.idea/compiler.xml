@@ -3,6 +3,8 @@
   <component name="CompilerConfiguration">
     <excludeFromCompile>
       <directory url="file://$PROJECT_DIR$/src/main/java/com/psvm/server/models" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/src/main/java/com/psvm/server/controllers" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/src/main/java/com/psvm/server/view/EXAMPLE" includeSubdirectories="true" />
     </excludeFromCompile>
     <annotationProcessing>
       <profile name="Maven default annotation processors profile" enabled="true">

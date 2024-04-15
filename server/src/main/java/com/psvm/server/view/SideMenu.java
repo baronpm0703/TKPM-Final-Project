@@ -27,7 +27,7 @@ class SideMenu extends JPanel{
         JButton dsNguoiDung = createButton("Danh sách người dùng","src/main/resources/icon/dsnguoidung.png");
         JButton dsNhomChat = createButton("Danh sách nhóm chat","src/main/resources/icon/dsnhomchat.png");
         JButton dsLienLac = createButton("Danh sách liên lạc của người dùng","src/main/resources/icon/danhsachlienlac.png");
-        JButton dsSpam = createButton("Báo cáo spam","src/main/resources/icon/spam.png");
+        JButton dsSpam = createButton("Danh sách báo cáo spam","src/main/resources/icon/spam.png");
         JButton dsDangNhap = createButton("Danh sách người dùng đăng nhập","src/main/resources/icon/danhsachdangnhap.png");
         JButton dsDangKy = createButton("Danh sách người dùng đăng ký","src/main/resources/icon/danhsachdangky.png");
         JButton bieuDoDangKy = createButton("Biểu đồ người dùng đăng ký","src/main/resources/icon/bieudodangky.png");
@@ -103,7 +103,8 @@ class SideMenu extends JPanel{
                         break;
                     case "Danh sách liên lạc của người dùng":
                         break;
-                    case "Báo cáo spam":
+                    case "Danh sách báo cáo spam":
+                        contentPane.renderDSBaoCaoSpam();
                         break;
                     case "Danh sách người dùng đăng nhập":
                         contentPane.renderDSNguoiDungDangNhap();
