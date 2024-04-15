@@ -1,0 +1,116 @@
+package com.psvm.client.views;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.time.LocalDateTime;
+import java.io.File;
+import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+
+public class UserEachFriend extends JPanel {
+    private String avatar;
+    private String name;
+    private String lastChat;
+    private LocalDateTime lastTime;
+    private String userStatus;
+    UserEachFriend(String avatar, String name, String lastChat, LocalDateTime lastTime, String userStatus){
+        this.avatar = avatar;
+        this.name = name;
+        this.lastChat = lastChat;
+        this.lastTime = lastTime;
+        this.userStatus = userStatus;
+        this.setPreferredSize(new Dimension(320,70));
+        initialize();
+    }
+    void initialize(){
+
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        // Component 1 (avatar, spanning 2 rows)//nhớ thay avatar dưới này
+        ImageIcon avatarIcon = createCircularAvatar("client/src/main/resources/icon/avatar_sample.jpg", 40, 40);
+        JLabel avatarLabel = new JLabel(avatarIcon);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridheight = 2;
+        gbc.fill = GridBagConstraints.BOTH;
+        this.add(avatarLabel, gbc);
+
+        // Component 2 (button in the second column)
+        JLabel friendName = new JLabel(name);
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.gridheight = 1; // Reset grid height
+        this.add(friendName, gbc);
+
+        // Component 3 (button in the third column)
+        JLabel friendLastTime = new JLabel(formatLocalDateTime(lastTime));
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        this.add(friendLastTime, gbc);
+
+        // Component 4 (button in the second row)
+        JLabel lastMessage= new JLabel(lastChat);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        this.add(lastMessage, gbc);
+
+        // Component 5 (button in the third row)
+        JLabel statusMessage = createUserStatusLabel(userStatus);
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        this.add(statusMessage, gbc);
+    }
+
+    private static ImageIcon createCircularAvatar(String imagePath, int width, int height) {
+        try {
+            BufferedImage originalImage = ImageIO.read(new File(imagePath));
+            BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = resizedImage.createGraphics();
+
+            // Create a circular clip
+            Shape clip = new Ellipse2D.Float(0, 0, width, height);
+            g2d.setClip(clip);
+            g2d.drawImage(originalImage, 0, 0, width, height, null);
+
+            g2d.dispose();
+
+            return new ImageIcon(resizedImage);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    private static String formatLocalDateTime(LocalDateTime dateTime) {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (dateTime.toLocalDate().isEqual(now.toLocalDate())) {
+            // Same day
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            return dateTime.format(formatter);
+        } else {
+            // Different day
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            return dateTime.format(formatter);
+        }
+    }
+    private static JLabel createUserStatusLabel(String userStatus) {
+        JLabel statusLabel = new JLabel();
+        statusLabel.setPreferredSize(new Dimension(20, 20));
+
+        if ("Online".equals(userStatus)) {
+            statusLabel.setIcon(new ImageIcon("client/src/main/resources/icon/chatWhenOnline.png"));
+        } else if ("Offline".equals(userStatus)) {
+            statusLabel.setIcon(new ImageIcon("client/src/main/resources/icon/chatWhenOffline.png"));
+        } else {
+            // Set nothing if userStatus is "None"
+            statusLabel.setVisible(false);
+        }
+
+
+        return statusLabel;
+    }
+}

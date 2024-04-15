@@ -72,7 +72,7 @@ class DSNhomChatTable extends JTable{
         //Formating the table
         this.model = (DefaultTableModel) this.getModel();
         this.setDefaultEditor(Object.class,null);
-        int iconHeight = new ImageIcon("src/main/resources/icon/more_vert.png").getIconHeight();
+        int iconHeight = new ImageIcon("server/src/main/resources/icon/more_vert.png").getIconHeight();
         this.setRowHeight(iconHeight);
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -261,7 +261,7 @@ class DSNhomChatTable extends JTable{
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             // Set the button text and icon (replace "Icon" with your actual icon)
-            button.setIcon(new ImageIcon("src/main/resources/icon/more_vert.png"));
+            button.setIcon(new ImageIcon("server/src/main/resources/icon/more_vert.png"));
             // Customize the button as needed
             // ...
             return button;
@@ -280,7 +280,7 @@ class DSNhomChatTable extends JTable{
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             // Set the button text and icon (replace "Icon" with your actual icon)
-            setIcon(new ImageIcon("src/main/resources/icon/more_vert.png"));
+            setIcon(new ImageIcon("server/src/main/resources/icon/more_vert.png"));
             // Customize the button as needed
             // ...
 //            if (isSelected) {

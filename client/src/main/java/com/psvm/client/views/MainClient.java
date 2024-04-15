@@ -1,18 +1,17 @@
-package com.psvm.server.view;
+package com.psvm.client.views;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class MainFrame {
+public class MainClient {
     private final JFrame jfrm;
-    MainFrame(){
-        // Create a new JFrame container.
+    MainClient(){
         jfrm = new JFrame("hooYah");
         jfrm.setLayout(new BorderLayout());
         jfrm.setLocationRelativeTo(null);
         jfrm.getContentPane().setBackground(Color.decode("#FDFDFD"));
         //favicon
-        ImageIcon favicon = new ImageIcon("src/main/resources/icon/chat-app-logo-2.png");
+        ImageIcon favicon = new ImageIcon("client/src/main/resources/icon/chat-app-logo-2.png");
 
         jfrm.setIconImage(favicon.getImage());
         // Give the frame an initial size.
@@ -21,23 +20,15 @@ public class MainFrame {
         // the application.
         jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-
-        //Header
-        Header header = new Header();
-        //header.setSize(1440,56);
-        jfrm.add(header,BorderLayout.NORTH);
-
-        //Content
-        ContentPane contentPane = new ContentPane();
-        jfrm.add(contentPane,BorderLayout.CENTER);
-        //SideMenu
-        SideMenu sideMenu = new SideMenu(contentPane);
-        jfrm.add(sideMenu,BorderLayout.WEST);
+        //FriendList
+        FriendList friendList = new FriendList();
+        jfrm.add(friendList,BorderLayout.WEST);
 
 
-        // Display the frame.
+        //Set visible
         jfrm.setVisible(true);
     }
+
     public int getFrameWidth() {
         return jfrm.getWidth();
     }
@@ -50,7 +41,7 @@ public class MainFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                MainFrame mainFrame = new MainFrame();
+                MainClient mainFrame = new MainClient();
 
                 int width = mainFrame.getFrameWidth();
                 int height = mainFrame.getFrameHeight();
