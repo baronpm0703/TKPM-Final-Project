@@ -1,0 +1,168 @@
+1. đăng ký tài khoản
+- input:
+	request: username, first name, last name, password, address, dob, gender, email, status, status detail, creation date
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+	+ ...?
+
+3. đăng nhập
+- input:
+	request:
+	+ 0 = email + password
+	+ 1 = username + password
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+
+4a. gửi lời mời kết bạn
+- input:
+	request: username, friend username
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+4b. nhận lời mời kết bạn
+- input:
+	request: username
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách lời mời kết bạn (chưa chấp nhận/đã chấp nhận/từ chối)
+4c. xử lý lời mời kết bạn
+- input:
+	request:
+	+ 0 = từ chối + username + sender usr
+	+ 1 = chấp nhận + username + sender usr
+- output:
+	+ 0 = failed
+	+ 1 = success
+4d. huỷ kết bạn
+- input:
+	request: username + friend usr
+- output:
+	+ 0 = failed
+	+ 1 = success
+
+5. danh sách bạn bè
+- input:
+	request: username
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách bạn bè
+
+6. tìm user
+- input: username cần tìm
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách kết quả tìm kiếm
+
+7. báo cáo spam
+- input: username + usr người bị báo cáo
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+
+8. block user
+- input: username + usr người bị block
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+
+9a. danh sách đoạn chat với mọi tin nhắn đã được đọc
+- input: username
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách đoạn chat với mọi tin nhắn đã được đọc
+9b. danh sách đoạn chat có tin nhắn chưa đọc + BẠN đang offline
+- input: 
+	request: username + log lần đăng xuất gần nhất + log lần đăng nhập gần nhất
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách đoạn chat có tin nhắn từ thời điểm đăng xuất gần nhất tới thời điểm đăng nhập gần nhất
+- *select distinct
+9c. danh sách đoạn chat có tin nhắn chưa đọc + BẠN đang online
+- input: 
+	request: username + log lần đăng nhập gần nhất
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách đoạn chat có tin nhắn từ thời điểm đăng nhập gần nhất tới hiện giờ
+- *select distinct
+9d. danh sách tin nhắn của đoạn chat
+- input:
+	request: username + conversation id + index nhóm tin nhắn (mỗi index = 25 tin nhắn)
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách 25 tin nhắn ở index
+9e. xoá lịch sử chat
+- input:
+	request: username + conversation id
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+9f. lịch sử chat với 1 người
+- input:
+	request: username + conversation id/friend usr
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách các tin nhắn đúng yêu cầu tìm kiếm thuộc đoạn chat đó
+9g. lịch sử chat với tất cả mnguoi
+- input:
+	request: username
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success + danh sách tất cả tin nhắn đúng yêu cầu tìm kiếm
+
+10a. tạo nhóm
+- input:
+	request: username + friend usr 1 + friend usr 2 + .....
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+10b. đổi tên nhóm
+- input: request + conversation id + tên mới
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+10c. thêm thành viên
+- input: request + conversation id + friend usr
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+10d. xoá thành viên
+- input: request + conversation id + member usr
+- output:
+	response:
+	+ 0 = failed
+	+ 1 = success
+
+11. Chat
+- chat với 1 người khác: input: user1 + user2 -> (nếu là lần đầu tiên chat: lưu conversation id mới -> output: 0 hoặc 1 + true thể hiện lần đầu chat) || (nếu không phải là đầu: output: 0 hoặc 1)
+- chat với nhóm: khi tạo nhóm chat sẽ lưu conversation id mới -> tạo cho mỗi thành viên trong nhóm 1 public và private key
++ thành viên mới được add vào sẽ được lưu public và private key mới
++ input: username + conversation id
+
+*
+9
+- đoạn chat nhóm đã bị kick sẽ không hiển thị
+- đoạn chat bị block sẽ hiển thị bạn đã block/bạn đã bị block và không cho nhắn thêm
+11
+- nếu bật mã hoá nhóm: tin nhắn nào có encryption, phải encrypt encryption = public của người nhận, sau đó gửi tin nhắn + encryption đã được encrypted qua 
+
+** Xem cách làm realtime swing + DB
