@@ -1,6 +1,7 @@
 package com.psvm.client.views;
 
 import javax.swing.*;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
 
 public class MainClient {
@@ -10,6 +11,7 @@ public class MainClient {
         jfrm.setLayout(new BorderLayout());
         jfrm.setLocationRelativeTo(null);
         jfrm.getContentPane().setBackground(Color.decode("#FDFDFD"));
+        jfrm.getRootPane().setBorder(new MatteBorder(1,1,1,1,Color.decode("#CDD5DE")));
         //favicon
         ImageIcon favicon = new ImageIcon("client/src/main/resources/icon/chat-app-logo-2.png");
 
@@ -24,7 +26,7 @@ public class MainClient {
         FriendListBar friendListBar = new FriendListBar();
         jfrm.add(friendListBar,BorderLayout.WEST);
 
-
+        //Chat panel
         //Set visible
         jfrm.setVisible(true);
     }

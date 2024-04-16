@@ -1,6 +1,9 @@
 package com.psvm.client.views;
 
 import javax.swing.*;
+import javax.swing.border.MatteBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.time.LocalDateTime;
 
@@ -16,10 +19,13 @@ class FriendListBar extends JPanel{
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.setOpaque(false);
         this.setPreferredSize(new Dimension(320, 820));
-
+        this.setBorder(new MatteBorder(0,0,0,1,Color.decode("#CDD5DE")));
         // Add header
         FriendListHeader friendListHeader = new FriendListHeader();
         this.add(friendListHeader);
+        // Add search option
+        FriendSearchOptions friendSearchOptions = new FriendSearchOptions();
+        this.add(friendSearchOptions);
         // friend search and add friend
         SearchFriendField searchFriendField = new SearchFriendField();
         AddFriendIconButton addFriendIconButton = new AddFriendIconButton();
@@ -33,7 +39,14 @@ class FriendListBar extends JPanel{
         JScrollPane scrollFriend = new JScrollPane(listFriendOfUser);
         scrollFriend.setBorder(null);
         scrollFriend.setPreferredSize(new Dimension(320, 630));
-        scrollFriend.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        scrollFriend.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollFriend.getViewport().addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                scrollFriend.revalidate();
+                scrollFriend.repaint();
+            }
+        });
 
         this.add(scrollFriend);
     }
