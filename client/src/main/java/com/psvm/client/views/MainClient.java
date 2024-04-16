@@ -21,8 +21,8 @@ public class MainClient {
         jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //FriendList
-        FriendList friendList = new FriendList();
-        jfrm.add(friendList,BorderLayout.WEST);
+        FriendListBar friendListBar = new FriendListBar();
+        jfrm.add(friendListBar,BorderLayout.WEST);
 
 
         //Set visible

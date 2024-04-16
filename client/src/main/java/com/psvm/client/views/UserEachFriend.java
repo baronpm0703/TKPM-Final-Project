@@ -2,7 +2,10 @@ package com.psvm.client.views;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;
@@ -22,7 +25,9 @@ public class UserEachFriend extends JPanel {
         this.lastChat = lastChat;
         this.lastTime = lastTime;
         this.userStatus = userStatus;
-        this.setPreferredSize(new Dimension(320,70));
+        this.setPreferredSize(new Dimension(super.getWidth(),70));
+        this.setBorder(new EmptyBorder(0,0,0,0));
+        this.setBackground(Color.WHITE);
         initialize();
     }
     void initialize(){
@@ -37,6 +42,7 @@ public class UserEachFriend extends JPanel {
         gbc.gridy = 0;
         gbc.gridheight = 2;
         gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(0, 0, 0, 10); // Add a 10-pixel gap to the right
         this.add(avatarLabel, gbc);
 
         // Component 2 (button in the second column)
@@ -44,12 +50,14 @@ public class UserEachFriend extends JPanel {
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.gridheight = 1; // Reset grid height
+        gbc.insets = new Insets(0, 0, 0, 135); // Add a 150-pixel gap to the right
         this.add(friendName, gbc);
 
         // Component 3 (button in the third column)
         JLabel friendLastTime = new JLabel(formatLocalDateTime(lastTime));
         gbc.gridx = 2;
         gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 0, 0); // Reset insets
         this.add(friendLastTime, gbc);
 
         // Component 4 (button in the second row)
@@ -63,6 +71,7 @@ public class UserEachFriend extends JPanel {
         gbc.gridx = 2;
         gbc.gridy = 1;
         this.add(statusMessage, gbc);
+
     }
 
     private static ImageIcon createCircularAvatar(String imagePath, int width, int height) {
