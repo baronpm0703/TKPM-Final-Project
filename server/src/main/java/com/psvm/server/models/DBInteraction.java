@@ -356,6 +356,7 @@ public class DBInteraction {
 				preparedStatement.setTimestamp(i, new Timestamp((long) value));
 		}
 
+
 		ResultSet resultSet = preparedStatement.executeQuery();
 		return resultSet;
 	}

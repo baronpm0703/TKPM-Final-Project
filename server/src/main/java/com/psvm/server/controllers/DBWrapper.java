@@ -13,7 +13,7 @@ import java.util.Vector;
 public class DBWrapper {
 	DBInteraction dbConn;
 
-	DBWrapper() {
+	public DBWrapper() {
 		try {
 			dbConn = new DBInteraction(DBConnection.getConnection());
 		} catch (SQLException exc) {
@@ -155,6 +155,13 @@ public class DBWrapper {
 		return new ResultSet[] {rs1, rs2, rs3};
 	}
 
+
+	public ResultSet getFieldUserList(String field) throws SQLException {
+		String sql = "SELECT " + field + " FROM User";
+		Vector<Object> questionMarks = new Vector<>();
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
 	public void close() {
 		dbConn.close();
 	}

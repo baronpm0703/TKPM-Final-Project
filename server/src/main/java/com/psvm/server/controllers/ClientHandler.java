@@ -96,6 +96,27 @@ public class ClientHandler implements Runnable {
 
 						break;
 					}
+					case "read_user": {
+						Map<String, Object> data = request.getData();
+						try {
+							ResultSet queryResult = db.getFieldUserList(data.get("field").toString());
+							ResultSetMetaData queryResultMeta;
+							queryResultMeta = queryResult.getMetaData();
+
+							Vector<Map<String, Object>> responseData = new Vector<>();
+							while (queryResult.next()) {
+								for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+									responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
+								}
+							}
+
+							queryResult.getStatement().close();
+							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+						} catch (SQLException e) {
+							System.out.println(e.getMessage());
+							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+						}
+					}
 				}
 
 			}
