@@ -1,7 +1,5 @@
 package com.psvm.client.views;
 
-import com.psvm.client.views.components.friend.FriendListBar;
-
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
@@ -28,7 +26,9 @@ public class MainClient {
         FriendListBar friendListBar = new FriendListBar();
         jfrm.add(friendListBar,BorderLayout.WEST);
 
-        //Chat panel
+        //Chat Section
+        ChatSection chatSection = new ChatSection();
+        jfrm.add(chatSection,BorderLayout.CENTER);
         //Set visible
         jfrm.setVisible(true);
     }

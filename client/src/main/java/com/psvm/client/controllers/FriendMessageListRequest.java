@@ -9,9 +9,11 @@ import java.net.Socket;
 import java.util.Map;
 
 public class FriendMessageListRequest extends SocketTalk {
-	public FriendMessageListRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut) {
+	public FriendMessageListRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String searchContent) {
 		super(socket, socketIn, socketOut, SocketTalk.TALK_CODE_FRIEND_MESSAGE_LIST, Map.of(
-				"username", LocalData.getCurrentUsername())
+				"username", LocalData.getCurrentUsername(),
+				"search", searchContent
+			)
 		);
 	}
 }

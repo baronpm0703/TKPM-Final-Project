@@ -1,4 +1,4 @@
-package com.psvm.client.views.components.friend;
+package com.psvm.client.views;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -10,8 +10,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
 public class SearchFriendField extends JTextField {
-    private String placeholder = "Tìm kiếm";
-    private boolean isFocused = false;
+    private String placeholder = "\uD83D\uDD0E Tìm kiếm";
 
     SearchFriendField() {
         setColumns(15);
@@ -28,7 +27,6 @@ public class SearchFriendField extends JTextField {
             @Override
             public void focusGained(FocusEvent e) {
                 if (getText().equals(placeholder)) {
-                    isFocused = true;
                     setText("");
                     setForeground(Color.BLACK);
                 }
@@ -37,7 +35,6 @@ public class SearchFriendField extends JTextField {
             @Override
             public void focusLost(FocusEvent e) {
                 if (getText().isEmpty()) {
-                    isFocused = false;
                     setText(placeholder);
                     setForeground(Color.GRAY);
                 }
@@ -62,11 +59,10 @@ public class SearchFriendField extends JTextField {
         });
     }
 
-    public boolean isFocused() { return isFocused; }
-
     private void handleTextChange() {
         // Implement your logic here when text changes
         System.out.println("Text changed: " + getText());
+
     }
 
     // Custom rounded border class

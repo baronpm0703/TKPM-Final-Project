@@ -130,7 +130,7 @@ public class ClientHandler implements Runnable {
 
 	void talkCode_FriendMessageList(Map<String, Object> data) throws IOException {
 		try {
-			ResultSet[] queryResult = db.getFriendMessageList(data.get("username").toString());
+			ResultSet[] queryResult = db.getFriendMessageList(data.get("username").toString(), data.get("search").toString());
 
 			Vector<Map<String, Object>> responseData = new Vector<>();
 			for (ResultSet qrEach: queryResult) {

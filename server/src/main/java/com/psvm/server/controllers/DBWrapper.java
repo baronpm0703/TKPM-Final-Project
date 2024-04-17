@@ -60,20 +60,20 @@ public class DBWrapper {
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}
 
-	public ResultSet[] getFriendMessageList(String currentUsername) throws SQLException {
+	public ResultSet[] getFriendMessageList(String currentUsername, String searchContent) throws SQLException {
 		String sql1 = "WITH ranked_data AS (\n" +
-				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, cvmes.Content,\n" +
-				"\t\tCOUNT(cvmem3.MemberId) as MemberCount,\n" +
+				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, \n" +
+				"    cvmes.Content, cv.IsGroup,\n" +
 				"        ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn\n" +
 				"\tFROM Conversation cv\n" +
 				"\tJOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
 				"    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != ?\n" +
-				"    JOIN ConversationMember cvmem3 ON cv.ConversationId = cvmem3.ConversationId\n" +
 				"\tJOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId\n" +
+				"    JOIN conversationmessage cvmes2 ON cvmes2.ConversationId = cvmem.ConversationId AND cvmes2.Content LIKE ?\n" +
 				"\tWHERE cvmem.MemberId=?\n" +
 				"\tGROUP BY cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId\n" +
 				")\n" +
-				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, MemberCount\n" +
+				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, IsGroup\n" +
 				"FROM ranked_data rd\n" +
 				"WHERE rn = 1 AND NOT EXISTS (\n" +
 				"\tSELECT *\n" +
@@ -87,6 +87,7 @@ public class DBWrapper {
 
 		Vector<Object> questionMarks1 = new Vector<>();
 		questionMarks1.add(currentUsername);
+		questionMarks1.add("%" + searchContent + "%");
 		questionMarks1.add(currentUsername);
 		questionMarks1.add(currentUsername);
 		questionMarks1.add(currentUsername);
@@ -94,18 +95,18 @@ public class DBWrapper {
 		ResultSet rs1 = dbConn.doPreparedQuery(sql1, questionMarks1);
 
 		String sql2 = "WITH ranked_data AS (\n" +
-				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, cvmes.Content,\n" +
-				"\t\tCOUNT(cvmem3.MemberId) as MemberCount,\n" +
+				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, \n" +
+				"\t\tcvmes.Content, cv.IsGroup,\n" +
 				"        ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn\n" +
 				"\tFROM Conversation cv\n" +
 				"\tJOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
 				"    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != ?\n" +
-				"    JOIN ConversationMember cvmem3 ON cv.ConversationId = cvmem3.ConversationId\n" +
 				"\tJOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId\n" +
+				"    JOIN conversationmessage cvmes2 ON cvmes2.ConversationId = cvmem.ConversationId AND cvmes2.Content LIKE ?\n" +
 				"\tWHERE cvmem.MemberId=?\n" +
 				"\tGROUP BY cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId\n" +
 				")\n" +
-				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, MemberCount\n" +
+				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, IsGroup\n" +
 				"FROM ranked_data rd\n" +
 				"WHERE rn = 1 AND NOT EXISTS (\n" +
 				"\tSELECT *\n" +
@@ -119,6 +120,7 @@ public class DBWrapper {
 
 		Vector<Object> questionMarks2 = new Vector<>();
 		questionMarks2.add(currentUsername);
+		questionMarks2.add("%" + searchContent + "%");
 		questionMarks2.add(currentUsername);
 		questionMarks2.add(currentUsername);
 		questionMarks2.add(currentUsername);
@@ -126,18 +128,18 @@ public class DBWrapper {
 		ResultSet rs2 = dbConn.doPreparedQuery(sql2, questionMarks2);
 
 		String sql3 = "WITH ranked_data AS (\n" +
-				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, cvmes.Content,\n" +
-				"\t\tCOUNT(cvmem3.MemberId) as MemberCount,\n" +
+				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, \n" +
+				"\t\tcvmes.Content, cv.IsGroup,\n" +
 				"        ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn\n" +
 				"\tFROM Conversation cv\n" +
 				"\tJOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
 				"    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != ?\n" +
-				"    JOIN ConversationMember cvmem3 ON cv.ConversationId = cvmem3.ConversationId\n" +
 				"\tJOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId\n" +
+				"    JOIN conversationmessage cvmes2 ON cvmes2.ConversationId = cvmem.ConversationId AND cvmes2.Content LIKE ?\n" +
 				"\tWHERE cvmem.MemberId=?\n" +
-				"\tGROUP BY cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId\n" +
+				"\tGROUP BY cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes2.Content\n" +
 				")\n" +
-				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, MemberCount\n" +
+				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, IsGroup\n" +
 				"FROM ranked_data rd\n" +
 				"WHERE rn = 1 AND EXISTS (\n" +
 				"\tSELECT *\n" +
@@ -147,6 +149,7 @@ public class DBWrapper {
 
 		Vector<Object> questionMarks3 = new Vector<>();
 		questionMarks3.add(currentUsername);
+		questionMarks3.add("%" + searchContent + "%");
 		questionMarks3.add(currentUsername);
 		questionMarks3.add(currentUsername);
 
