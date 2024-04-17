@@ -60,23 +60,99 @@ public class DBWrapper {
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}
 
-	public ResultSet getFriendMessageList(String currentUsername) throws SQLException {
-		String sql = "WITH ranked_data AS (\n" +
-				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.SenderId, cvmes.Datetime, cvmes.Content,\n" +
-				"\t\tROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn\n" +
+	public ResultSet[] getFriendMessageList(String currentUsername) throws SQLException {
+		String sql1 = "WITH ranked_data AS (\n" +
+				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, cvmes.Content,\n" +
+				"\t\tCOUNT(cvmem3.MemberId) as MemberCount,\n" +
+				"        ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn\n" +
 				"\tFROM Conversation cv\n" +
 				"\tJOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
+				"    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != ?\n" +
+				"    JOIN ConversationMember cvmem3 ON cv.ConversationId = cvmem3.ConversationId\n" +
 				"\tJOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId\n" +
 				"\tWHERE cvmem.MemberId=?\n" +
+				"\tGROUP BY cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId\n" +
 				")\n" +
-				"SELECT ConversationId, ConversationName, SenderId, Datetime, Content\n" +
-				"FROM ranked_data\n" +
-				"WHERE rn = 1;";
+				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, MemberCount\n" +
+				"FROM ranked_data rd\n" +
+				"WHERE rn = 1 AND NOT EXISTS (\n" +
+				"\tSELECT *\n" +
+				"    FROM MessageSeen ms\n" +
+				"    WHERE ms.MessageId = rd.MessageId AND ms.ConversationId = rd.ConversationId AND ms.SeenId = ?\n" +
+				") AND rd.Datetime >= all(\n" +
+				"\tSELECT ul.Datetime\n" +
+				"    FROM UserLog ul\n" +
+				"    WHERE ul.UserId = ? AND ul.LogType = 0\n" +
+				");";
 
-		Vector<Object> questionMarks = new Vector<>();
-		questionMarks.add(currentUsername);
+		Vector<Object> questionMarks1 = new Vector<>();
+		questionMarks1.add(currentUsername);
+		questionMarks1.add(currentUsername);
+		questionMarks1.add(currentUsername);
+		questionMarks1.add(currentUsername);
 
-		return dbConn.doPreparedQuery(sql, questionMarks);
+		ResultSet rs1 = dbConn.doPreparedQuery(sql1, questionMarks1);
+
+		String sql2 = "WITH ranked_data AS (\n" +
+				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, cvmes.Content,\n" +
+				"\t\tCOUNT(cvmem3.MemberId) as MemberCount,\n" +
+				"        ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn\n" +
+				"\tFROM Conversation cv\n" +
+				"\tJOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
+				"    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != ?\n" +
+				"    JOIN ConversationMember cvmem3 ON cv.ConversationId = cvmem3.ConversationId\n" +
+				"\tJOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId\n" +
+				"\tWHERE cvmem.MemberId=?\n" +
+				"\tGROUP BY cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId\n" +
+				")\n" +
+				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, MemberCount\n" +
+				"FROM ranked_data rd\n" +
+				"WHERE rn = 1 AND NOT EXISTS (\n" +
+				"\tSELECT *\n" +
+				"    FROM MessageSeen ms\n" +
+				"    WHERE ms.MessageId = rd.MessageId AND ms.ConversationId = rd.ConversationId AND ms.SeenId = ?\n" +
+				") AND rd.Datetime < all(\n" +
+				"\tSELECT ul.Datetime\n" +
+				"    FROM UserLog ul\n" +
+				"    WHERE ul.UserId = ? AND ul.LogType = 0\n" +
+				");";
+
+		Vector<Object> questionMarks2 = new Vector<>();
+		questionMarks2.add(currentUsername);
+		questionMarks2.add(currentUsername);
+		questionMarks2.add(currentUsername);
+		questionMarks2.add(currentUsername);
+
+		ResultSet rs2 = dbConn.doPreparedQuery(sql2, questionMarks2);
+
+		String sql3 = "WITH ranked_data AS (\n" +
+				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, cvmes.Content,\n" +
+				"\t\tCOUNT(cvmem3.MemberId) as MemberCount,\n" +
+				"        ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn\n" +
+				"\tFROM Conversation cv\n" +
+				"\tJOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
+				"    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != ?\n" +
+				"    JOIN ConversationMember cvmem3 ON cv.ConversationId = cvmem3.ConversationId\n" +
+				"\tJOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId\n" +
+				"\tWHERE cvmem.MemberId=?\n" +
+				"\tGROUP BY cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId\n" +
+				")\n" +
+				"SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, MemberCount\n" +
+				"FROM ranked_data rd\n" +
+				"WHERE rn = 1 AND EXISTS (\n" +
+				"\tSELECT *\n" +
+				"    FROM MessageSeen ms\n" +
+				"    WHERE ms.MessageId = rd.MessageId AND ms.ConversationId = rd.ConversationId AND ms.SeenId = ?\n" +
+				");";
+
+		Vector<Object> questionMarks3 = new Vector<>();
+		questionMarks3.add(currentUsername);
+		questionMarks3.add(currentUsername);
+		questionMarks3.add(currentUsername);
+
+		ResultSet rs3 = dbConn.doPreparedQuery(sql3, questionMarks3);
+
+		return new ResultSet[] {rs1, rs2, rs3};
 	}
 
 	public void close() {

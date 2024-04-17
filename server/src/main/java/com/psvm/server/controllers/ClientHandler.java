@@ -109,21 +109,25 @@ public class ClientHandler implements Runnable {
 
 	void talkCode_FriendMessageList(Map<String, Object> data) throws IOException {
 		try {
-			ResultSet queryResult = db.getFriendMessageList(data.get("username").toString());
-			ResultSetMetaData queryResultMeta;
-			queryResultMeta = queryResult.getMetaData();
+			ResultSet[] queryResult = db.getFriendMessageList(data.get("username").toString());
 
 			Vector<Map<String, Object>> responseData = new Vector<>();
-			while (queryResult.next()) {
-				HashMap<String, Object> row = new HashMap<>();
-				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
-					row.put(queryResultMeta.getColumnLabel(i), queryResult.getObject(i));
+			for (ResultSet qrEach: queryResult) {
+				ResultSetMetaData queryResultMeta = qrEach.getMetaData();
+				Vector<Map<String, Object>> rdEach = new Vector<>();
+				while (qrEach.next()) {
+					HashMap<String, Object> row = new HashMap<>();
+					for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+						row.put(queryResultMeta.getColumnLabel(i), qrEach.getObject(i));
+					}
+					rdEach.add(row);
 				}
-				responseData.add(row);
+
+				qrEach.getStatement().close();
+				responseData.add(Map.of("data", rdEach));
 			}
 
-			queryResult.getStatement().close();
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));

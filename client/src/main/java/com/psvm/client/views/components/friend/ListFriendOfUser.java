@@ -16,9 +16,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Vector;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -119,8 +118,26 @@ public class ListFriendOfUser extends JPanel {
             public void workerDidUpdate(Vector<Map<String, Object>> friends) {
                 SwingUtilities.invokeLater(() -> {
                     thisPanel.removeAll();
-                    for (Map<String, Object> friend: friends) {
-                        UserEachFriend userEachFriend = new UserEachFriend("af",friend.get("ConversationName").toString(), friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Online");
+                    for (Map<String, Object> friend: (Vector<Map<String, Object>>) friends.get(0).get("data"))
+                    {
+                        String convoName = (Integer.parseInt(friend.get("MemberCount").toString()) > 2) ? friend.get("ConversationName").toString() : friend.get("MemberId").toString();
+                        UserEachFriend userEachFriend = new UserEachFriend("af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Online");
+                        thisPanel.add(userEachFriend);
+                        // Add vertical spacing between components
+                        thisPanel.add(Box.createVerticalStrut(10));
+                        addHoverEffect(userEachFriend);
+                    }
+                    for (Map<String, Object> friend: (Vector<Map<String, Object>>) friends.get(1).get("data")) {
+                        String convoName = (Integer.parseInt(friend.get("MemberCount").toString()) > 2) ? friend.get("ConversationName").toString() : friend.get("MemberId").toString();
+                        UserEachFriend userEachFriend = new UserEachFriend("af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Offline");
+                        thisPanel.add(userEachFriend);
+                        // Add vertical spacing between components
+                        thisPanel.add(Box.createVerticalStrut(10));
+                        addHoverEffect(userEachFriend);
+                    }
+                    for (Map<String, Object> friend: (Vector<Map<String, Object>>) friends.get(2).get("data")) {
+                        String convoName = (Integer.parseInt(friend.get("MemberCount").toString()) > 2) ? friend.get("ConversationName").toString() : friend.get("MemberId").toString();
+                        UserEachFriend userEachFriend = new UserEachFriend("af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"");
                         thisPanel.add(userEachFriend);
                         // Add vertical spacing between components
                         thisPanel.add(Box.createVerticalStrut(10));
@@ -140,6 +157,6 @@ public class ListFriendOfUser extends JPanel {
                 }
             }
         });
-        service.schedule(worker, 250, TimeUnit.MILLISECONDS);
+        service.schedule(worker, 1000, TimeUnit.MILLISECONDS);
     }
 }
