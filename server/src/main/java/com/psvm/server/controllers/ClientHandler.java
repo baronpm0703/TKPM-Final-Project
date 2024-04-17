@@ -1,5 +1,6 @@
 package com.psvm.server.controllers;
 
+import com.psvm.client.settings.LocalData;
 import com.psvm.shared.socket.SocketRequest;
 import com.psvm.shared.socket.SocketResponse;
 
@@ -68,6 +69,10 @@ public class ClientHandler implements Runnable {
 
 						break;
 					}
+					case "4f": {
+						talkCode_FriendMessageList(request.getData());
+						break;
+					}
 					case "5": {
 						Map<String, Object> data = request.getData();
 						try {
@@ -101,20 +106,27 @@ public class ClientHandler implements Runnable {
 			db.close();
 		}
 	}
-//	public void sendMessage(String message, String roomID) { // Broacast
-//		try {
-//			if (this.roomID.equals(roomID))
-//				objectOutputStream.writeObject(new Message(MessageType.TEXT, "Client" + clientID + " Send: " + message, roomID));
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
-//
-//	public void sendFile(byte[] fileData, String fileName) { // Broacast
-//		try {
-//			objectOutputStream.writeObject(new Message(MessageType.FILE, fileData, fileName));
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
+
+	void talkCode_FriendMessageList(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.getFriendMessageList(data.get("username").toString());
+			ResultSetMetaData queryResultMeta;
+			queryResultMeta = queryResult.getMetaData();
+
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				HashMap<String, Object> row = new HashMap<>();
+				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+					row.put(queryResultMeta.getColumnLabel(i), queryResult.getObject(i));
+				}
+				responseData.add(row);
+			}
+
+			queryResult.getStatement().close();
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
 }

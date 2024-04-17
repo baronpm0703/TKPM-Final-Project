@@ -1,5 +1,7 @@
 package com.psvm.client.views;
 
+import com.psvm.client.views.components.friend.FriendListBar;
+
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;

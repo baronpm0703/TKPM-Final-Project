@@ -60,6 +60,25 @@ public class DBWrapper {
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}
 
+	public ResultSet getFriendMessageList(String currentUsername) throws SQLException {
+		String sql = "WITH ranked_data AS (\n" +
+				"\tSELECT cv.ConversationId, cv.ConversationName, cvmes.SenderId, cvmes.Datetime, cvmes.Content,\n" +
+				"\t\tROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn\n" +
+				"\tFROM Conversation cv\n" +
+				"\tJOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
+				"\tJOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId\n" +
+				"\tWHERE cvmem.MemberId=?\n" +
+				")\n" +
+				"SELECT ConversationId, ConversationName, SenderId, Datetime, Content\n" +
+				"FROM ranked_data\n" +
+				"WHERE rn = 1;";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(currentUsername);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
 	public void close() {
 		dbConn.close();
 	}
