@@ -35,7 +35,7 @@ public class DSNguoiDungDangNhap extends JTable {
         this.setDefaultEditor(Object.class,null);
         this.model = (DefaultTableModel) this.getModel();
         this.sorter = new TableRowSorter<>(model);
-        int iconHeight = new ImageIcon("src/main/resources/icon/more_vert.png").getIconHeight();
+        int iconHeight = new ImageIcon("server/src/main/resources/icon/more_vert.png").getIconHeight();
         this.setRowHeight(iconHeight);
         this.setRowSorter(sorter);
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();

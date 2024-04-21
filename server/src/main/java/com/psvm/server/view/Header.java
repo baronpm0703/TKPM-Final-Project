@@ -14,7 +14,7 @@ public class Header extends JPanel {
         this.setBorder(BorderFactory.createLineBorder(Color.decode("#CDD5DE")));
         this.setOpaque(false);
         //Logo on the left
-        ImageIcon originalLogoIcon = new ImageIcon("src/main/resources/icon/logo-with-name.png");
+        ImageIcon originalLogoIcon = new ImageIcon("server/src/main/resources/icon/logo-with-name.png");
         Image scaledLogo = originalLogoIcon.getImage().getScaledInstance(150, 56, Image.SCALE_SMOOTH);
         ImageIcon logoIcon = new ImageIcon(scaledLogo);
 
@@ -23,9 +23,9 @@ public class Header extends JPanel {
         add(logoLabel, BorderLayout.WEST);
 
         //Button and avatar on the right
-        JButton setting = createImageButton("src/main/resources/icon/setting.png");
-        JButton more = createImageButton("src/main/resources/icon/more.png");
-        JButton avatar = createImageButton("src/main/resources/icon/avatar_sample.jpg");
+        JButton setting = createImageButton("server/src/main/resources/icon/setting.png");
+        JButton more = createImageButton("server/src/main/resources/icon/more.png");
+        JButton avatar = createImageButton("server/src/main/resources/icon/avatar_sample.jpg");
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setOpaque(false);
         buttonsPanel.add(setting);

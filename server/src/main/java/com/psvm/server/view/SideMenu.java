@@ -24,15 +24,15 @@ class SideMenu extends JPanel{
         //Label describe which tag
         //Too lazy to do
         //Menu options
-        JButton dsNguoiDung = createButton("Danh sách người dùng","src/main/resources/icon/dsnguoidung.png");
-        JButton dsNhomChat = createButton("Danh sách nhóm chat","src/main/resources/icon/dsnhomchat.png");
-        JButton dsLienLac = createButton("Danh sách liên lạc của người dùng","src/main/resources/icon/danhsachlienlac.png");
-        JButton dsSpam = createButton("Danh sách báo cáo spam","src/main/resources/icon/spam.png");
-        JButton dsDangNhap = createButton("Danh sách người dùng đăng nhập","src/main/resources/icon/danhsachdangnhap.png");
-        JButton dsDangKy = createButton("Danh sách người dùng đăng ký","src/main/resources/icon/danhsachdangky.png");
-        JButton bieuDoDangKy = createButton("Biểu đồ người dùng đăng ký","src/main/resources/icon/bieudodangky.png");
-        JButton dsHoatDong = createButton("Danh sách hoạt động của người dùng","src/main/resources/icon/dshoatdong.png");
-        JButton bieuDoHoatDong = createButton("Biểu đồ hoạt động của người dùng","src/main/resources/icon/bieudohoatdong.png");
+        JButton dsNguoiDung = createButton("Danh sách người dùng","server/src/main/resources/icon/dsnguoidung.png");
+        JButton dsNhomChat = createButton("Danh sách nhóm chat","server/src/main/resources/icon/dsnhomchat.png");
+        JButton dsLienLac = createButton("Danh sách liên lạc của người dùng","server/src/main/resources/icon/danhsachlienlac.png");
+        JButton dsSpam = createButton("Danh sách báo cáo spam","server/src/main/resources/icon/spam.png");
+        JButton dsDangNhap = createButton("Danh sách người dùng đăng nhập","server/src/main/resources/icon/danhsachdangnhap.png");
+        JButton dsDangKy = createButton("Danh sách người dùng đăng ký","server/src/main/resources/icon/danhsachdangky.png");
+        JButton bieuDoDangKy = createButton("Biểu đồ người dùng đăng ký","server/src/main/resources/icon/bieudodangky.png");
+        JButton dsHoatDong = createButton("Danh sách hoạt động của người dùng","server/src/main/resources/icon/dshoatdong.png");
+        JButton bieuDoHoatDong = createButton("Biểu đồ hoạt động của người dùng","server/src/main/resources/icon/bieudohoatdong.png");
 
         // Add action listeners to change button color
         addColorChangeActionListener(dsNguoiDung);
