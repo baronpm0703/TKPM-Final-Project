@@ -43,7 +43,6 @@ class FriendListThread extends SwingWorker<Void, Vector<String>> {
 
 		Vector<String> temp = new Vector<>();
 		temp.add(response.getData().toString());
-		System.out.println(temp);
 		publish(temp);
 
 		return null;
@@ -58,18 +57,18 @@ class FriendListThread extends SwingWorker<Void, Vector<String>> {
 		}
 	}
 
-//	@Override
-//	protected void done() {
-//		try {
-//			get();
-//			System.out.println("Done!");
-//		} catch (InterruptedException e) {
-//			System.out.println("Done!");
-//			throw new RuntimeException(e);
-//		} catch (ExecutionException e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
+	@Override
+	protected void done() {
+		try {
+			get();
+			System.out.println("Done!");
+		} catch (InterruptedException e) {
+			System.out.println("Done!");
+			throw new RuntimeException(e);
+		} catch (ExecutionException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
 
 public class FriendList extends JList<String> {

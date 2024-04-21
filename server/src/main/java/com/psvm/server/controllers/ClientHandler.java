@@ -1,6 +1,5 @@
 package com.psvm.server.controllers;
 
-import com.psvm.client.settings.LocalData;
 import com.psvm.shared.socket.SocketRequest;
 import com.psvm.shared.socket.SocketResponse;
 
@@ -9,7 +8,6 @@ import java.net.Socket;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.*;
 
 public class ClientHandler implements Runnable {
@@ -46,48 +44,10 @@ public class ClientHandler implements Runnable {
 				SocketRequest request = (SocketRequest) handlerIn.readObject();
 
 				switch (request.getTalkCode()) {
-					case "1": {
-						talkCode_CreateUser(request.getData());
-
-						break;
-					}
-					case "3": {
-						talkCode_GetUser(request.getData());
-
-						break;
-					}
-					case "4c": {
-						Map<String, Object> data = request.getData();
-						try {
-							db.respondFriendRequest(data.get("username").toString(), data.get("senderId").toString());
-							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
-						} catch (SQLException e) {
-							System.out.println(e.getMessage());
-							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-						}
-
-						break;
-					}
-					case "4d": {
-						Map<String, Object> data = request.getData();
-						try {
-							db.removeFriend(data.get("username").toString(), data.get("friendId").toString());
-							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
-						} catch (SQLException e) {
-							System.out.println(e.getMessage());
-							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-						}
-
-						break;
-					}
-					case "4f": {
-						talkCode_FriendMessageList(request.getData());
-						break;
-					}
 					case "5": {
 						Map<String, Object> data = request.getData();
 						try {
-							ResultSet queryResult = db.getFriendList(data.get("username").toString());
+							ResultSet queryResult = db.getFriendList(data.get("currentUsr").toString());
 							ResultSetMetaData queryResultMeta;
 							queryResultMeta = queryResult.getMetaData();
 
@@ -97,8 +57,7 @@ public class ClientHandler implements Runnable {
 									responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
 								}
 							}
-
-							queryResult.getStatement().close();
+							System.out.println(responseData);
 							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
 						} catch (SQLException e) {
 							System.out.println(e.getMessage());
@@ -106,27 +65,6 @@ public class ClientHandler implements Runnable {
 						}
 
 						break;
-					}
-					case "read_user": {
-						Map<String, Object> data = request.getData();
-						try {
-							ResultSet queryResult = db.getFieldUserList(data.get("field").toString());
-							ResultSetMetaData queryResultMeta;
-							queryResultMeta = queryResult.getMetaData();
-
-							Vector<Map<String, Object>> responseData = new Vector<>();
-							while (queryResult.next()) {
-								for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
-									responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
-								}
-							}
-
-							queryResult.getStatement().close();
-							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
-						} catch (SQLException e) {
-							System.out.println(e.getMessage());
-							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-						}
 					}
 				}
 
@@ -138,72 +76,20 @@ public class ClientHandler implements Runnable {
 			db.close();
 		}
 	}
-
-	void talkCode_CreateUser(Map<String, Object> data) throws IOException {
-		try {
-			db.createUser(data.get("username").toString(), data.get("firstName").toString(), data.get("lastName").toString(), data.get("password").toString(), data.get("address").toString(), (LocalDateTime) data.get("dob"), (boolean) data.get("gender"), data.get("email").toString());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-		}
-	}
-
-	void talkCode_ForgetPassword(Map<String, Object> data) throws IOException {
-		try {
-			db.createUser(data.get("username").toString(), data.get("firstName").toString(), data.get("lastName").toString(), data.get("password").toString(), data.get("address").toString(), (LocalDateTime) data.get("dob"), (boolean) data.get("gender"), data.get("email").toString());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-		}
-	}
-
-	void talkCode_GetUser(Map<String, Object> data) throws IOException {
-		try {
-			ResultSet queryResult = db.getUser(data.get("username").toString(), data.get("hashedPassword").toString());
-			ResultSetMetaData queryResultMeta;
-			queryResultMeta = queryResult.getMetaData();
-
-			Vector<Map<String, Object>> responseData = new Vector<>();
-			while (queryResult.next()) {
-				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
-					responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
-				}
-			}
-
-			queryResult.getStatement().close();
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-		}
-	}
-
-	void talkCode_FriendMessageList(Map<String, Object> data) throws IOException {
-		try {
-			ResultSet[] queryResult = db.getFriendMessageList(data.get("username").toString(), data.get("friendSearch").toString(), data.get("chatSearch").toString());
-
-			Vector<Map<String, Object>> responseData = new Vector<>();
-			for (ResultSet qrEach: queryResult) {
-				ResultSetMetaData queryResultMeta = qrEach.getMetaData();
-				Vector<Map<String, Object>> rdEach = new Vector<>();
-				while (qrEach.next()) {
-					HashMap<String, Object> row = new HashMap<>();
-					for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
-						row.put(queryResultMeta.getColumnLabel(i), qrEach.getObject(i));
-					}
-					rdEach.add(row);
-				}
-
-				qrEach.getStatement().close();
-				responseData.add(Map.of("data", rdEach));
-			}
-
-		handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-		}
-	}
+//	public void sendMessage(String message, String roomID) { // Broacast
+//		try {
+//			if (this.roomID.equals(roomID))
+//				objectOutputStream.writeObject(new Message(MessageType.TEXT, "Client" + clientID + " Send: " + message, roomID));
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+//
+//	public void sendFile(byte[] fileData, String fileName) { // Broacast
+//		try {
+//			objectOutputStream.writeObject(new Message(MessageType.FILE, fileData, fileName));
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
 }

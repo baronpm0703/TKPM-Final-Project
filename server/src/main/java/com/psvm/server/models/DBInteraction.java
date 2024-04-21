@@ -3,7 +3,6 @@ package com.psvm.server.models;
 import com.psvm.server.models.objects.DBObject;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -310,58 +309,30 @@ public class DBInteraction {
 				preparedStatement.setInt(i, (int)value);
 			else if (value.getClass() == Boolean.class)
 				preparedStatement.setBoolean(i, (boolean) value);
-			else if (value.getClass() == LocalDateTime.class)
-				preparedStatement.setTimestamp(i, Timestamp.valueOf((LocalDateTime) value));
 			else
 				preparedStatement.setTimestamp(i, new Timestamp((long) value));
 		}
 
-		System.out.println(preparedStatement.toString());
-		System.out.println(preparedStatement.executeUpdate());
-		preparedStatement.close();
-		dbConn.commit();
-	}
-	public void doBatchPreparedStatement(String[] preparedSQL, Vector<Object>[] questionMarks) throws SQLException {
-		for (int j = 0; j < preparedSQL.length; j++) {
-			PreparedStatement preparedStatement = dbConn.prepareStatement(preparedSQL[j]);
-
-			for (int i = 1; i <= questionMarks[j].size(); i++) {
-				Object value = questionMarks[j].get(i - 1);
-
-				if (value.getClass() == String.class)
-					preparedStatement.setString(i, value.toString());
-				else if (value.getClass() == Integer.class)
-					preparedStatement.setInt(i, (int)value);
-				else if (value.getClass() == Boolean.class)
-					preparedStatement.setBoolean(i, (boolean) value);
-				else
-					preparedStatement.setTimestamp(i, new Timestamp((long) value));
-			}
-
-			preparedStatement.executeUpdate();
-			preparedStatement.close();
-		}
+		preparedStatement.executeUpdate();
 		dbConn.commit();
 	}
 	public ResultSet doPreparedQuery(String preparedSQL, Vector<Object> questionMarks) throws SQLException {
 		PreparedStatement preparedStatement = dbConn.prepareStatement(preparedSQL);
 
-		if (!questionMarks.isEmpty()){
-			for (int i = 1; i <= questionMarks.size(); i++) {
-				Object value = questionMarks.get(i - 1);
+		for (int i = 1; i <= questionMarks.size(); i++) {
+			Object value = questionMarks.get(i - 1);
 
-				if (value.getClass() == String.class)
-					preparedStatement.setString(i, value.toString());
-				else if (value.getClass() == Integer.class)
-					preparedStatement.setInt(i, (int)value);
-				else if (value.getClass() == Boolean.class)
-					preparedStatement.setBoolean(i, (boolean) value);
-				else
-					preparedStatement.setTimestamp(i, new Timestamp((long) value));
-			}
+			if (value.getClass() == String.class)
+				preparedStatement.setString(i, value.toString());
+			else if (value.getClass() == Integer.class)
+				preparedStatement.setInt(i, (int)value);
+			else if (value.getClass() == Boolean.class)
+				preparedStatement.setBoolean(i, (boolean) value);
+			else
+				preparedStatement.setTimestamp(i, new Timestamp((long) value));
 		}
-		ResultSet resultSet = preparedStatement.executeQuery();
-		return resultSet;
+
+		return preparedStatement.executeQuery();
 	}
 
 	/* Displaying/debugging */
