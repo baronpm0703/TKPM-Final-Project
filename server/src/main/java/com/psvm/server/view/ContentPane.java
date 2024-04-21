@@ -55,5 +55,18 @@ public class ContentPane extends JPanel {
         this.revalidate();
         this.repaint();
     }
+    void renderDSBaoCaoSpam(){
+        removeComponent();
+        String[] columnNames = {"STT","Tên","Thời gian tạo","Xem thêm"};
+        this.setLayout(new BorderLayout());
+        DSBaoCaoSpamTable table = new DSBaoCaoSpamTable(columnNames);
+        OptionPanelDSSpam optionPanel = new OptionPanelDSSpam(table);
+        this.add(optionPanel,BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(table);
+        this.add(scrollPane,BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
 }
 

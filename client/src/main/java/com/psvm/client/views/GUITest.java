@@ -1,9 +1,7 @@
 package com.psvm.client.views;
 
 import com.psvm.client.views.components.FriendList;
-import com.psvm.client.views.components.TestAddButton;
 import com.psvm.client.views.components.TestPane;
-import com.psvm.client.views.components.TestRemoveButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,8 +23,6 @@ public class GUITest {
 				JPanel jPanel = new JPanel();
 				jPanel.setLayout(new GridLayout());
 				jPanel.add(new FriendList());
-				jPanel.add(new TestAddButton());
-				jPanel.add(new TestRemoveButton());
 				jPanel.add(new TestPane());
 				jFrame.add(jPanel);
 
