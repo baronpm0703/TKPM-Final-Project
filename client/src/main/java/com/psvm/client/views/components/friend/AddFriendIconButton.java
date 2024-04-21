@@ -105,17 +105,17 @@ public class AddFriendIconButton extends JButton {
 
         contentPanel.add(searchFriendField, BorderLayout.CENTER);
 
-        // Table
-        ListFriendInSearchDialog listFriendInSearchDialog = new ListFriendInSearchDialog();
-        JScrollPane scrollFriend = new JScrollPane(listFriendInSearchDialog);
-        scrollFriend.setPreferredSize(new Dimension(300, 200));
-        scrollFriend.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollFriend.getViewport().addChangeListener(e -> {
-            scrollFriend.revalidate();
-            scrollFriend.repaint();
-        });
-        scrollFriend.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
-        contentPanel.add(scrollFriend, BorderLayout.SOUTH);
+//        // Table
+//        ListFriendInSearchDialog listFriendInSearchDialog = new ListFriendInSearchDialog();
+//        JScrollPane scrollFriend = new JScrollPane(listFriendInSearchDialog);
+//        scrollFriend.setPreferredSize(new Dimension(300, 200));
+//        scrollFriend.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+//        scrollFriend.getViewport().addChangeListener(e -> {
+//            scrollFriend.revalidate();
+//            scrollFriend.repaint();
+//        });
+//        scrollFriend.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
+//        contentPanel.add(scrollFriend, BorderLayout.SOUTH);
 
         // Set the content panel to the dialog
         dialog.setContentPane(contentPanel);

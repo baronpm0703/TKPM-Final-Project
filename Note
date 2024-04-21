@@ -1,0 +1,15 @@
+Yêu cầu: Biểu đồ số lượng người hoạt động theo năm: chọn năm, vẽ biểu đồ với trục hoành là tháng, trục
+tung là số lượng người có mở ứng dụng.
+
+
+Chọn năm -> Lọc ra các userID có logType = 0 và Datetime có năm = selected năm
+-> check ra userID với userName của table user -> Check status : Lấy được số lượng ng đang mở ứng dụng, và online
+-> đem nó đi check với Conversation Mem -> lấy ra được idCon List
+-> đem đi check với ConversationMessage -> các conId nào có dateTime phù hợp -> tạo ra suitableConId Check
+Quay lại bảng Conversation Mem với mọi suitableConId lọc ra những thằng khác UserID đang chọn
+ Điều Kiện: nếu số lượng out ra = 1 => + 1 chat với người
+ số lượng >2 => + 1 chat với nhóm
+
+
+
+ Note: Yêu cầu 7??? bạn của bạn là gì
