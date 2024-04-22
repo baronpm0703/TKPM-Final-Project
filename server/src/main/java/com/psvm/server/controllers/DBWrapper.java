@@ -222,8 +222,8 @@ public class DBWrapper {
 	}
 
 	public ResultSet getSuitableConversationId(String memId, String dateTime) throws SQLException {
-		String sql = "Select ConversationId From hooyah.conversationmember cMsg Where cMsg.MemberId = ? and cMsg.ConversationId = (\n" +
-				"\tSelect cM.ConversationId From hooyah.conversationmessage cM Where year( cM.Datetime ) = ? and cM.ConversationId = cMsg.ConversationId \n" +
+		String sql = "Select ConversationId From conversationmember cMsg Where cMsg.MemberId = ? and cMsg.ConversationId = (\n" +
+				"\tSelect cM.ConversationId From conversationmessage cM Where year( cM.Datetime ) = ? and cM.ConversationId = cMsg.ConversationId \n" +
 				"\t\tORDER BY Datetime DESC LIMIT 1\n" +
 				")";
 		Vector<Object> questionMarks = new Vector<>();
@@ -234,7 +234,7 @@ public class DBWrapper {
     }
 
 	public ResultSet getInfoConversationUserParticipateIn(String conversationId) throws SQLException {
-		String sql = "Select IsGroup From hooyah.conversation Where ConversationId = ?";
+		String sql = "Select IsGroup From conversation Where ConversationId = ?";
 		Vector<Object> questionMarks = new Vector<>();
 		questionMarks.add(conversationId);
 
@@ -242,7 +242,7 @@ public class DBWrapper {
 	}
 
 	public ResultSet getLogInUserIdListWithDateTime(String dateTime) throws SQLException {
-		String sql = "Select UserId From hooyah.userlog Where year(Datetime) = ? and LogType = 0;";
+		String sql = "Select UserId From userlog Where year(Datetime) = ? and LogType = 0;";
 		Vector<Object> questionMarks = new Vector<>();
 		questionMarks.add(dateTime);
 
@@ -250,15 +250,15 @@ public class DBWrapper {
 	}
 
 	public ResultSet getUserListInfo() throws SQLException {
-		String sql = "SELECT Username, CONCAT_ws(\" \",FirstName, LastName) as Hoten, Address, DoB, Gender, Email FROM hooyah.user;";
+		String sql = "SELECT Username, CONCAT_ws(' ',FirstName, LastName) as Hoten, Address, DoB, Gender, Email, CreationDate FROM User;";
 		Vector<Object> questionMarks = new Vector<>();
-//		questionMarks.add(dateTime);
 
+		System.out.println(dbConn.doPreparedQuery(sql, questionMarks));
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}
 
 	public ResultSet getUserLogListWithDetailInfo() throws SQLException {
-		String sql = "Select UserId, concat_ws(FirstName, LastName) as Hoten, Datetime From hooyah.userlog  Join hooyah.user On hooyah.userlog.UserId = hooyah.user.Username";
+		String sql = "Select UserId, concat_ws(' ', FirstName, LastName) as Hoten, Datetime From userlog  Join user On userlog.UserId = user.Username";
 		Vector<Object> questionMarks = new Vector<>();
 //		questionMarks.add(dateTime);
 
@@ -266,7 +266,7 @@ public class DBWrapper {
 	}
 
 	public ResultSet getConversationInfo() throws SQLException {
-		String sql = "SELECT * FROM hooyah.conversation;";
+		String sql = "SELECT * FROM conversation;";
 		Vector<Object> questionMarks = new Vector<>();
 //		questionMarks.add(dateTime);
 
@@ -274,10 +274,17 @@ public class DBWrapper {
 	}
 
 	public ResultSet getConversationMemberInfo(String conversationId) throws SQLException {
-		String sql = "Select ConversationId, MemberId, concat_ws(' ', FirstName, LastName) as Hoten, IsAdmin From hooyah.conversationmember Join hooyah.user On MemberId = Username\n" +
+		String sql = "Select ConversationId, MemberId, concat_ws(' ', FirstName, LastName) as Hoten, IsAdmin From conversationmember Join user On MemberId = Username\n" +
 				"Where ConversationId = ?";
 		Vector<Object> questionMarks = new Vector<>();
 		questionMarks.add(conversationId);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getSpamReportInfo() throws SQLException {
+		String sql = "SELECT * FROM spamreport;";
+		Vector<Object> questionMarks = new Vector<>();
 
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}

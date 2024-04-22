@@ -1,5 +1,5 @@
 package com.psvm.server.view;
-
+import com.psvm.server.controllers.DBWrapper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -8,7 +8,10 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.Serial;
+import java.sql.ResultSet;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -17,6 +20,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 class OptionPanelDSNguoiDung extends JPanel{
@@ -92,8 +98,11 @@ class DSNguoiDungTable extends JTable{
     // Cần dòng này để gọi dữ liệu từ database
     // Khi trả dữ về thì trả với dạng List<Object[]> (ArrayList)
     // Coi trong folder EXAMPLE, MySQLData
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(5);
     private final DefaultTableModel model;
     private final int columnCount;
+
+    private HashMap<String, Object> userList = new HashMap<>();
     int index = 1;
     DefaultTableModel getTableModel(){
         return model;
@@ -110,38 +119,36 @@ class DSNguoiDungTable extends JTable{
         this.setDefaultRenderer(Object.class, centerRenderer);
         // Enable sorting
         this.setAutoCreateRowSorter(true);
-
         //Example data
         // CHỖ NÀY ĐỌC KĨ VÀO CHO TAO
         // TẤT cả ngày ở mySQL phải là SQL date, khi gọi hàm ở database, nhớ chuyển nó về LocalDate để add vào data
-        List<Object[]> userAccountData = new ArrayList<>();
-        //LocalDate mới sort được, string ko sort đc
-        Object[] acc1 = {"haimen","Nguyễn Anh Khoa","123 Nguyen Thi Phuong, HA noi","21/10/2002","Nam","2men@gmail.com","21/02/2003","Online"};
-        Object[] acc2 = {"aaimen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","23/01/2003","Online"};
-        Object[] acc3 = {"aaiasdfasdfmen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","24/10/2003","Online"};
-        LocalDate date1 = LocalDate.of(2004,11, 5);
-        LocalDate date2 = LocalDate.of(2004,12, 3);
-        LocalDate date3 = LocalDate.of(2004,12, 4);
-
-        acc1[3] = date1;
-        acc2[3] = date2;
-        acc3[3] = date3;
-        acc1[6] = date1;
-        acc2[6] = date2;
-        acc3[6] = date3;
-        userAccountData.add(acc1);
-        userAccountData.add(acc2);
-        userAccountData.add(acc3);
-
-
-        //Add data to table
-        for (Object[] row: userAccountData){
-            Object[] newRow = new Object[row.length + 1];
-            newRow[0] = index++;
-            System.arraycopy(row,0,newRow,1,row.length);
-            this.model.addRow(newRow);
-        }
-
+//        List<Object[]> userAccountData = new ArrayList<>();
+//        //LocalDate mới sort được, string ko sort đc
+//        Object[] acc1 = {"haimen","Nguyễn Anh Khoa","123 Nguyen Thi Phuong, HA noi","21/10/2002","Nam","2men@gmail.com","21/02/2003","Online"};
+//        Object[] acc2 = {"aaimen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","23/01/2003","Online"};
+//        Object[] acc3 = {"aaiasdfasdfmen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","24/10/2003","Online"};
+//        LocalDate date1 = LocalDate.of(2004,11, 5);
+//        LocalDate date2 = LocalDate.of(2004,12, 3);
+//        LocalDate date3 = LocalDate.of(2004,12, 4);
+//
+//        acc1[3] = date1;
+//        acc2[3] = date2;
+//        acc3[3] = date3;
+//        acc1[6] = date1;
+//        acc2[6] = date2;
+//        acc3[6] = date3;
+//        userAccountData.add(acc1);
+//        userAccountData.add(acc2);
+//        userAccountData.add(acc3);
+//
+//        //Add data to table
+//        for (Object[] row: userAccountData){
+//            Object[] newRow = new Object[row.length + 1];
+//            newRow[0] = index++;
+//            System.arraycopy(row,0,newRow,1,row.length);
+//            this.model.addRow(newRow);
+//        }
+        startNextWorker();
 
         // Add a custom renderer and editor for the last column
         this.getColumnModel().getColumn(columnNames.length - 1).setCellRenderer(new ButtonRenderer());
@@ -169,6 +176,58 @@ class DSNguoiDungTable extends JTable{
         //add columnCount for later use
         this.columnCount = this.getColumnCount();
 
+    }
+
+    protected void startNextWorker() {
+        UserListThread userWorker = new UserListThread(new UserListThread.Observer() {
+            @Override
+            public void workerDidUpdate(HashMap<String, Object> userInfo) {
+                if (!userList.equals(userInfo)) {
+                    List<Object[]> userAccountData = new ArrayList<>();
+                    userInfo.forEach((userId, detail) -> {
+                        Object[] acc = new Object[8];
+                        acc[0] = userId; // Assign row
+                        HashMap<String, Object> castedDetail = (HashMap<String, Object>) detail;
+                        // Loop Through to get value
+                        castedDetail.forEach((field, value) -> {
+                            Object obj = value;
+                            if (obj instanceof LocalDate) {
+                                LocalDate dateValue = (LocalDate) obj;
+                                acc[getIndex(field)] = dateValue;
+                            }
+                            else if (obj instanceof String) {
+                                String stringValue = (String) obj;
+                                acc[getIndex(field)] = stringValue;
+                            } else {
+                                String gender = (Boolean) obj ? "Female" : "Male";
+                                acc[getIndex(field)] = gender;
+                            }
+                        });
+                        userAccountData.add(acc);
+                    });
+
+                    resetModelRow(); // Reset new Data
+                    for (Object[] row: userAccountData){
+                        Object[] newRow = new Object[row.length + 1];
+                        newRow[0] = index++;
+                        System.arraycopy(row,0,newRow,1,row.length);
+                        model.addRow(newRow);
+                    }
+                    userList = userInfo;
+                }
+            }
+        });
+        userWorker.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (userWorker.getState() == SwingWorker.StateValue.DONE) {
+                    userWorker.removePropertyChangeListener(this);
+                    startNextWorker();
+                }
+
+            }
+        });
+        service.schedule(userWorker, 1000, TimeUnit.MILLISECONDS);
     }
     void filterTable(String username, String name , String status){
         SwingUtilities.invokeLater(new Runnable() {
@@ -279,6 +338,11 @@ class DSNguoiDungTable extends JTable{
         addDialog.setVisible(true);
     }
 
+    void resetModelRow() {
+        while (model.getRowCount() > 0) {
+            model.removeRow(0);
+        }
+    }
 
     void showPopupMenu(JButton button) {
         JPopupMenu popupMenu = new JPopupMenu();
@@ -577,6 +641,30 @@ class DSNguoiDungTable extends JTable{
         }
         index = getRowCount() + 1;
     }
+
+    private int getIndex(String value) {
+        switch (value) {
+            case "fullName":
+                return 1;
+
+            case "addrs":
+                return 2;
+
+            case "dob":
+                return 3;
+
+            case "gender":
+                return 4;
+
+            case "email":
+                return 5;
+
+            case "creationDate":
+                return 6;
+            default:
+                return -1;
+        }
+    }
     // Custom renderer for the button column
     // Custom editor for the button column
     private class ButtonEditor extends DefaultCellEditor {
@@ -632,6 +720,79 @@ class DSNguoiDungTable extends JTable{
 //            }
             return this;
         }
+    }
+
+}
+
+class UserListThread extends SwingWorker<Void, HashMap<String, Object>> {
+    private final DBWrapper db;
+    private Observer observer;
+
+    public interface Observer {
+        public void workerDidUpdate(HashMap<String, Object> userInfo);
+    }
+
+    public UserListThread(Observer observer) {
+        // Connect DB
+        this.db = new DBWrapper();
+        this.observer = observer;
+    }
+
+    @Override
+    protected Void doInBackground() throws Exception {
+        // Get User List With given DateTime
+        ResultSet userNameQueryRes = db.getUserListInfo();
+
+        HashMap<String, Object> userListInfo = new HashMap<>();
+        while (userNameQueryRes.next()) {
+            // Get UserName First
+            String userId = (String) userNameQueryRes.getObject(1);
+            // Get Fullname
+            String fullName = (String) userNameQueryRes.getObject(2);
+            // Address
+            String addrs = (String) userNameQueryRes.getObject(3);
+            // Date of birth
+            String dateString =  userNameQueryRes.getString("DoB");
+            // Define the format of the input string
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // Parse the string into a LocalDate object
+            LocalDate dob = LocalDate.parse(dateString, formatter);
+
+            // Gender
+            String gender = !((Boolean) userNameQueryRes.getObject(5)) ? "Male" : "Female";
+
+            // Email
+            String email = (String) userNameQueryRes.getObject(6);
+
+            // Creation Date
+            dateString =  userNameQueryRes.getString("CreationDate");
+            // Parse the string into a LocalDate object
+            LocalDate creationDate = LocalDate.parse(dateString, formatter);
+
+            HashMap<String, Object> userDetailInfo = new HashMap<>();
+            userDetailInfo.put("fullName", fullName);
+            userDetailInfo.put("addrs", addrs);
+            userDetailInfo.put("dob", dob);
+            userDetailInfo.put("gender", gender);
+            userDetailInfo.put("email", email);
+            userDetailInfo.put("creationDate", creationDate);
+
+            userListInfo.put(userId, userDetailInfo);
+        }
+
+        String stopHere = "Stop";
+        publish(userListInfo);
+
+        userNameQueryRes.close();
+        return null;
+    }
+
+    @Override
+    protected void process(List<HashMap<String, Object>> chunks) {
+        super.process(chunks);
+
+        for (HashMap<String, Object> obj : chunks)
+            observer.workerDidUpdate(obj);
     }
 
 }

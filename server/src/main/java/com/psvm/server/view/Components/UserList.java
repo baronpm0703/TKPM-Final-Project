@@ -48,7 +48,7 @@ class UserListThread extends SwingWorker<Void, HashMap<String, Object>> {
                 // Define the format of the input string
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 // Parse the string into a LocalDate object
-            LocalDate localDate = LocalDate.parse(dateString, formatter);
+            LocalDate dob = LocalDate.parse(dateString, formatter);
 
             // Gender
             String gender = (Boolean) userNameQueryRes.getObject(5) == false ? "Male" : "Female";
@@ -56,20 +56,75 @@ class UserListThread extends SwingWorker<Void, HashMap<String, Object>> {
             // Email
             String email = (String) userNameQueryRes.getObject(6);
 
+            // Creation Date
+            dateString =  userNameQueryRes.getString("CreationDate");
+            // Parse the string into a LocalDate object
+            LocalDate creationDate = LocalDate.parse(dateString, formatter);
+
             HashMap<String, Object> userDetailInfo = new HashMap<>();
             userDetailInfo.put("fullName", fullName);
             userDetailInfo.put("addrs", addrs);
-            userDetailInfo.put("dob", localDate);
-            userDetailInfo.put("gendder", gender);
+            userDetailInfo.put("dob", dob);
+            userDetailInfo.put("gender", gender);
             userDetailInfo.put("email", email);
+            userDetailInfo.put("creationDate", creationDate);
 
             userListInfo.put(userId, userDetailInfo);
         }
+        Object[] acc = new Object[8];
+        userListInfo.forEach((userId, detail) -> {
+            acc[0] = userId; // Assign row
+//            System.out.println(userId + ": ");
+            HashMap<String, Object> castedDetail = (HashMap<String, Object>) detail;
+            // Loop Through to get value
+            castedDetail.forEach((field, value) -> {
+//                System.out.print(getIndex(field));
+                Object obj = value;
+                if (obj instanceof LocalDate) {
+                    LocalDate dateValue = (LocalDate) obj;
+                    acc[getIndex(field)] = dateValue;
+//                    System.out.print(field + ": " + dateValue + " ");
+                }
+                else if (obj instanceof String) {
+                    String stringValue = (String) obj;
+                    acc[getIndex(field)] = stringValue;
+//                    System.out.print(field + ": " + stringValue + " ");
+                } else {
+                    String gender = (Boolean) obj ? "Female" : "Male";
+                    acc[getIndex(field)] = gender;
+                }
+            });
+//            System.out.println();
+        });
 
 
         publish(userListInfo);
 
         return null;
+    }
+
+    private int getIndex(String value) {
+        switch (value) {
+            case "fullName":
+                return 1;
+
+            case "addrs":
+                return 2;
+
+            case "dob":
+                return 3;
+
+            case "gender":
+                return 4;
+
+            case "email":
+                return 5;
+
+            case "creationDate":
+                return 6;
+            default:
+                return -1;
+        }
     }
 
     @Override
@@ -84,7 +139,6 @@ class UserListThread extends SwingWorker<Void, HashMap<String, Object>> {
 }
 
 public class UserList extends JFrame {
-
     ScheduledExecutorService service = Executors.newScheduledThreadPool(10);
 
     JPanel jPanel;

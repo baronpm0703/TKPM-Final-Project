@@ -346,20 +346,20 @@ public class DBInteraction {
 	public ResultSet doPreparedQuery(String preparedSQL, Vector<Object> questionMarks) throws SQLException {
 		PreparedStatement preparedStatement = dbConn.prepareStatement(preparedSQL);
 
-		for (int i = 1; i <= questionMarks.size(); i++) {
-			Object value = questionMarks.get(i - 1);
+		if (!questionMarks.isEmpty()){
+			for (int i = 1; i <= questionMarks.size(); i++) {
+				Object value = questionMarks.get(i - 1);
 
-			if (value.getClass() == String.class)
-				preparedStatement.setString(i, value.toString());
-			else if (value.getClass() == Integer.class)
-				preparedStatement.setInt(i, (int)value);
-			else if (value.getClass() == Boolean.class)
-				preparedStatement.setBoolean(i, (boolean) value);
-			else
-				preparedStatement.setTimestamp(i, new Timestamp((long) value));
+				if (value.getClass() == String.class)
+					preparedStatement.setString(i, value.toString());
+				else if (value.getClass() == Integer.class)
+					preparedStatement.setInt(i, (int)value);
+				else if (value.getClass() == Boolean.class)
+					preparedStatement.setBoolean(i, (boolean) value);
+				else
+					preparedStatement.setTimestamp(i, new Timestamp((long) value));
+			}
 		}
-
-
 		ResultSet resultSet = preparedStatement.executeQuery();
 		return resultSet;
 	}

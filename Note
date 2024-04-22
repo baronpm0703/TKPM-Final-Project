@@ -9,3 +9,7 @@ Chọn năm -> Lọc ra các userID có logType = 0 và Datetime có năm = sele
 Quay lại bảng Conversation Mem với mọi suitableConId lọc ra những thằng khác UserID đang chọn
  Điều Kiện: nếu số lượng out ra = 1 => + 1 chat với người
  số lượng >2 => + 1 chat với nhóm
+
+
+
+ Note: Yêu cầu 7??? bạn của bạn là gì
