@@ -9,8 +9,8 @@ import java.util.Map;
 
 public class FriendListRequest extends SocketTalk {
 	public FriendListRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String currentUser) {
-		super(socket, socketIn, socketOut, SocketTalk.TALK_CODE_FRIENDLIST, Map.of(
-				"currentUsr", currentUser
+		super(socket, socketIn, socketOut, SocketTalk.TALK_CODE_FRIEND_LIST, Map.of(
+				"username", currentUser
 		));
 	}
 }

@@ -11,9 +11,9 @@ public enum Path {
 
 	Path() {
 		this.srcPath = "client/src/";
-		this.modelPath = "client/src/main/java/com/psvm/server/models/";
-		this.controllerPath = "client/src/main/java/com/psvm/server/controllers/";
-		this.viewPath = "client/src/main/java/com/psvm/server/views/";
+		this.modelPath = "client/src/main/java/com/psvm/client/models/";
+		this.controllerPath = "client/src/main/java/com/psvm/client/controllers/";
+		this.viewPath = "client/src/main/java/com/psvm/client/views/";
 		this.resourcePath = "client/src/main/resources/";
 	}
 
