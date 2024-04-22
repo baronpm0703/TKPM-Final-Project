@@ -102,6 +102,10 @@ create table hooyah.SpamReport (
     foreign key (ReportedId) references User(Username)
 );
 
+create table hooyah.Emptiness (
+	placeholder int
+);
+
 DELIMITER //
 create trigger hooyah.TRG_Request_Response
 after update on FriendRequest
@@ -142,6 +146,7 @@ insert into hooyah.ConversationMember values ('CV000002', 'adhd', true);
 
 insert into hooyah.Friend (UserId, FriendId)
 values ('Highman', 'Baobeo');
+insert into hooyah.Friend (UserId, FriendId) values ('Highman', 'adhd');
 
 insert into hooyah.FriendRequest (SenderId, TargetId, Datetime) values ('Kizark', 'Highman', current_timestamp());
 update hooyah.FriendRequest
@@ -202,3 +207,14 @@ values
 	(6, 'CV000002', 'Kizark'),
 	(6, 'CV000002', 'adhd'),
 	(6, 'CV000002', 'Baobeo');
+insert into hooyah.userlog (UserId, Datetime, LogType, LogDetail)
+values 
+	('Kizark', '2022-11-12 06:30:01', 0, 'Login')
+    ('Baobeo', '2023-11-12 06:30:01', 0, 'Login'),
+    ('adhd', '2022-11-12 06:30:01', 1, 'Logout');
+    ('Highd', '2023-11-12 06:30:01', 1, 'Logout'),
+    
+insert into hooyah.spamreport (ReporterId, SenderId, Datetime) 
+values 
+	('adhd', 'Highman', '2022-11-11 06:30:01'),
+	('Kizark', 'Baobeo', '2022-11-12 06:30:01')

@@ -1,11 +1,11 @@
 -- Unseen online messages
 WITH ranked_data AS (
 	SELECT cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId, cvmes.Datetime, 
-    cvmes.Content, cv.IsGroup,
+		cvmes.Content, cv.IsGroup,
         ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn
 	FROM Conversation cv
 	JOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId
-    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != 'Highman'
+    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId LIKE '%Baobeo%' AND cvmem2.MemberId != 'Highman'
 	JOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId
     JOIN conversationmessage cvmes2 ON cvmes2.ConversationId = cvmem.ConversationId AND cvmes2.Content LIKE '%kh%'
 	WHERE cvmem.MemberId='Highman'
@@ -30,7 +30,7 @@ WITH ranked_data AS (
         ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn
 	FROM Conversation cv
 	JOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId
-    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != 'Highman'
+    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId LIKE '%Baobeo%' AND cvmem2.MemberId != 'Highman'
 	JOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId
     JOIN conversationmessage cvmes2 ON cvmes2.ConversationId = cvmem.ConversationId AND cvmes2.Content LIKE '%kh%'
 	WHERE cvmem.MemberId='Highman'
@@ -55,7 +55,7 @@ WITH ranked_data AS (
         ROW_NUMBER() OVER (PARTITION BY cv.ConversationId ORDER BY cvmes.Datetime DESC) AS rn
 	FROM Conversation cv
 	JOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId
-    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId != 'Highman'
+    JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId LIKE '%Baobeo%' AND cvmem2.MemberId != 'Highman'
 	JOIN ConversationMessage cvmes ON cvmes.ConversationId = cvmem.ConversationId
     JOIN conversationmessage cvmes2 ON cvmes2.ConversationId = cvmem.ConversationId AND cvmes2.Content LIKE '%kh%'
 	WHERE cvmem.MemberId='Highman'
@@ -67,4 +67,15 @@ WHERE rn = 1 AND EXISTS (
 	SELECT *
     FROM MessageSeen ms
     WHERE ms.MessageId = rd.MessageId AND ms.ConversationId = rd.ConversationId AND ms.SeenId = 'Highman'
+);
+
+-- Other friends with no message
+SELECT f.UserId, f.FriendId
+FROM Friend f
+WHERE (f.UserId = 'Highman' AND f.FriendId LIKE '%kizark%' OR f.UserId LIKE '%kizark%' AND f.FriendId = 'Highman') AND NOT EXISTS (
+	SELECT *
+    FROM Conversation cv
+    JOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId
+    JOIN ConversationMember cvmem2 ON cvmem.ConversationId = cvmem2.ConversationId
+    WHERE cvmem.MemberId = f.UserId AND cvmem2.MemberId = f.FriendId AND cvmem.MemberId != cvmem2.MemberId AND cv.IsGroup = false
 );

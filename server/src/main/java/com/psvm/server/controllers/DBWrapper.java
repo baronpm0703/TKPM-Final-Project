@@ -220,6 +220,67 @@ public class DBWrapper {
 
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}
+
+	public ResultSet getSuitableConversationId(String memId, String dateTime) throws SQLException {
+		String sql = "Select ConversationId From hooyah.conversationmember cMsg Where cMsg.MemberId = ? and cMsg.ConversationId = (\n" +
+				"\tSelect cM.ConversationId From hooyah.conversationmessage cM Where year( cM.Datetime ) = ? and cM.ConversationId = cMsg.ConversationId \n" +
+				"\t\tORDER BY Datetime DESC LIMIT 1\n" +
+				")";
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(memId);
+		questionMarks.add(dateTime);
+
+        return dbConn.doPreparedQuery(sql, questionMarks);
+    }
+
+	public ResultSet getInfoConversationUserParticipateIn(String conversationId) throws SQLException {
+		String sql = "Select IsGroup From hooyah.conversation Where ConversationId = ?";
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(conversationId);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getLogInUserIdListWithDateTime(String dateTime) throws SQLException {
+		String sql = "Select UserId From hooyah.userlog Where year(Datetime) = ? and LogType = 0;";
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(dateTime);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getUserListInfo() throws SQLException {
+		String sql = "SELECT Username, CONCAT_ws(\" \",FirstName, LastName) as Hoten, Address, DoB, Gender, Email FROM hooyah.user;";
+		Vector<Object> questionMarks = new Vector<>();
+//		questionMarks.add(dateTime);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getUserLogListWithDetailInfo() throws SQLException {
+		String sql = "Select UserId, concat_ws(FirstName, LastName) as Hoten, Datetime From hooyah.userlog  Join hooyah.user On hooyah.userlog.UserId = hooyah.user.Username";
+		Vector<Object> questionMarks = new Vector<>();
+//		questionMarks.add(dateTime);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getConversationInfo() throws SQLException {
+		String sql = "SELECT * FROM hooyah.conversation;";
+		Vector<Object> questionMarks = new Vector<>();
+//		questionMarks.add(dateTime);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getConversationMemberInfo(String conversationId) throws SQLException {
+		String sql = "Select ConversationId, MemberId, concat_ws(' ', FirstName, LastName) as Hoten, IsAdmin From hooyah.conversationmember Join hooyah.user On MemberId = Username\n" +
+				"Where ConversationId = ?";
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(conversationId);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
 	public void close() {
 		dbConn.close();
 	}
