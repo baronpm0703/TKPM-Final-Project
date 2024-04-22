@@ -1,6 +1,6 @@
 package com.psvm.server.view;
 
-import com.psvm.server.view.RegisterChartControl.UserRequest;
+
 import com.psvm.shared.socket.SocketResponse;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -82,9 +82,8 @@ public class RegistrationChartExample extends JFrame {
                         .merge(arrTime[1], 1, Integer::sum);
             }
         }
-
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-
+        System.out.println(userRegData);
 
         userRegData.forEach((year, monthData) -> {
             monthData.forEach((month, count) -> {

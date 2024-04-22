@@ -7,7 +7,7 @@ import java.awt.event.MouseEvent;
 import java.time.LocalDateTime;
 
 public class ListFriendInSearchDialog extends JPanel {
-    ListFriendInSearchDialog(){
+    public ListFriendInSearchDialog(){
         this.setBackground(Color.white);
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         //friendList.add(friendSearchAndAdd);

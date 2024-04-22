@@ -1,5 +1,7 @@
 package com.psvm.client.views.components.friend;
 
+import com.psvm.client.views.ListFriendInSearchDialog;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
