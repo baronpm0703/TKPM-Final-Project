@@ -1,27 +1,12 @@
 package com.psvm.client.views;
 
-import com.psvm.client.views.components.account.LoginBox;
-import com.psvm.client.views.components.account.RegisterBox;
-import com.psvm.client.views.components.friend.FriendListBar;
-
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
-import java.util.Map;
-import java.util.Vector;
 
 public class MainClient {
     private final JFrame jfrm;
     MainClient(){
-        // Spawn login box
-        LoginBox loginBox = new LoginBox();
-        int loginResult = loginBox.display();
-
-        if (loginResult != 0) {
-            jfrm = null;
-            return;
-        }
-
         jfrm = new JFrame("hooYah");
         jfrm.setLayout(new BorderLayout());
         jfrm.setLocationRelativeTo(null);
@@ -43,7 +28,7 @@ public class MainClient {
 
         //Chat Section
         ChatSection chatSection = new ChatSection();
-        jfrm.add(chatSection,BorderLayout.EAST);
+        jfrm.add(chatSection,BorderLayout.CENTER);
         //Set visible
         jfrm.setVisible(true);
     }
@@ -62,16 +47,11 @@ public class MainClient {
             public void run() {
                 MainClient mainFrame = new MainClient();
 
-                try {
-                    int width = mainFrame.getFrameWidth();
-                    int height = mainFrame.getFrameHeight();
+                int width = mainFrame.getFrameWidth();
+                int height = mainFrame.getFrameHeight();
 
-                    System.out.println("Current Frame Width: " + width);
-                    System.out.println("Current Frame Height: " + height);
-                }
-                catch (NullPointerException e) {
-                    System.out.println("Program exited");
-                }
+                System.out.println("Current Frame Width: " + width);
+                System.out.println("Current Frame Height: " + height);
             }
         });
     }

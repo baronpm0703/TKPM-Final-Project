@@ -26,27 +26,25 @@ class FriendListBarThread extends SwingWorker<Void, Map<String, Object>> {
     private Socket clientSocket;
     ObjectInputStream socketIn;
     ObjectOutputStream socketOut;
-    private String friendSearch;
-    private String chatSearch;
+    private String searchContent;
     private Observer observer;
 
     public interface Observer {
         public void workerDidUpdate(Vector<Map<String, Object>> message);
     }
 
-    public FriendListBarThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String friendSearch, String chatSearch, Observer observer) {
+    public FriendListBarThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String searchContent, Observer observer) {
         this.clientSocket = clientSocket;
         this.socketIn = socketIn;
         this.socketOut = socketOut;
-        this.friendSearch = friendSearch;
-        this.chatSearch = chatSearch;
+        this.searchContent = searchContent;
 
         this.observer = observer;
     }
 
     @Override
     protected Void doInBackground() throws Exception {
-        FriendMessageListRequest request = new FriendMessageListRequest(clientSocket, socketIn, socketOut, friendSearch, chatSearch);
+        FriendMessageListRequest request = new FriendMessageListRequest(clientSocket, socketIn, socketOut, searchContent);
         SocketResponse response = request.talk();
 
         for (Map<String, Object> datum: response.getData()) {
@@ -82,7 +80,6 @@ public class FriendListBar extends JPanel{
     private ListFriendOfUser listFriendOfUser;
     private FriendSearchOptions friendSearchOptions;
     private SearchFriendField searchFriendField;
-    private String previousFriendSearch = "";
     private String previousSearchContent = "";
 
     //later for chat of selected Friend
@@ -156,17 +153,13 @@ public class FriendListBar extends JPanel{
         }
 
         String finalChatSearch = chatSearch;
-        String finalFriendSearch = friendSearch;
-        FriendListBarThread worker = new FriendListBarThread(socket, socketIn, socketOut, friendSearch, chatSearch, new FriendListBarThread.Observer() {
+        FriendListBarThread worker = new FriendListBarThread(socket, socketIn, socketOut, chatSearch, new FriendListBarThread.Observer() {
             @Override
             public void workerDidUpdate(Vector<Map<String, Object>> friends) {
                 SwingUtilities.invokeLater(() -> {
-                    if (!finalChatSearch.equals(previousSearchContent) || !finalFriendSearch.equals(previousFriendSearch))
+                    if (!finalChatSearch.equals(previousSearchContent))
                         listFriendOfUser.resetList();
-
                     listFriendOfUser.setData(friends);
-
-                    previousFriendSearch = finalFriendSearch;
                     previousSearchContent = finalChatSearch;
                 });
             }

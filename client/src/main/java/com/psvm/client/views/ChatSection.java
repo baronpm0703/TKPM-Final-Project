@@ -1,6 +1,7 @@
 package com.psvm.client.views;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class ChatSection extends JPanel {
@@ -13,7 +14,13 @@ public class ChatSection extends JPanel {
 
         //ChatScreen
         ChatBody chatBody = new ChatBody();
+        JScrollPane chatBodyScroll = new JScrollPane();
+        chatBodyScroll.setBorder(new EmptyBorder(0,0,0,0));
+        chatBodyScroll.setViewportView(chatBody);
+        this.add(chatBodyScroll, BorderLayout.CENTER);
 
-        this.add(chatBody, BorderLayout.CENTER);
+        //Detail
+        DetailOfChat detailOfChat = new DetailOfChat();
+        this.add(detailOfChat,BorderLayout.EAST);
     }
 }

@@ -1,16 +1,11 @@
 package com.psvm.client.views.components.friend;
 
-import com.psvm.client.settings.LocalData;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.Array;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,24 +16,19 @@ public class ListFriendOfUser extends JPanel {
     private Vector<Map<String, Object>> totalUnseenOnlineMessages = new Vector<>();
     private Vector<Map<String, Object>> totalUnseenOfflineMessages = new Vector<>();
     private Vector<Map<String, Object>> totalSeenMessages = new Vector<>();
-    private Vector<Map<String, Object>> totalNoMessages = new Vector<>();
 
     // Separate JPanels to display these messages
     private int unseenOnlineMessagesIndex = 0;
     private int unseenOfflineMessagesIndex = 0;
     private int seenMessagesIndex = 0;
-    private int noMessagesIndex = 0;
     private ArrayList<String> messageIndexer = new ArrayList<>();
 
-    private Box vertical = Box.createVerticalBox();
     private JPanel currentSelectedFriend;
     private String currentSelectedFriendId;
     ListFriendOfUser(){
         // Initialize this GUI component
         setBackground(new Color(255,255,255,255));
-        setLayout(new BorderLayout());
-        add(vertical, BorderLayout.PAGE_START);
-//        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
     private void addHoverEffect(UserEachFriend friend) {
         friend.addMouseListener(new MouseAdapter() {
@@ -68,8 +58,7 @@ public class ListFriendOfUser extends JPanel {
 
     // Move message component at childIndex to 3 message type areas, then return the new index of the component
     int moveMessage(int childIndex, int newMessageType) {
-        Box thisPanel = vertical;
-
+        System.out.println(childIndex + " " + newMessageType);
         UserEachFriend conversation = (UserEachFriend) getComponent(childIndex);
 
         remove(conversation);
@@ -80,7 +69,7 @@ public class ListFriendOfUser extends JPanel {
                 messageIndexer.remove(conversationId);
                 messageIndexer.add(0, conversationId);
 
-                thisPanel.add(conversation, 0);
+                add(conversation, 0);
                 return 0;
             }
             case 2: {
@@ -91,7 +80,7 @@ public class ListFriendOfUser extends JPanel {
                     messageIndexer.add(unseenOnlineMessagesIndex, conversationId);
                 else messageIndexer.add(conversationId);
 
-                thisPanel.add(conversation, unseenOnlineMessagesIndex);
+                add(conversation, unseenOnlineMessagesIndex);
                 return unseenOnlineMessagesIndex;
             }
             case 3: {
@@ -102,7 +91,7 @@ public class ListFriendOfUser extends JPanel {
                     messageIndexer.add(unseenOnlineMessagesIndex + unseenOfflineMessagesIndex, conversationId);
                 else messageIndexer.add(conversationId);
 
-                thisPanel.add(conversation, unseenOnlineMessagesIndex + unseenOfflineMessagesIndex);
+                add(conversation, unseenOnlineMessagesIndex + unseenOfflineMessagesIndex);
                 return unseenOnlineMessagesIndex + unseenOfflineMessagesIndex;
             }
         }
@@ -111,15 +100,13 @@ public class ListFriendOfUser extends JPanel {
     }
 
     public void resetList() {
-        Box thisPanel = vertical;
+        JPanel thisPanel = this;
         totalUnseenOnlineMessages.clear();
         totalUnseenOfflineMessages.clear();
         totalSeenMessages.clear();
-        totalNoMessages.clear();
         unseenOnlineMessagesIndex = 0;
         unseenOfflineMessagesIndex = 0;
         seenMessagesIndex = 0;
-        noMessagesIndex = 0;
         messageIndexer.clear();
         SwingUtilities.invokeLater(() -> {
             thisPanel.removeAll();
@@ -136,10 +123,8 @@ public class ListFriendOfUser extends JPanel {
     }
 
     public void setData(Vector<Map<String, Object>> friends) {
-        Box thisPanel = vertical;
+        JPanel thisPanel = this;
         SwingUtilities.invokeLater(() -> {
-            thisPanel.add(Box.createVerticalGlue());
-
             /* Add unseen messages while online */
             Vector<Map<String, Object>> unseenOnlineMessages = (Vector<Map<String, Object>>) friends.get(0).get("data");
             // If unseenOnlineMessages is empty after this line then the data is the same
@@ -218,25 +203,7 @@ public class ListFriendOfUser extends JPanel {
                     manuallySelectMessage(currentSelectedFriendId);
                 seenMessagesIndex++;
             }
-
-            /* Add other friends with no messages */
-            Vector<Map<String, Object>> noMessages = (Vector<Map<String, Object>>) friends.get(3).get("data");
-            // If seenMessages is empty after this line then the data is the same
-            noMessages.removeAll(totalNoMessages);
-            totalNoMessages.addAll(noMessages);
-            for (Map<String, Object> friend: noMessages) {
-                String convoName = (friend.get("UserId").toString().equals(LocalData.getCurrentUsername())) ? friend.get("FriendId").toString() : friend.get("UserId").toString();
-                UserEachFriend userEachFriend = new UserEachFriend("fdsafsd", "af", convoName, "", LocalDateTime.of(LocalDate.now(), LocalTime.now()),"");
-                thisPanel.add(userEachFriend, unseenOnlineMessagesIndex + unseenOfflineMessagesIndex + seenMessagesIndex + noMessagesIndex);
-//                messageIndexer.add(unseenOnlineMessagesIndex + unseenOfflineMessagesIndex + seenMessagesIndex + noMessagesIndex, friend.get("ConversationId").toString());
-                addHoverEffect(userEachFriend);
-
-//                // Manually set the selected effect
-//                if (currentSelectedFriendId != null && currentSelectedFriendId.equals(friend.get("ConversationId").toString()))
-//                    manuallySelectMessage(currentSelectedFriendId);
-//                seenMessagesIndex++;
-            }
-
+            thisPanel.add(Box.createVerticalGlue());
             thisPanel.revalidate();
         });
     }
