@@ -3,6 +3,7 @@ package com.psvm.server.models;
 import com.psvm.server.models.objects.DBObject;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -309,6 +310,8 @@ public class DBInteraction {
 				preparedStatement.setInt(i, (int)value);
 			else if (value.getClass() == Boolean.class)
 				preparedStatement.setBoolean(i, (boolean) value);
+			else if (value.getClass() == LocalDateTime.class)
+				preparedStatement.setTimestamp(i, Timestamp.valueOf((LocalDateTime) value));
 			else
 				preparedStatement.setTimestamp(i, new Timestamp((long) value));
 		}
@@ -355,6 +358,7 @@ public class DBInteraction {
 			else
 				preparedStatement.setTimestamp(i, new Timestamp((long) value));
 		}
+
 
 		ResultSet resultSet = preparedStatement.executeQuery();
 		return resultSet;

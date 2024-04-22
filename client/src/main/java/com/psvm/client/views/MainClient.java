@@ -1,15 +1,25 @@
 package com.psvm.client.views;
 
+import com.psvm.client.views.components.account.RegisterBox;
+import com.psvm.client.views.components.friend.FriendListBar;
+
 import javax.swing.*;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.util.Map;
+import java.util.Vector;
 
 public class MainClient {
     private final JFrame jfrm;
     MainClient(){
+        RegisterBox registerBox = new RegisterBox();
+        registerBox.display();
+
         jfrm = new JFrame("hooYah");
         jfrm.setLayout(new BorderLayout());
         jfrm.setLocationRelativeTo(null);
         jfrm.getContentPane().setBackground(Color.decode("#FDFDFD"));
+        jfrm.getRootPane().setBorder(new MatteBorder(1,1,1,1,Color.decode("#CDD5DE")));
         //favicon
         ImageIcon favicon = new ImageIcon("client/src/main/resources/icon/chat-app-logo-2.png");
 
@@ -21,10 +31,12 @@ public class MainClient {
         jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //FriendList
-        FriendList friendList = new FriendList();
-        jfrm.add(friendList,BorderLayout.WEST);
+        FriendListBar friendListBar = new FriendListBar();
+        jfrm.add(friendListBar,BorderLayout.WEST);
 
-
+        //Chat Section
+        ChatSection chatSection = new ChatSection();
+        jfrm.add(chatSection,BorderLayout.EAST);
         //Set visible
         jfrm.setVisible(true);
     }
