@@ -78,6 +78,7 @@ public class RegisterBox extends Component {
 	ObjectInputStream socketIn;
 	ObjectOutputStream socketOut;
 
+	Component parent;
 	JTextField usernameInput;
 	JTextField fNameInput;
 	JTextField lNameInput;
@@ -89,13 +90,17 @@ public class RegisterBox extends Component {
 	JRadioButton femaleButton;
 	JTextField emailInput;
 
-	public RegisterBox() {}
+	public RegisterBox(Component parent) {
+		this.parent = parent;
+	}
 
 	public int display() {
 		int result = 0;
 
 		while (result != -1 && result != 2) {
 			result = JOptionPane.showConfirmDialog(null, getPanel(), "Tạo tài khoản", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+			if (result == -1 || result == 2) break;
 
 			// Get username
 			String username = usernameInput.getText();
@@ -165,7 +170,6 @@ public class RegisterBox extends Component {
 				int responseCode = registerBoxThread.getResponseCode();
 
 				if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS) {
-					LocalData.setCurrentUsername(username);
 					break;
 				}
 				else {

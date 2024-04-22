@@ -1,5 +1,6 @@
 package com.psvm.client.views;
 
+import com.psvm.client.views.components.account.LoginBox;
 import com.psvm.client.views.components.account.RegisterBox;
 import com.psvm.client.views.components.friend.FriendListBar;
 
@@ -12,8 +13,14 @@ import java.util.Vector;
 public class MainClient {
     private final JFrame jfrm;
     MainClient(){
-        RegisterBox registerBox = new RegisterBox();
-        registerBox.display();
+        // Spawn login box
+        LoginBox loginBox = new LoginBox();
+        int loginResult = loginBox.display();
+
+        if (loginResult != 0) {
+            jfrm = null;
+            return;
+        }
 
         jfrm = new JFrame("hooYah");
         jfrm.setLayout(new BorderLayout());
@@ -55,11 +62,16 @@ public class MainClient {
             public void run() {
                 MainClient mainFrame = new MainClient();
 
-                int width = mainFrame.getFrameWidth();
-                int height = mainFrame.getFrameHeight();
+                try {
+                    int width = mainFrame.getFrameWidth();
+                    int height = mainFrame.getFrameHeight();
 
-                System.out.println("Current Frame Width: " + width);
-                System.out.println("Current Frame Height: " + height);
+                    System.out.println("Current Frame Width: " + width);
+                    System.out.println("Current Frame Height: " + height);
+                }
+                catch (NullPointerException e) {
+                    System.out.println("Program exited");
+                }
             }
         });
     }

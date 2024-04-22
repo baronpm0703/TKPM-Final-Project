@@ -11,6 +11,7 @@ import java.util.Map;
 
 public class SocketTalk {
 	public final static String TALK_CODE_CREATE_USER = "1";
+	public final static String TALK_CODE_GET_USER = "3";
 	public final static String TALK_CODE_FRIEND_MESSAGE_LIST = "4f";
 	public final static String TALK_CODE_PROCESS_FRIEND_REQUEST = "4c";
 	public final static String TALK_CODE_FRIEND_REMOVE = "4d";
