@@ -1,7 +1,6 @@
 package com.psvm.client.views.components.account;
 
-import com.psvm.client.controllers.CreateUser;
-import com.psvm.client.controllers.GetUser;
+import com.psvm.client.controllers.GetUserRequest;
 import com.psvm.client.settings.LocalData;
 import com.psvm.shared.socket.SocketResponse;
 
@@ -15,7 +14,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Vector;
 
@@ -42,7 +40,7 @@ class LoginBoxThread extends Thread {
 	public void run() {
 		super.run();
 
-		GetUser request = new GetUser(clientSocket, socketIn, socketOut, username, hashedPassword);
+		GetUserRequest request = new GetUserRequest(clientSocket, socketIn, socketOut, username, hashedPassword);
 		SocketResponse response = request.talk();
 
 		responseCode = response.getResponseCode();

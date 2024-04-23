@@ -38,6 +38,7 @@ public class ListFriendOfUser extends JPanel {
         setBackground(new Color(255,255,255,255));
         setLayout(new BorderLayout());
         add(vertical, BorderLayout.PAGE_START);
+//        vertical.add(Box.createVerticalGlue());
 //        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
     private void addHoverEffect(UserEachFriend friend) {
@@ -57,11 +58,14 @@ public class ListFriendOfUser extends JPanel {
                 if (currentSelectedFriend != null){
                     currentSelectedFriend.setBackground(Color.WHITE);
                 }
-                // do sth
 
                 friend.setBackground(Color.decode("#ADD8E6"));
                 currentSelectedFriend = friend;
                 currentSelectedFriendId = friend.getConversationId();
+
+                System.out.println(currentSelectedFriendId);
+
+                LocalData.setSelectedConversation(currentSelectedFriendId);
             }
         });
     }
@@ -69,8 +73,7 @@ public class ListFriendOfUser extends JPanel {
     // Move message component at childIndex to 3 message type areas, then return the new index of the component
     int moveMessage(int childIndex, int newMessageType) {
         Box thisPanel = vertical;
-
-        UserEachFriend conversation = (UserEachFriend) getComponent(childIndex);
+        UserEachFriend conversation = (UserEachFriend) thisPanel.getComponent(childIndex);
 
         remove(conversation);
 
@@ -138,8 +141,6 @@ public class ListFriendOfUser extends JPanel {
     public void setData(Vector<Map<String, Object>> friends) {
         Box thisPanel = vertical;
         SwingUtilities.invokeLater(() -> {
-            thisPanel.add(Box.createVerticalGlue());
-
             /* Add unseen messages while online */
             Vector<Map<String, Object>> unseenOnlineMessages = (Vector<Map<String, Object>>) friends.get(0).get("data");
             // If unseenOnlineMessages is empty after this line then the data is the same

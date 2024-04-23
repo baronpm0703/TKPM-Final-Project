@@ -1,5 +1,8 @@
 package com.psvm.client.views;
 
+import com.psvm.client.controllers.FriendRequestSendRequest;
+import com.psvm.shared.socket.SocketResponse;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,24 +13,43 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class FriendInSearchDialog extends JPanel {
+    final String SOCKET_HOST = "localhost";
+    final int SOCKET_PORT = 5555;
+    Socket sendFriendRequestSocket;
+    ObjectInputStream sendFriendRequestSocketIn;
+    ObjectOutputStream sendFriendRequestSocketOut;
+
     //chỗ này cần phải có 1 cái xử lí để lấy danh sách pending add friend request của thằng user mà muốn add để có thể check. (Khi tắt cái dialog đi là xác nhận
-    private boolean addStatus = false;
+    private boolean addStatus;
     private String avatar;
     private String username;
     private String name;
 
-    FriendInSearchDialog(String avatar, String username, String name){
+    FriendInSearchDialog(String avatar, String username, String name, boolean addStatus){
         this.avatar = avatar;
         this.username = username;
         this.name = name;
+        this.addStatus = addStatus;
         this.setPreferredSize(new Dimension(200,50));
         this.setBorder(new EmptyBorder(0,0,0,0));
         this.setBackground(Color.WHITE);
         initialize();
+
+        /* Multithreading + Socket */
+        try {
+            sendFriendRequestSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            sendFriendRequestSocketIn = new ObjectInputStream(sendFriendRequestSocket.getInputStream());
+            sendFriendRequestSocketOut = new ObjectOutputStream(sendFriendRequestSocket.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     String getUsername(){
         return username;
@@ -89,13 +111,20 @@ public class FriendInSearchDialog extends JPanel {
         toggleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Implement sau khi có cách xử lí (Huỷ lời mời kết bạn, nếu có thể làm kịp sẽ làm sau)
-//                if (toggleButton.getIcon().toString().equals(new ImageIcon(addFriendIcon).toString())) {
-//                    toggleButton.setIcon(new ImageIcon(doneIcon));
-//                } else {
-//                    toggleButton.setIcon(new ImageIcon(addFriendIcon));
-//                }
-                toggleButton.setIcon(new ImageIcon(scaledDoneImage));
+                // Thread to create friend request
+                FriendRequestSendRequest friendRequestSendRequest = new FriendRequestSendRequest(sendFriendRequestSocket, sendFriendRequestSocketIn, sendFriendRequestSocketOut, username);
+                SocketResponse response = friendRequestSendRequest.talk();
+
+                int responseCode = response.getResponseCode();
+                if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                    // Implement sau khi có cách xử lí (Huỷ lời mời kết bạn, nếu có thể làm kịp sẽ làm sau)
+    //                if (toggleButton.getIcon().toString().equals(new ImageIcon(addFriendIcon).toString())) {
+    //                    toggleButton.setIcon(new ImageIcon(doneIcon));
+    //                } else {
+    //                    toggleButton.setIcon(new ImageIcon(addFriendIcon));
+    //                }
+                    toggleButton.setIcon(new ImageIcon(scaledDoneImage));
+                }
             }
         });
         return toggleButton;

@@ -3,12 +3,15 @@ package com.psvm.server.controllers;
 import com.psvm.server.models.DBConnection;
 import com.psvm.server.models.DBInteraction;
 
+import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Vector;
 
 public class DBWrapper {
@@ -47,6 +50,30 @@ public class DBWrapper {
 		questionMarks.add(hashedPassword);
 
 		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet searchUser(String currentUsername, String otherUsername) throws SQLException {
+		String sql = "SELECT u.Username, fq.TargetId\n" +
+				"FROM User u\n" +
+				"LEFT JOIN FriendRequest fq ON fq.SenderId = ? AND fq.TargetId = u.Username\n" +
+				"WHERE u.Username LIKE ? AND u.Username!=?;";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(currentUsername);
+		questionMarks.add("%" + otherUsername + "%");
+		questionMarks.add(currentUsername);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public void sendFriendRequest(String currentUsername, String otherUsername) throws SQLException {
+		String sql = "INSERT INTO FriendRequest (SenderId, TargetId, Datetime) VALUES (?, ?, current_timestamp());";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(currentUsername);
+		questionMarks.add(otherUsername);
+
+		dbConn.doPreparedStatement(sql, questionMarks);
 	}
 
 	public void respondFriendRequest(String currentUsername, String senderId) throws SQLException {
@@ -241,6 +268,94 @@ public class DBWrapper {
 		return new ResultSet[] {rs1, rs2, rs3, rs4};
 	}
 
+	public ResultSet getSingleFriendChatLog(String currentUsername, String conversationId, String memberId) throws SQLException {
+		String sql = "SELECT *\n" +
+				"FROM ConversationMessage cvmes\n" +
+				"JOIN ConversationMember cvmem ON cvmem.ConversationId = cvmes.ConversationId\n" +
+				"WHERE cvmem.MemberId=? AND (cvmes.ConversationId=? OR EXISTS (\n" +
+				"\tSELECT *\n" +
+				"    FROM ConversationMember cvmem2\n" +
+				"    JOIN Conversation cv ON cv.ConversationId = cvmem2.ConversationId\n" +
+				"    WHERE cvmem.ConversationId = cvmem2.ConversationId AND cvmem2.MemberId=? AND cv.IsGroup=false\n" +
+				"));";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(currentUsername);
+		questionMarks.add(conversationId);
+		questionMarks.add(memberId);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public void messageSeen(String currentUsername, String conversationId) throws SQLException {
+		String sql1 = "SELECT cvmes.MessageId\n" +
+				"FROM ConversationMessage cvmes\n" +
+				"WHERE cvmes.ConversationId=? AND NOT EXISTS (\n" +
+				"\tSELECT *\n" +
+				"    FROM MessageSeen ms\n" +
+				"    WHERE ms.ConversationId = cvmes.ConversationId AND cvmes.MessageId = ms.MessageId AND ms.SeenId=?\n" +
+				");";
+
+		Vector<Object> questionMarks1 = new Vector<>();
+		questionMarks1.add(conversationId);
+		questionMarks1.add(currentUsername);
+
+		ResultSet resultSet = dbConn.doPreparedQuery(sql1, questionMarks1);
+		ArrayList<String> batchSql = new ArrayList<>();
+		ArrayList<Vector<Object>> batchQuestionMarks = new ArrayList<>();
+		while (resultSet.next()) {
+			int unseenMessageId = resultSet.getInt("MessageId");
+
+			String sql2 = "INSERT INTO MessageSeen VALUES (?, ?, ?)";
+
+			Vector<Object> questionMarks2 = new Vector<>();
+			questionMarks2.add(unseenMessageId);
+			questionMarks2.add(conversationId);
+			questionMarks2.add(currentUsername);
+
+			batchSql.add(sql2);
+			batchQuestionMarks.add(questionMarks2);
+		}
+
+		dbConn.doBatchPreparedStatement(batchSql.toArray(new String[batchSql.size()]), batchQuestionMarks.toArray(new Vector[batchQuestionMarks.size()]));
+	}
+
+	public void sendMessage(String currentUsername, String friendId, String conversationId, String content) throws SQLException {
+		String sql1 = "SELECT COUNT(cvmes.MessageId) as MessageCount\n" +
+				"FROM ConversationMessage cvmes\n" +
+				"WHERE cvmes.ConversationId=? OR EXISTS (\n" +
+				"\tSELECT *\n" +
+				"    FROM ConversationMember cvmem\n" +
+				"    JOIN Conversation cv ON cv.ConversationId = cvmem.ConversationId\n" +
+				"    WHERE cvmes.ConversationId = cvmem.ConversationId AND cvmem.MemberId=? AND cv.IsGroup=false\n" +
+				")\n" +
+				"GROUP BY cvmes.ConversationId;";
+
+		Vector<Object> questionMarks1 = new Vector<>();
+		questionMarks1.add(conversationId);
+		questionMarks1.add(friendId);
+
+		ResultSet resultSet1 = dbConn.doPreparedQuery(sql1, questionMarks1);
+		int messageCount = 0;
+		if (resultSet1.next()) messageCount = resultSet1.getInt(1);
+		resultSet1.close();
+
+		String sql2 = "INSERT INTO MessageSeen VALUES (?, ?, ?, current_timestamp(), ?, ?)";
+		Vector<Object> questionMarks2 = new Vector<>();
+		questionMarks2.add(messageCount + 1);
+		questionMarks2.add(conversationId);
+		questionMarks2.add(currentUsername);
+		questionMarks2.add(content);
+		questionMarks2.add("");
+
+		String sql3 = "INSERT INTO MessageSeen VALUES (?, ?, ?)";
+		Vector<Object> questionMarks3 = new Vector<>();
+		questionMarks3.add(messageCount + 1);
+		questionMarks3.add(conversationId);
+		questionMarks3.add(currentUsername);
+
+		dbConn.doBatchPreparedStatement(new String[]{sql2, sql3}, new Vector[]{questionMarks2, questionMarks3});
+	}
 
 	public ResultSet getFieldUserList(String field) throws SQLException {
 		String sql = "SELECT " + field + " FROM User";
