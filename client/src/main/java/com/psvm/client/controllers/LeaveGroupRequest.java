@@ -7,9 +7,9 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Map;
 
-public class GetUserInfoRequest extends SocketTalk {
-	public GetUserInfoRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String username, String conversationId) {
-		super(socket, socketIn, socketOut, SocketTalk.TALK_CODE_GET_USER_INFO, Map.of(
+public class LeaveGroupRequest extends SocketTalk {
+	public LeaveGroupRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String username, String conversationId) {
+		super(socket, socketIn, socketOut, SocketTalk.TALK_CODE_LEAVE_GROUP, Map.of(
 				"username", username,
 				"conversationId", conversationId
 		));

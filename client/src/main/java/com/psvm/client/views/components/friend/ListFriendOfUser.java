@@ -30,6 +30,8 @@ public class ListFriendOfUser extends JPanel {
     private int noMessagesIndex = 0;
     private ArrayList<String> messageIndexer = new ArrayList<>();
 
+    Vector<String> tempMoved = new Vector<>();
+
     private Box vertical = Box.createVerticalBox();
     private JPanel currentSelectedFriend;
     private String currentSelectedFriendId;
@@ -73,7 +75,7 @@ public class ListFriendOfUser extends JPanel {
         Box thisPanel = vertical;
         UserEachFriend conversation = (UserEachFriend) thisPanel.getComponent(childIndex);
 
-        thisPanel.remove(conversation);
+        remove(conversation);
 
         switch (newMessageType) {
             case 1: {
@@ -181,9 +183,11 @@ public class ListFriendOfUser extends JPanel {
                 }
                 else {
                     int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 1);
-                    System.out.println(newIndex);
                     UserEachFriend userEachFriend = (UserEachFriend) thisPanel.getComponent(newIndex);
                     userEachFriend.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Online");
+
+                    // Store the id of conversations that have been moved
+                    tempMoved.add(friend.get("ConversationId").toString());
                 }
 
                 // Manually set the selected effect
@@ -194,6 +198,10 @@ public class ListFriendOfUser extends JPanel {
             // If tempCloneGlobal is note empty after this line then the data has been shrunk
             tempCloneGlobal.removeAll(tempCloneLocal);
             for (Map<String, Object> datum: tempCloneGlobal) {
+                if (tempMoved.contains(datum.get("ConversationId").toString())) {
+                    continue;
+                }
+
                 deletedConvos.add(datum.get("ConversationId").toString());
                 unseenOnlineMessagesIndex--;
                 // Remove from Object list
@@ -220,6 +228,9 @@ public class ListFriendOfUser extends JPanel {
                     int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 2);
                     UserEachFriend userEachFriend = (UserEachFriend) thisPanel.getComponent(newIndex);
                     userEachFriend.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Offline");
+
+                    // Store the id of conversations that have been moved
+                    tempMoved.add(friend.get("ConversationId").toString());
                 }
 
                 // Manually set the selected effect
@@ -230,6 +241,10 @@ public class ListFriendOfUser extends JPanel {
             // If tempCloneGlobal is note empty after this line then the data has been shrunk
             tempCloneGlobal.removeAll(tempCloneLocal);
             for (Map<String, Object> datum: tempCloneGlobal) {
+                if (tempMoved.contains(datum.get("ConversationId").toString())) {
+                    continue;
+                }
+
                 deletedConvos.add(datum.get("ConversationId").toString());
                 unseenOfflineMessagesIndex--;
                 // Remove from Object list
@@ -256,6 +271,9 @@ public class ListFriendOfUser extends JPanel {
                     int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 3);
                     UserEachFriend userEachFriend = (UserEachFriend) thisPanel.getComponent(newIndex);
                     userEachFriend.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"");
+
+                    // Store the id of conversations that have been moved
+                    tempMoved.add(friend.get("ConversationId").toString());
                 }
 
                 // Manually set the selected effect
@@ -263,15 +281,18 @@ public class ListFriendOfUser extends JPanel {
                     manuallySelectMessage(currentSelectedFriendId);
                 seenMessagesIndex++;
             }
-            // If tempCloneGlobal is note empty after this line then the data has been shrunk
+            // If tempCloneGlobal is not empty after this line then the data has been shrunk
             tempCloneGlobal.removeAll(tempCloneLocal);
             for (Map<String, Object> datum: tempCloneGlobal) {
+                if (tempMoved.contains(datum.get("ConversationId").toString())) {
+                    continue;
+                }
+
                 deletedConvos.add(datum.get("ConversationId").toString());
                 seenMessagesIndex--;
                 // Remove from Object list
                 totalSeenMessages.remove(datum);
             }
-
 
             /* Add other friends with no messages */
             Vector<Map<String, Object>> noMessages = (Vector<Map<String, Object>>) friends.get(3).get("data");
@@ -290,7 +311,10 @@ public class ListFriendOfUser extends JPanel {
                 else {
                     int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 4);
                     UserEachFriend userEachFriend = (UserEachFriend) thisPanel.getComponent(newIndex);
-                    userEachFriend.setData(friend.get("MemberId").toString(), friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"");
+                    userEachFriend.setData(friend.get("MemberId").toString(), "", LocalDateTime.of(LocalDate.now(), LocalTime.now()),"");
+
+                    // Store the id of conversations that have been moved
+                    tempMoved.add(friend.get("ConversationId").toString());
                 }
 
                 // Manually set the selected effect
@@ -301,6 +325,10 @@ public class ListFriendOfUser extends JPanel {
             // If tempCloneGlobal is note empty after this line then the data has been shrunk
             tempCloneGlobal.removeAll(tempCloneLocal);
             for (Map<String, Object> datum: tempCloneGlobal) {
+                if (tempMoved.contains(datum.get("ConversationId").toString())) {
+                    continue;
+                }
+
                 deletedConvos.add(datum.get("ConversationId").toString());
                 noMessagesIndex--;
                 // Remove from Object list

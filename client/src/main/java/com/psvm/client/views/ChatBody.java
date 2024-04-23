@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.Array;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -156,9 +157,12 @@ public class ChatBody extends JPanel {
     private int currentRow = 0;
 
     private Vector<Map<String, Object>> totalMessages = new Vector<>();
+    private Vector<String> totalMessageContent = new Vector<>();
 
     private String currentConversationId;
     private String previousConversationId;
+    private String previousScrollSearchContent;
+    private int scrollSearchIndex = -1;
 
     public ChatBody() {
         /* Initialize this GUI component */
@@ -191,6 +195,17 @@ public class ChatBody extends JPanel {
             public void run() {
                 JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
                 verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+            }
+        });
+    }
+
+    void scrollToChat(int chatIndex) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
+                float value = ((float) chatIndex / totalMessageContent.size()) * verticalScrollBar.getMaximum();
+                verticalScrollBar.setValue((int) value);
             }
         });
     }
@@ -302,6 +317,16 @@ public class ChatBody extends JPanel {
         scrollToTheEnd();
     }
 
+    private int indexOfStringList(String string, Vector<String> stringList) {
+        int i = -1;
+        for (String stringItem: stringList) {
+            i++;
+            if (stringItem.contains(string)) return i;
+        }
+
+        return -1;
+    }
+
     protected void startNextChatBodyWorker() {
         JPanel thisPanel = this;
 
@@ -328,10 +353,35 @@ public class ChatBody extends JPanel {
                     totalMessages.addAll(messages);
 
                     for (Map<String, Object> message: messages) {
+                        totalMessageContent.add((String) message.get("Content"));
+
                         if (message.get("SenderId").equals(LocalData.getCurrentUsername()))
                             addRight((String) message.get("Content"), ((Timestamp) message.get("Datetime")).toLocalDateTime());
                         else
                             addLeft((String) message.get("Content"), (String) message.get("SenderId"), ((Timestamp) message.get("Datetime")).toLocalDateTime());
+                    }
+
+                    if (!LocalData.getConversationScrollSearch().isEmpty()) {
+                        if (LocalData.getConversationScrollSearch().equals(previousScrollSearchContent) && scrollSearchIndex != -1) {
+                            // Prevent array out of bound error
+                            if (scrollSearchIndex + 1 > totalMessageContent.size() - 1) scrollSearchIndex = totalMessageContent.size() - 1;
+
+                            List<String> subArray = totalMessageContent.subList(scrollSearchIndex + 1, totalMessageContent.size());
+                            int temp = indexOfStringList(LocalData.getConversationScrollSearch(), new Vector<>(subArray));
+                            int anyIndex = totalMessageContent.indexOf(subArray.get(temp));
+
+                            scrollSearchIndex = anyIndex;
+                            previousScrollSearchContent = LocalData.getConversationScrollSearch();
+                        }
+                        else {
+                            int firstIndex = indexOfStringList(LocalData.getConversationScrollSearch(), totalMessageContent);
+
+                            scrollSearchIndex = firstIndex;
+                            previousScrollSearchContent = LocalData.getConversationScrollSearch();
+                        }
+
+                        LocalData.setConversationScrollSearch("");
+                        if (scrollSearchIndex != -1) scrollToChat(scrollSearchIndex);
                     }
 
                     thisPanel.revalidate();

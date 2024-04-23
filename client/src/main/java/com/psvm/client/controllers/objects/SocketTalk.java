@@ -21,10 +21,20 @@ public class SocketTalk {
 	public final static String TALK_CODE_PROCESS_FRIEND_REQUEST = "4c";
 	public final static String TALK_CODE_FRIEND_REMOVE = "4d";
 	public final static String TALK_CODE_GET_USER_INFO = "4e";
+	public final static String TALK_CODE_GET_GROUP_INFO = "4e_1";
 	public final static String TALK_CODE_FRIEND_MESSAGE_LIST = "4f";
 	public final static String TALK_CODE_FRIEND_LIST = "5";
 	public final static String TALK_CODE_SINGLE_FRIEND_CHAT_LOG = "9d";
+	public final static String TALK_CODE_DELETE_CHAT_HISTORY = "9e";
+	public final static String TALK_CODE_SEARCH_CHAT_CONTENT = "9f";
 	public final static String TALK_CODE_MESSAGE_SEEN = "9h";
+	public final static String TALK_CODE_RENAME_CHAT = "10b";
+	public final static String TALK_CODE_NON_GROUP_MEMBER_LIST = "10c_1";
+	public final static String TALK_CODE_ADD_GROUP_MEMBER = "10c";
+	public final static String TALK_CODE_REMOVE_GROUP_MEMBER = "10d";
+	public final static String TALK_CODE_GROUP_MEMBER_LIST = "10e";
+	public final static String TALK_CODE_LEAVE_GROUP = "10f";
+	public final static String TALK_CODE_SET_MEMBER_ADMIN_STATUS = "10g";
 	public final static String TALK_CODE_SEND_MESSAGE = "11";
 
 	public final static String BLOCK_CODE_BLOCK_USER = "bu";

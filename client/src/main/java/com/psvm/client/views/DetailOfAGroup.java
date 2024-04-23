@@ -1,5 +1,9 @@
 package com.psvm.client.views;
 
+import com.psvm.client.controllers.*;
+import com.psvm.client.settings.LocalData;
+import com.psvm.shared.socket.SocketResponse;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -8,30 +12,276 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.Map;
+import java.util.Vector;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+class RenameChatThread extends Thread {
+    private Socket clientSocket;
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    private String conversationId;
+    private String conversationName;
+
+    private int responseCode;
+
+    public RenameChatThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String conversationId, String conversationName) {
+        this.clientSocket = clientSocket;
+        this.socketIn = socketIn;
+        this.socketOut = socketOut;
+
+        this.conversationId = conversationId;
+        this.conversationName = conversationName;
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        RenameChatRequest request = new RenameChatRequest(clientSocket, socketIn, socketOut, conversationId, conversationName);
+        SocketResponse response = request.talk();
+
+        responseCode = response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
+
+class MemberListThread extends Thread {
+    private Socket clientSocket;
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    private String conversationId;
+
+    private Vector<Map<String, Object>> data;
+    private int responseCode;
+
+    public MemberListThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String conversationId) {
+        this.clientSocket = clientSocket;
+        this.socketIn = socketIn;
+        this.socketOut = socketOut;
+
+        this.conversationId = conversationId;
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        GroupMemberListRequest request = new GroupMemberListRequest(clientSocket, socketIn, socketOut, conversationId);
+        SocketResponse response = request.talk();
+
+        data = response.getData();
+        responseCode = response.getResponseCode();
+    }
+
+    public Vector<Map<String, Object>> getData() {
+        return data;
+    }
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
+
+class LeaveGroupThread extends Thread {
+    private Socket clientSocket;
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    private String username;
+    private String conversationId;
+
+    private int responseCode;
+
+    public LeaveGroupThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String username, String conversationId) {
+        this.clientSocket = clientSocket;
+        this.socketIn = socketIn;
+        this.socketOut = socketOut;
+
+        this.username = username;
+        this.conversationId = conversationId;
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        LeaveGroupRequest request = new LeaveGroupRequest(clientSocket, socketIn, socketOut, username, conversationId);
+        SocketResponse response = request.talk();
+
+        responseCode = response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
+
+class SearchNonMemberThread extends Thread {
+    private Socket clientSocket;
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+    private String searchUsername;
+    private String conversationId;
+
+    private int responseCode;
+    private Vector<Map<String, Object>> data;
+
+    public SearchNonMemberThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String searchUsername, String conversationId) {
+        this.clientSocket = clientSocket;
+        this.socketIn = socketIn;
+        this.socketOut = socketOut;
+        this.searchUsername = searchUsername;
+        this.conversationId = conversationId;
+    }
+
+    @Override
+    public void run() {
+        SearchNonMemberRequest request = new SearchNonMemberRequest(clientSocket, socketIn, socketOut, searchUsername, conversationId);
+        SocketResponse response = request.talk();
+
+        responseCode = response.getResponseCode();
+        data = response.getData();
+    }
+
+    public int getResponseCode() { return responseCode; }
+    public Vector<Map<String, Object>> getData() { return data; }
+}
+
+class SetMemberAdminStatusThread extends Thread {
+    private Socket clientSocket;
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    private String currentUsername;
+    private String conversationId;
+    private String memberId;
+    private boolean isAdmin;
+
+    private int responseCode;
+
+    public SetMemberAdminStatusThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String currentUsername, String conversationId, String memberId, boolean isAdmin) {
+        this.clientSocket = clientSocket;
+        this.socketIn = socketIn;
+        this.socketOut = socketOut;
+
+        this.currentUsername = currentUsername;
+        this.conversationId = conversationId;
+        this.memberId = memberId;
+        this.isAdmin = isAdmin;
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        SetMemberAdminStatusRequest request = new SetMemberAdminStatusRequest(clientSocket, socketIn, socketOut, currentUsername, conversationId, memberId, isAdmin);
+        SocketResponse response = request.talk();
+
+        responseCode = response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
+
+class RemoveGroupMemberThread extends Thread {
+    private Socket clientSocket;
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    private String currentUsername;
+    private String conversationId;
+    private String memberId;
+
+    private int responseCode;
+
+    public RemoveGroupMemberThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String currentUsername, String conversationId, String memberId) {
+        this.clientSocket = clientSocket;
+        this.socketIn = socketIn;
+        this.socketOut = socketOut;
+
+        this.currentUsername = currentUsername;
+        this.conversationId = conversationId;
+        this.memberId = memberId;
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        RemoveGroupMemberRequest request = new RemoveGroupMemberRequest(clientSocket, socketIn, socketOut, currentUsername, conversationId, memberId);
+        SocketResponse response = request.talk();
+
+        responseCode = response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
 
 public class DetailOfAGroup extends JPanel {
+    // Multithreading + Socket
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(2);
+    final String SOCKET_HOST = "localhost";
+    final int SOCKET_PORT = 5555;
+    Socket renameChatSocket;
+    ObjectInputStream renameChatSocketIn;
+    ObjectOutputStream renameChatSocketOut;
+    Socket searchNonMemberSocket;
+    ObjectInputStream searchNonMemberSocketIn;
+    ObjectOutputStream searchNonMemberSocketOut;
+    Socket leaveGroupSocket;
+    ObjectInputStream leaveGroupSocketIn;
+    ObjectOutputStream leaveGroupSocketOut;
+
+    private String conversationId;
     private String avatar;
     private String name;
+
+    SearchNonMemberThread searchNonMemberThread;
+    boolean isSearchFieldFocused = false;
+
+    ListMemberInSearchDialog listMemberInSearchDialog;
+    JScrollPane scrollFriend;
 
     //nhớ sửa cái này
     boolean isAdmin = true;
 
 
-    DetailOfAGroup(String avatar, String name) {
+    DetailOfAGroup(String conversationId, String avatar, String name) {
         this.setPreferredSize(new Dimension(250, 754));
         this.setBackground(Color.WHITE);
+        this.conversationId = conversationId;
         this.avatar = avatar;
         this.name = name;
 
         initialize();
+
+        /* Multithreading + Socket */
+        try {
+            renameChatSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            renameChatSocketIn = new ObjectInputStream(renameChatSocket.getInputStream());
+            renameChatSocketOut = new ObjectOutputStream(renameChatSocket.getOutputStream());
+            searchNonMemberSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            searchNonMemberSocketIn = new ObjectInputStream(searchNonMemberSocket.getInputStream());
+            searchNonMemberSocketOut = new ObjectOutputStream(searchNonMemberSocket.getOutputStream());
+            leaveGroupSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            leaveGroupSocketIn = new ObjectInputStream(leaveGroupSocket.getInputStream());
+            leaveGroupSocketOut = new ObjectOutputStream(leaveGroupSocket.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     void initialize() {
@@ -59,7 +309,18 @@ public class DetailOfAGroup extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 String newName = JOptionPane.showInputDialog("Nhập tên mới:");
                 if (newName != null && !newName.isEmpty()) {
-                    nameField.setText(newName);
+                    RenameChatThread renameChatThread = new RenameChatThread(renameChatSocket, renameChatSocketIn, renameChatSocketOut, conversationId, newName);
+                    renameChatThread.start();
+
+                    try {
+                        renameChatThread.join();
+                        if (renameChatThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                            nameField.setText(newName);
+                        }
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
                 }
             }
         });
@@ -108,10 +369,8 @@ public class DetailOfAGroup extends JPanel {
         add(searchTextLabel, gbc);
 
         gbc.gridy++;
-        JTextArea searchField = new JTextArea(0, 20);
+        JTextField searchField = new JTextField(20);
         gbc.weightx = 1.0;
-        searchField.setLineWrap(true);
-        searchField.setWrapStyleWord(true);
         searchField.setBackground(Color.decode("#EEF1F4"));
         searchField.setBorder(new LineBorder(new Color(0, 0, 0, 0), 1, true));
         add(searchField, gbc);
@@ -133,27 +392,18 @@ public class DetailOfAGroup extends JPanel {
         outGroup.setFocusPainted(false);
         add(outGroup, gbc);
 
-        gbc.gridy++;
-        JButton encodeChat = new JButton("Mã Hoá");
-        encodeChat.setForeground(Color.BLUE);
-        encodeChat.setFocusPainted(false);
-        add(encodeChat, gbc);
+//        gbc.gridy++;
+//        JButton encodeChat = new JButton("Mã Hoá");
+//        encodeChat.setForeground(Color.BLUE);
+//        encodeChat.setFocusPainted(false);
+//        add(encodeChat, gbc);
 
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
+        searchField.addActionListener(new AbstractAction()
+        {
             @Override
-            public void insertUpdate(DocumentEvent e) {
-                // Handle text insertion
-                System.out.println("Text inserted: " + searchField.getText());
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                // Handle text removal
-                System.out.println("Text removed: " + searchField.getText());
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
+                LocalData.setConversationScrollSearch(searchField.getText());
             }
         });
 
@@ -170,24 +420,33 @@ public class DetailOfAGroup extends JPanel {
                         "Bạn có chắc muốn rời khỏi nhóm?",
                         "Xác nhận", JOptionPane.YES_NO_OPTION);
                 if (response == JOptionPane.YES_OPTION) {
-                    // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                    JOptionPane.showMessageDialog(null, "Rời khỏi nhóm...");
-                }
-            }
-        });
-        encodeChat.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int response = JOptionPane.showConfirmDialog(null,
-                        "Bạn có muốn mã hoá nhóm chat?",
-                        "Xác nhận", JOptionPane.YES_NO_OPTION);
-                if (response == JOptionPane.YES_OPTION) {
+                    LeaveGroupThread leaveGroupThread = new LeaveGroupThread(leaveGroupSocket, leaveGroupSocketIn, leaveGroupSocketOut, LocalData.getCurrentUsername(), conversationId);
+                    leaveGroupThread.start();
 
-                    // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                    JOptionPane.showMessageDialog(null, "Mã hoá...");
+                    try {
+                        leaveGroupThread.join();
+                        if (leaveGroupThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
+
+                        }
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
         });
+//        encodeChat.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                int response = JOptionPane.showConfirmDialog(null,
+//                        "Bạn có muốn mã hoá nhóm chat?",
+//                        "Xác nhận", JOptionPane.YES_NO_OPTION);
+//                if (response == JOptionPane.YES_OPTION) {
+//
+//                    // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
+//                    JOptionPane.showMessageDialog(null, "Mã hoá...");
+//                }
+//            }
+//        });
     }
 
     //cái nút này giống với bên thêm bạn bè (nhớ gọi addRight ở chỗ này để thông báo đã thêm 1 thành viên vào)
@@ -211,6 +470,7 @@ public class DetailOfAGroup extends JPanel {
                 if (searchFriendField.getText().equals(placeHolder)) {
                     searchFriendField.setText("");
                 }
+                isSearchFieldFocused = true;
             }
 
             @Override
@@ -218,6 +478,7 @@ public class DetailOfAGroup extends JPanel {
                 if (searchFriendField.getText().isEmpty()) {
                     searchFriendField.setText(placeHolder);
                 }
+                isSearchFieldFocused = false;
             }
         });
 
@@ -241,8 +502,8 @@ public class DetailOfAGroup extends JPanel {
         contentPanel.add(searchFriendField, BorderLayout.CENTER);
 
         // Table
-        ListFriendInSearchDialog listFriendInSearchDialog = new ListFriendInSearchDialog();
-        JScrollPane scrollFriend = new JScrollPane(listFriendInSearchDialog);
+        listMemberInSearchDialog = new ListMemberInSearchDialog(conversationId);
+        scrollFriend = new JScrollPane(listMemberInSearchDialog);
         scrollFriend.setPreferredSize(new Dimension(300, 200));
         scrollFriend.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollFriend.getViewport().addChangeListener(e -> {
@@ -260,6 +521,25 @@ public class DetailOfAGroup extends JPanel {
     private void getFriendField(String friendName) {
         // Xử lí cái *username đc ghi ở đây
         System.out.println("Text changed: " + friendName);
+
+        // If the client is not actively typing in the search field then the list is not updated
+        if (!isSearchFieldFocused) return;
+
+        if (searchNonMemberThread != null && !searchNonMemberThread.isInterrupted()) {
+            searchNonMemberThread.interrupt();
+        }
+        searchNonMemberThread = new SearchNonMemberThread(searchNonMemberSocket, searchNonMemberSocketIn, searchNonMemberSocketOut, friendName, conversationId);
+        searchNonMemberThread.start();
+
+        try {
+            searchNonMemberThread.join();
+
+            listMemberInSearchDialog.setData(searchNonMemberThread.getData());
+            scrollFriend.revalidate();
+            scrollFriend.repaint();
+        } catch (InterruptedException e) {
+            System.out.println("Exception thrown while search for users in " + this.getClass().getSimpleName() + ": " + e.getMessage());
+        }
     }
     static ImageIcon createCircularAvatar(String imagePath, int width, int height) {
         try {
@@ -282,90 +562,43 @@ public class DetailOfAGroup extends JPanel {
 
 
     private void showMemberListDialog() {
-        JDialog memberListDialog = new JDialog((Frame) null, "Danh Sách Thành Viên", true);
-        memberListDialog.setSize(400, 300);
-        memberListDialog.setLocationRelativeTo(null);
+        try (Socket memberListSocket = new Socket(SOCKET_HOST, SOCKET_PORT)) {
+            ObjectInputStream memberListSocketIn = new ObjectInputStream(memberListSocket.getInputStream());
+            ObjectOutputStream memberListSocketOut = new ObjectOutputStream(memberListSocket.getOutputStream());
+            MemberListThread memberListThread = new MemberListThread(memberListSocket, memberListSocketIn, memberListSocketOut, conversationId);
+            memberListThread.start();
+            memberListThread.join();
 
-        // Create a tabbed pane
-        JTabbedPane tabbedPane = new JTabbedPane();
+            JDialog memberListDialog = new JDialog((Frame) null, "Danh Sách Thành Viên", true);
+            memberListDialog.setSize(400, 300);
+            memberListDialog.setLocationRelativeTo(null);
 
-        // Create content for the Thành viên tab
-        JPanel memberPanel = new JPanel();
-        memberPanel.setLayout(new GridLayout(0, 1)); // One column, multiple rows
+            // Create content for the Thành viên tab
+            JPanel memberPanel = new JPanel();
+            memberPanel.setLayout(new GridLayout(0, 1)); // One column, multiple rows
 
-        //Chỗ này để hiện data member
-        for (int i = 0; i < 4; i++) {
-            memberPanel.add(memberPanel("Member " + (i + 1))); // Adjust label text accordingly
-        }
+            Vector<Map<String, Object>> data = memberListThread.getData();
+            //Chỗ này để hiện data member
+            for (Map<String, Object> datum: data) {
+                if (!datum.get("MemberId").toString().equals(LocalData.getCurrentUsername()))
+                    memberPanel.add(memberPanel(conversationId, datum.get("MemberId").toString(), (Boolean) datum.get("IsAdmin")));
+                else
+                    memberPanel.add(memberPanel(conversationId, datum.get("MemberId").toString(), (Boolean) datum.get("IsAdmin")), 0);
+            }
 
-        JScrollPane memberScrollPane = new JScrollPane(memberPanel);
-        tabbedPane.addTab("Thành viên", memberScrollPane);
+            JScrollPane memberScrollPane = new JScrollPane(memberPanel);
+            memberListDialog.add(memberScrollPane);
 
+            // Show the dialog
+            memberListDialog.setVisible(true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-        JPanel adminPanel = new JPanel();
-        adminPanel.setLayout(new GridLayout(0, 1)); // One column, multiple rows
-
-        //Chỗ này để hiện admin
-        for (int i = 0; i < 10; i++) {
-            adminPanel.add(adminPanel("Admin " + (i + 1))); // Adjust label text accordingly
-        }
-
-        JScrollPane adminScrollPane = new JScrollPane(adminPanel);
-        tabbedPane.addTab("Admin", adminScrollPane);
-
-        // Add the tabbed pane to the content panel
-        memberListDialog.add(tabbedPane);
-
-        // Show the dialog
-        memberListDialog.setVisible(true);
-    }
-
-    JPanel adminPanel(String labelText) {
-        JPanel adminPanel = new JPanel();
-        adminPanel.setBackground(Color.WHITE);
-        adminPanel.setPreferredSize(new Dimension(300, 50));
-        adminPanel.setLayout(new BorderLayout());
-
-        // Add avatar to the left
-        ImageIcon avatarIcon = createCircularAvatar("client/src/main/resources/icon/avatar_sample.jpg", 30, 30);
-        JLabel avatarLabel = new JLabel(avatarIcon);
-        avatarLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        adminPanel.add(avatarLabel, BorderLayout.WEST);
-
-        // Create JLabel
-        JLabel label = new JLabel(labelText);
-        label.setBorder(new EmptyBorder(20, 0, 20, 20)); // Increase the right inset for more spacing
-        adminPanel.add(label, BorderLayout.CENTER);
-
-        ImageIcon icon;
-        Image image;
-        ImageIcon resizedIcon;
-        // Create JButton
-        if (isAdmin) {
-            icon = new ImageIcon("client/src/main/resources/icon/cancelled.png");
-            image = icon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
-            resizedIcon = new ImageIcon(image);
-            JButton button = new JButton(resizedIcon);
-            button.setFocusPainted(false);
-            button.setBackground(Color.WHITE);
-            button.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    int response = JOptionPane.showConfirmDialog(null,
-                            "Bạn có chắc giáng chức người này xuống thành thành viên?",
-                            "Xác nhận", JOptionPane.YES_NO_OPTION);
-                    if (response == JOptionPane.YES_OPTION) {
-                        // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                        JOptionPane.showMessageDialog(null, "Giáng chức xuống member...");
-                    }
-                }
-            });
-            adminPanel.add(button, BorderLayout.EAST);
-        }
-        return adminPanel;
-    }
-
-    JPanel memberPanel(String labelText) {
+    JPanel memberPanel(String conversationId, String labelText, boolean isAdmin) {
         JPanel memberPanel = new JPanel();
         memberPanel.setBackground(Color.WHITE);
         memberPanel.setPreferredSize(new Dimension(300, 50));
@@ -382,30 +615,92 @@ public class DetailOfAGroup extends JPanel {
         label.setBorder(new EmptyBorder(20, 0, 20, 20)); // Increase the right inset for more spacing
         memberPanel.add(label, BorderLayout.CENTER);
 
-        ImageIcon icon;
-        Image image;
-        ImageIcon resizedIcon;
-        // Create JButton
-        if (isAdmin) {
-            icon = new ImageIcon("client/src/main/resources/icon/acceptFriendRequest.png");
-            image = icon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
-            resizedIcon = new ImageIcon(image);
-            JButton button = new JButton(resizedIcon);
-            button.setFocusPainted(false);
-            button.setBackground(Color.WHITE);
-            button.addActionListener(new ActionListener() {
+        ImageIcon adminIcon = new ImageIcon("client/src/main/resources/icon/acceptFriendRequest.png");
+        Image adminImage = adminIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+        ImageIcon adminResizedIcon = new ImageIcon(adminImage);
+        ImageIcon deleteIcon = new ImageIcon("client/src/main/resources/icon/cancelled.png");
+        Image deleteImage = deleteIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+        ImageIcon deleteResizedIcon = new ImageIcon(deleteImage);
+
+        if (!labelText.equals(LocalData.getCurrentUsername())) {
+            JPanel buttons = new JPanel(new FlowLayout());
+
+            // Add admin toggle button
+            JToggleButton adminSwitch = new JToggleButton(adminResizedIcon);
+            adminSwitch.setSelected(isAdmin);
+            adminSwitch.addItemListener(new ItemListener() {
+                public void itemStateChanged(ItemEvent itemEvent)
+                {
+                    // event is generated in button
+                    int state = itemEvent.getStateChange();
+
+                    boolean isAdmin;
+                    // if selected print selected in console
+                    if (state == ItemEvent.SELECTED) {
+                        System.out.println("Selected");
+                        isAdmin = true;
+                    }
+                    else {
+                        // else print deselected in console
+                        System.out.println("Deselected");
+                        isAdmin = false;
+                    }
+
+                    try (Socket setAdminStatusSocket = new Socket(SOCKET_HOST, SOCKET_PORT)) {
+                        ObjectInputStream setAdminStatusSocketIn = new ObjectInputStream(setAdminStatusSocket.getInputStream());
+                        ObjectOutputStream setAdminStatusSocketOut = new ObjectOutputStream(setAdminStatusSocket.getOutputStream());
+
+                        SetMemberAdminStatusThread setMemberAdminStatusThread = new SetMemberAdminStatusThread(setAdminStatusSocket, setAdminStatusSocketIn, setAdminStatusSocketOut, LocalData.getCurrentUsername(), conversationId, labelText, isAdmin);
+                        setMemberAdminStatusThread.start();
+                        setMemberAdminStatusThread.join();
+
+                        if (setMemberAdminStatusThread.getResponseCode() == SocketResponse.RESPONSE_CODE_FAILURE) {
+                            JOptionPane.showConfirmDialog(null, "Hành động thất bại", "Thất bại", JOptionPane.DEFAULT_OPTION);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+				}
+            });
+            buttons.add(adminSwitch);
+
+            // Add delete member button
+            JButton deleteButton = new JButton(deleteResizedIcon);
+            deleteButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     int response = JOptionPane.showConfirmDialog(null,
-                            "Bạn có chắc muốn bổ nhiệm người này thành admin?",
+                            "Bạn có xoá thành viên này khỏi nhóm không?",
                             "Xác nhận", JOptionPane.YES_NO_OPTION);
                     if (response == JOptionPane.YES_OPTION) {
-                        // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                        JOptionPane.showMessageDialog(null, "Bổ nhiệm thành admin...");
+                        try (Socket setAdminStatusSocket = new Socket(SOCKET_HOST, SOCKET_PORT)) {
+                            ObjectInputStream setAdminStatusSocketIn = new ObjectInputStream(setAdminStatusSocket.getInputStream());
+                            ObjectOutputStream setAdminStatusSocketOut = new ObjectOutputStream(setAdminStatusSocket.getOutputStream());
+
+                            RemoveGroupMemberThread removeGroupMemberThread = new RemoveGroupMemberThread(setAdminStatusSocket, setAdminStatusSocketIn, setAdminStatusSocketOut, LocalData.getCurrentUsername(), conversationId, labelText);
+                            removeGroupMemberThread.start();
+                            removeGroupMemberThread.join();
+
+                            if (removeGroupMemberThread.getResponseCode() == SocketResponse.RESPONSE_CODE_FAILURE) {
+                                JOptionPane.showConfirmDialog(null, "Hành động thất bại", "Thất bại", JOptionPane.DEFAULT_OPTION);
+                            }
+                            else {
+                                JPanel parent = (JPanel) memberPanel.getParent();
+                                parent.remove(memberPanel);
+                                parent.revalidate();
+                                parent.repaint();
+                            }
+                        } catch (IOException | InterruptedException ie) {
+                            throw new RuntimeException(ie);
+                        }
                     }
-                }
+				}
             });
-            memberPanel.add(button, BorderLayout.EAST);
+            buttons.add(deleteButton);
+
+            memberPanel.add(buttons, BorderLayout.EAST);
         }
         return memberPanel;
     }

@@ -141,19 +141,6 @@ values
 	('adhd', 'agdsg', 'gadsghf', '25d55ad283aa400af464c76d713c07ad', '222 gfdgsfd', '1970-04-04', false, 'ytrhy@email', 0, '', '2023-02-12'),
 	('HaiMen', 'Hai', 'Mèn', '25d55ad283aa400af464c76d713c07ad', '222 hdhgf', '1970-04-04', true, 'fdasf@gmail', 2, '', '2023-02-12');
 
-insert into hooyah.UserLog
-values
-	('Highman', '2023-11-12', 0, ''),
-	('Highman', '2023-11-13', 1, ''),
-	('HaiMen', '2023-11-12', 0, ''),
-	('HaiMen', '2023-11-13', 1, ''),
-	('Kizark', '2023-11-11', 0, ''),
-	('Kizark', '2023-11-12', 1, ''),
-	('Baobeo', '2023-11-10', 0, ''),
-	('Baobeo', '2023-11-12', 1, ''),
-	('adhd', '2023-11-11', 0, ''),
-	('adhd', '2023-11-12', 1, '');
-
 insert into hooyah.Conversation (ConversationId, ConversationName, IsGroup)
 values
 	('CV000001', 'Cuộc trò chuyện', false),
@@ -235,9 +222,13 @@ values
 insert into hooyah.userlog (UserId, Datetime, LogType, LogDetail)
 values 
 	('Kizark', '2022-11-12 06:30:01', 0, 'Login'),
+	('Kizark', '2022-11-12 06:40:01', 1, 'Logout'),
     ('Baobeo', '2023-11-12 06:30:01', 0, 'Login'),
+	('Baobeo', '2022-11-12 06:45:01', 1, 'Logout'),
+    ('adhd', '2022-11-12 06:28:01', 0, 'Login'),
     ('adhd', '2022-11-12 06:30:01', 1, 'Logout'),
-    ('Highman', '2023-11-12 06:30:01', 1, 'Logout');
+    ('Highman', '2023-11-12 06:30:01', 0, 'Login'),
+    ('Highman', '2023-11-12 06:36:01', 1, 'Logout');
 
 insert into hooyah.spamreport (ReporterId, ReportedId, Datetime) 
 values 

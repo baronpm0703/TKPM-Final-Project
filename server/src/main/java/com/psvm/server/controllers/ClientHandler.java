@@ -106,6 +106,10 @@ public class ClientHandler implements Runnable {
 						talkCode_GetUserInfo(request.getData());
 						break;
 					}
+					case "4e_1": {
+						talkCode_GetGroupInfo(request.getData());
+						break;
+					}
 					case "4f": {
 						talkCode_FriendMessageList(request.getData());
 						break;
@@ -137,9 +141,42 @@ public class ClientHandler implements Runnable {
 						talkCode_SingleFriendChatLog(request.getData());
 						break;
 					}
+					case "9e": {
+						talkCode_DeleteChatHistory(request.getData());
+						break;
+					}
 					case "9h": {
 						talkCode_MessageSeen(request.getData());
-
+						break;
+					}
+					case "10b": {
+						talkCode_RenameChat(request.getData());
+						break;
+					}
+					case "10c_1": {
+						talkCode_NonGroupMemberList(request.getData());
+						break;
+					}
+					case "10c": {
+						talkCode_AddGroupMember(request.getData());
+						break;
+					}
+					case "10d": {
+						if (talkCode_GetMemberAdminStatus(request.getData()))
+							talkCode_RemoveGroupMember(request.getData());
+						break;
+					}
+					case "10e": {
+						talkCode_GroupMemberList(request.getData());
+						break;
+					}
+					case "10f": {
+						talkCode_LeaveGroup(request.getData());
+						break;
+					}
+					case "10g": {
+						if (talkCode_GetMemberAdminStatus(request.getData()))
+							talkCode_SetMemberAdminStatus(request.getData());
 						break;
 					}
 					case "11": {
@@ -230,7 +267,7 @@ public class ClientHandler implements Runnable {
 					responseData.add(Map.of(queryResultMeta.getColumnLabel(i), value));
 				}
 			}
-			System.out.println(responseData);
+
 			queryResult.getStatement().close();
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
 		} catch (SQLException e) {
@@ -318,7 +355,45 @@ public class ClientHandler implements Runnable {
 	}
 
 	void talkCode_GetUserInfo(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.getUserInfo(data.get("username").toString(), data.get("conversationId").toString());
+			ResultSetMetaData queryResultMeta;
+			queryResultMeta = queryResult.getMetaData();
 
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+					responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
+				}
+			}
+
+			queryResult.getStatement().close();
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_GetGroupInfo(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.getGroupInfo(data.get("conversationId").toString());
+			ResultSetMetaData queryResultMeta;
+			queryResultMeta = queryResult.getMetaData();
+
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+					responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
+				}
+			}
+
+			queryResult.getStatement().close();
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
 	}
 
 	void talkCode_FriendMessageList(Map<String, Object> data) throws IOException {
@@ -393,9 +468,146 @@ public class ClientHandler implements Runnable {
 		}
 	}
 
+	void talkCode_DeleteChatHistory(Map<String, Object> data) throws IOException {
+		try {
+			db.deleteChatHistory(data.get("conversationId").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
 	void talkCode_MessageSeen(Map<String, Object> data) throws IOException {
 		try {
 			db.messageSeen(data.get("username").toString(), data.get("conversationId").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_RenameChat(Map<String, Object> data) throws IOException {
+		try {
+			db.renameChat(data.get("conversationId").toString(), data.get("conversationName").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_NonGroupMemberList(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.getNonGroupMember(data.get("searchUsername").toString(), data.get("conversationId").toString());
+			ResultSetMetaData queryResultMeta;
+			queryResultMeta = queryResult.getMetaData();
+
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				Map<String, Object> row = new HashMap<>();
+				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+					row.put(queryResultMeta.getColumnLabel(i), queryResult.getObject(i));
+				}
+
+				responseData.add(row);
+			}
+
+			queryResult.getStatement().close();
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException | NullPointerException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_AddGroupMember(Map<String, Object> data) throws IOException {
+		try {
+			db.addGroupMember(data.get("conversationId").toString(), data.get("newMemberId").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_RemoveGroupMember(Map<String, Object> data) throws IOException {
+		try {
+			db.removeGroupMember(data.get("conversationId").toString(), data.get("newMemberId").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_GroupMemberList(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.groupMemberList(data.get("conversationId").toString());
+			ResultSetMetaData queryResultMeta;
+			queryResultMeta = queryResult.getMetaData();
+
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				Map<String, Object> row = new HashMap<>();
+				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+					row.put(queryResultMeta.getColumnLabel(i), queryResult.getObject(i));
+				}
+
+				responseData.add(row);
+			}
+
+			queryResult.getStatement().close();
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException | NullPointerException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_LeaveGroup(Map<String, Object> data) throws IOException {
+		try {
+			db.leaveGroup(data.get("username").toString(), data.get("conversationId").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	boolean talkCode_GetMemberAdminStatus(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.getMemberAdminStatus(data.get("username").toString(), data.get("conversationId").toString());
+			ResultSetMetaData queryResultMeta;
+			queryResultMeta = queryResult.getMetaData();
+
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+					responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
+				}
+			}
+
+			queryResult.getStatement().close();
+
+			if ((Boolean) responseData.get(0).get("IsAdmin")) {
+				handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+				return true;
+			}
+			else {
+				handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+				return false;
+			}
+		} catch (SQLException e) {
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+			return false;
+		}
+	}
+
+	void talkCode_SetMemberAdminStatus(Map<String, Object> data) throws IOException {
+		try {
+			db.setMemberAdminStatus(data.get("conversationId").toString(), data.get("memberId").toString(), (Boolean) data.get("isAdmin"));
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
