@@ -57,7 +57,7 @@ public class ContentPane extends JPanel {
     }
     void renderDSBaoCaoSpam(){
         removeComponent();
-        String[] columnNames = {"STT","Tên","Thời gian tạo","Xem thêm"};
+        String[] columnNames = {"STT","Người Gửi", "Người Bị Báo Cáo","Thời gian tạo", "Chi Tiết"};
         this.setLayout(new BorderLayout());
         DSBaoCaoSpamTable table = new DSBaoCaoSpamTable(columnNames);
         OptionPanelDSSpam optionPanel = new OptionPanelDSSpam(table);

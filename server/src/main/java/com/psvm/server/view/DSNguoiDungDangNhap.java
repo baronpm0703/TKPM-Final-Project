@@ -1,13 +1,23 @@
 package com.psvm.server.view;
 
+import com.psvm.server.controllers.DBWrapper;
+
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.Serial;
+import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 class DSNguoiDungDangNhapHeader extends JPanel{
     DSNguoiDungDangNhapHeader() {
@@ -29,6 +39,11 @@ class DSNguoiDungDangNhapHeader extends JPanel{
 public class DSNguoiDungDangNhap extends JTable {
     private final DefaultTableModel model;
     private final TableRowSorter<DefaultTableModel> sorter;
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(5);
+
+    private HashMap<String, Object> userLogList = new HashMap<>();
+
+    List<Object[]> userLogListData; // Store reportID
     int index = 1;
     DSNguoiDungDangNhap(String[] columnNames){
         super(new DefaultTableModel(columnNames,0));
@@ -81,7 +96,57 @@ public class DSNguoiDungDangNhap extends JTable {
         for (Object[] row: userAccountData){
             addRowAndSort(row);
         }
+        startNextWorker();
         addRowAndSort(new Object[]{"aaiasdfasdfmen", "Nguyễn Phú Minh Bảo", dateTime4});
+    }
+
+    protected void startNextWorker() {
+        UserLogListThread userWorker = new UserLogListThread(new UserLogListThread.Observer() {
+            @Override
+            public void workerDidUpdate(HashMap<String, Object> userLogInfo) {
+                if (!userLogList.equals(userLogInfo)) {
+                    userLogListData = new ArrayList<>();
+
+                    userLogInfo.forEach((index, detail) -> {
+                        Object[] userLog = new Object[3];
+                        HashMap<String, Object> castedDetail = (HashMap<String, Object>) detail;
+                        userLog[0] = (String) castedDetail.get("userId");
+                        userLog[1] = (String) castedDetail.get("fullName");
+                        userLog[2] = (LocalDate) castedDetail.get("date");
+
+                        userLogListData.add(userLog);
+                    });
+
+                    resetModelRow(); // reset table
+                    index = 1;
+                    for (Object[] row: userLogListData){
+                        Object[] newRow = new Object[row.length + 1];
+                        newRow[0] = index++;
+                        System.arraycopy(row,0,newRow,1,row.length);
+                        model.addRow(newRow);
+                    }
+                    userLogList = userLogInfo;
+                }
+            }
+
+        });
+
+        userWorker.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (userWorker.getState() == SwingWorker.StateValue.DONE) {
+                    userWorker.removePropertyChangeListener(this);
+                    startNextWorker();
+                }
+            }
+        });
+
+        service.schedule(userWorker, 1000, TimeUnit.MILLISECONDS);
+    }
+    void resetModelRow() {
+        while (model.getRowCount() > 0) {
+            model.removeRow(0);
+        }
     }
     private void setColumnWidthToFitContent() {
         for (int column = 0; column < this.getColumnCount(); column++) {
@@ -113,4 +178,67 @@ public class DSNguoiDungDangNhap extends JTable {
         sorter.sort();
         updateIndexColumn();
     }
+}
+
+class UserLogListThread extends SwingWorker<Void, HashMap<String, Object>> {
+    private final DBWrapper db;
+    private Observer observer;
+
+    public interface Observer {
+        public void workerDidUpdate(HashMap<String, Object> userInfo);
+    }
+
+    public UserLogListThread(Observer observer) {
+        // Connect DB
+        this.db = new DBWrapper();
+        this.observer = observer;
+    }
+
+    @Override
+    protected Void doInBackground() throws Exception {
+        // Get User List With given DateTime
+        ResultSet userNameQueryRes = db.getUserLogListWithDetailInfo();
+        int index = 1;
+        HashMap<String, Object> userLogListInfo = new HashMap<>();
+        while (userNameQueryRes.next()) {
+            // Get UserName First
+            String userId = (String) userNameQueryRes.getObject(1);
+            // Get Fullname
+            String fullName = (String) userNameQueryRes.getObject(2);
+            // Date of birth
+            String dateString =  userNameQueryRes.getString("Datetime");
+            // Define the format of the input string
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // Parse the string into a LocalDate object
+            LocalDate localDate = LocalDate.parse(dateString, formatter);
+
+            HashMap<String, Object> userDetailInfo = new HashMap<>();
+            userDetailInfo.put("userId", userId);
+            userDetailInfo.put("fullName", fullName);
+            userDetailInfo.put("date", localDate);
+
+            userLogListInfo.put(String.valueOf(index), userDetailInfo);
+            index  ++;
+        }
+
+        publish(userLogListInfo);
+
+        return null;
+    }
+
+    @Override
+    protected void process(List<HashMap<String, Object>> chunks) {
+        super.process(chunks);
+
+        for (HashMap<String, Object> userInfo : chunks) {
+            observer.workerDidUpdate(userInfo);
+        }
+    }
+
+    @Override
+    protected void done() {
+        super.done();
+        db.close();
+    }
+
 }

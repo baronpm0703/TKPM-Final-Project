@@ -34,7 +34,7 @@ class UserLogListThread extends SwingWorker<Void, HashMap<String, Object>> {
     protected Void doInBackground() throws Exception {
         // Get User List With given DateTime
         ResultSet userNameQueryRes = db.getUserLogListWithDetailInfo();
-
+        int index = 1;
         HashMap<String, Object> userLogListInfo = new HashMap<>();
         while (userNameQueryRes.next()) {
             // Get UserName First
@@ -49,10 +49,12 @@ class UserLogListThread extends SwingWorker<Void, HashMap<String, Object>> {
             LocalDate localDate = LocalDate.parse(dateString, formatter);
 
             HashMap<String, Object> userDetailInfo = new HashMap<>();
+            userDetailInfo.put("userId", userId);
             userDetailInfo.put("fullName", fullName);
             userDetailInfo.put("date", localDate);
 
-            userLogListInfo.put(userId, userDetailInfo);
+            userLogListInfo.put(String.valueOf(index), userDetailInfo);
+            index  ++;
         }
 
         publish(userLogListInfo);
@@ -67,6 +69,12 @@ class UserLogListThread extends SwingWorker<Void, HashMap<String, Object>> {
         for (HashMap<String, Object> userInfo : chunks) {
             observer.workerDidUpdate(userInfo);
         }
+    }
+
+    @Override
+    protected void done() {
+        super.done();
+        db.close();
     }
 
 }

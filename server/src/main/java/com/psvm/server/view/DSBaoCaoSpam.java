@@ -1,5 +1,7 @@
 package com.psvm.server.view;
 
+import com.psvm.server.controllers.DBWrapper;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.*;
@@ -7,10 +9,19 @@ import javax.swing.text.MaskFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 class OptionPanelDSSpam extends JPanel {
     DSBaoCaoSpamTable table;
@@ -75,8 +86,11 @@ class DSBaoCaoSpamTable extends JTable{
     // Khi trả dữ về thì trả với dạng List<Object[]> (ArrayList)
     // Coi trong folder EXAMPLE, MySQLData
     private final DefaultTableModel model;
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(5);
     private final int columnCount;
     int index = 1;
+    private HashMap<String, Object> reportList = new HashMap<>();
+    List<Object[]> reportedListData; // Store reportID
     DefaultTableModel getTableModel(){
         return model;
     }
@@ -94,16 +108,16 @@ class DSBaoCaoSpamTable extends JTable{
         this.setAutoCreateRowSorter(true);
         //Example data
         java.util.List<Object[]> userAccountData = new ArrayList<>();
-        Object[] acc1 = {"nhoma","sdfg"};
-        Object[] acc2 = {"nhomb","sdfg"};
-        Object[] acc3 = {"nhoma","sdfg"};
+        Object[] acc1 = {"nhoma","sdfg","ádda"};
+        Object[] acc2 = {"nhomb","sdfg","adad"};
+        Object[] acc3 = {"nhoma","sdfg","adad"};
         //Đống bên dưới này sửa sao cho nó hiện từ cái SQL date sang Date là được, không cần phải là String (Ngày ko phải là String mà là Date, còn lại String hết (hay sao đó tuỳ) ), vì mảng là Object[]
         LocalDate date1 = LocalDate.of(2004,11, 5);
         LocalDate date2 = LocalDate.of(2004,12, 3);
         LocalDate date3 = LocalDate.of(2004,12, 4);
-        acc1[1] = date1;
-        acc2[1] = date2;
-        acc3[1] = date3;
+        acc1[2] = date1;
+        acc2[2] = date2;
+        acc3[2] = date3;
         userAccountData.add(acc1);
         userAccountData.add(acc2);
         userAccountData.add(acc3);
@@ -116,6 +130,7 @@ class DSBaoCaoSpamTable extends JTable{
             this.model.addRow(newRow);
         }
 
+        startNextWorker();
         // Add a custom renderer and editor for the last column
         this.getColumnModel().getColumn(columnNames.length - 1).setCellRenderer(new ButtonRenderer());
         this.getColumnModel().getColumn(columnNames.length - 1).setCellEditor(new ButtonEditor(new JCheckBox()));
@@ -124,6 +139,58 @@ class DSBaoCaoSpamTable extends JTable{
         setColumnWidthToFitContent();
         //add columnCount for later use
         this.columnCount = this.getColumnCount();
+    }
+
+    protected void startNextWorker() {
+        ReportListThread userWorker = new ReportListThread(new ReportListThread.Observer() {
+            @Override
+            public void workerDidUpdate(HashMap<String, Object> reportInfo) {
+                if (!reportList.equals(reportInfo)) {
+                    reportedListData = new ArrayList<>();
+
+                    reportInfo.forEach((rpindex, detail) -> {
+                        Object[] report = new Object[3];
+                        HashMap<String, Object> castedDetail = (HashMap<String, Object>) detail;
+                        report[0] = (String) castedDetail.get("reporterId");
+                        report[1] = (String) castedDetail.get("reportedId");
+                        report[2] = (LocalDate) castedDetail.get("datetime");
+
+                        reportedListData.add(report);
+                        int stop = 1;
+                    });
+
+                    resetModelRow(); // Reset new Data
+                    index = 1;
+                    for (Object[] row: reportedListData){
+                        Object[] newRow = new Object[row.length + 1];
+                        newRow[0] = index++;
+                        System.arraycopy(row,0,newRow,1,row.length);
+                        model.addRow(newRow);
+                    }
+                    reportList = reportInfo;
+
+                }
+            }
+
+        });
+
+        userWorker.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (userWorker.getState() == SwingWorker.StateValue.DONE) {
+                    userWorker.removePropertyChangeListener(this);
+                    startNextWorker();
+                }
+            }
+        });
+
+        service.schedule(userWorker, 1000, TimeUnit.MILLISECONDS);
+    }
+
+    void resetModelRow() {
+        while (model.getRowCount() > 0) {
+            model.removeRow(0);
+        }
     }
     void filterTable(String name){
         SwingUtilities.invokeLater(new Runnable() {
@@ -155,84 +222,44 @@ class DSBaoCaoSpamTable extends JTable{
     }
 
     void showPopupMenu(JButton button) {
+        int selectedRow = getSelectedRow();
+        Object[] selectedReport = reportedListData.get(selectedRow);
+
         JPopupMenu popupMenu = new JPopupMenu();
-        JMenuItem memberItem = new JMenuItem("Danh sách thành viên");
-        JMenuItem adminItem = new JMenuItem("Danh sách admin");
+        JMenuItem lockAcc = new JMenuItem("Khóa tài khoản người dùng: " + selectedReport[1]);
+        JMenuItem declineReq = new JMenuItem("Từ chối yêu cầu");
 
-        memberItem.addActionListener(new ActionListener() {
+        // Khi Tao nhấn 1 khóa hoặc từ chối có thể đổi icon của cột chi tiết không?
+        lockAcc.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showTableMember();
+                // Đổi Icon
+                try {
+                    showTableMember(selectedReport);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
-        adminItem.addActionListener(new ActionListener() {
+        declineReq.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showTableAdmin();
+                // Đổi ICon
             }
         });
-        popupMenu.add(memberItem);
-        popupMenu.add(adminItem);
+        popupMenu.add(lockAcc);
+        popupMenu.add(declineReq);
         // Show the popup menu at the cell's location
         popupMenu.show(this, button.getX(), button.getY());
     }
-    void showTableMember() {
-        int selectedRow = getSelectedRow();
-        //Cái này t dùng để gọi khoá chính, thay bằng cái khác đi
-        //String chatName = (String) model.getValueAt(selectedRow, 1);
-
-        JDialog tableDialog = new JDialog();
-        tableDialog.setTitle("Danh sách thành viên");
-        tableDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-
-        //Thêm data vào ở đây (ko có ID thì bỏ)
-        String[] columnNames = {"ID", "Tên thành viên"};
-        Object[][] data = {
-                {1, "John"},
-                {2, "Alice"},
-                {3, "Bob"},
-        };
-        JTable table = new JTable(new DefaultTableModel(data, columnNames));
-        table.setDefaultEditor(Object.class,null);
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        table.setDefaultRenderer(Object.class, centerRenderer);
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        JScrollPane scrollPane = new JScrollPane(table);
-        tableDialog.add(scrollPane);
-
-        tableDialog.pack();
-        tableDialog.setLocationRelativeTo(null);
-        tableDialog.setVisible(true);
+    void showTableMember(Object[] selectedReport) throws SQLException {
+       DBWrapper db = new DBWrapper();
+       db.BanUser((String) selectedReport[1]);
+       //db.UpdateUserLogBanType();
+       db.close();
     }
-    void showTableAdmin() {
-        int selectedRow = getSelectedRow();
-        //Cái này t dùng để gọi khoá chính, thay bằng cái khác đi
-        //String chatName = (String) model.getValueAt(selectedRow, 1);
 
-        JDialog tableDialog = new JDialog();
-        tableDialog.setTitle("Danh sách admin");
-        tableDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        //Thêm data vào ở đây
-        String[] columnNames = {"ID", "Tên Admin"};
-        Object[][] data = {
-                {1, "John"},
-                {2, "Alice"},
-                {3, "Bob"},
-        };
-        JTable table = new JTable(new DefaultTableModel(data, columnNames));
-        table.setDefaultEditor(Object.class,null);
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        table.setDefaultRenderer(Object.class, centerRenderer);
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        tableDialog.add(scrollPane);
-
-        tableDialog.pack();
-        tableDialog.setLocationRelativeTo(null);
-        tableDialog.setVisible(true);
-    }
     private void setColumnWidthToFitContent() {
         for (int column = 0; column < this.getColumnCount(); column++) {
             int maxwidth = 0;
@@ -306,6 +333,69 @@ class DSBaoCaoSpamTable extends JTable{
             //            }
             return this;
         }
+    }
+
+}
+
+class ReportListThread extends SwingWorker<Void, HashMap<String, Object>> {
+    private final DBWrapper db;
+    private Observer observer;
+
+    public interface Observer {
+        public void workerDidUpdate(HashMap<String, Object> userInfo);
+    }
+
+    public ReportListThread(Observer observer) {
+        // Connect DB
+        this.db = new DBWrapper();
+        this.observer = observer;
+    }
+
+    @Override
+    protected Void doInBackground() throws Exception {
+        // Get Conversation
+        ResultSet reportQueryRes = db.getSpamReportInfo();
+
+
+        HashMap<String, Object> userLogListInfo = new HashMap<>();
+        int index = 1;
+        while (reportQueryRes.next()) {
+            HashMap<String, Object> reportDetail = new HashMap<>();
+            // Get reportedId
+            String reporterId = (String) reportQueryRes.getObject(1);
+            // Get senderId
+            String reportedId = (String) reportQueryRes.getObject(2);
+            // Get DateTime send report
+            String dateString =  reportQueryRes.getString("DateTime");
+            // Define the format of the input string
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // Parse the string into a LocalDate object
+            LocalDate localDate = LocalDate.parse(dateString, formatter);
+            reportDetail.put("reporterId", reporterId);
+            reportDetail.put("reportedId", reportedId);
+            reportDetail.put("datetime", localDate);
+
+            userLogListInfo.put(String.valueOf(index), reportDetail);
+            index ++;
+        }
+        publish(userLogListInfo);
+
+        return null;
+    }
+
+    @Override
+    protected void process(List<HashMap<String, Object>> chunks) {
+        super.process(chunks);
+
+        for (HashMap<String, Object> userInfo : chunks) {
+            observer.workerDidUpdate(userInfo);
+        }
+    }
+
+    @Override
+    protected void done() {
+        super.done();
+        db.close();
     }
 
 }

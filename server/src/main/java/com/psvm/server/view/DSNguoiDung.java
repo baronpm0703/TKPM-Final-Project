@@ -122,33 +122,7 @@ class DSNguoiDungTable extends JTable{
         //Example data
         // CHỖ NÀY ĐỌC KĨ VÀO CHO TAO
         // TẤT cả ngày ở mySQL phải là SQL date, khi gọi hàm ở database, nhớ chuyển nó về LocalDate để add vào data
-//        List<Object[]> userAccountData = new ArrayList<>();
-//        //LocalDate mới sort được, string ko sort đc
-//        Object[] acc1 = {"haimen","Nguyễn Anh Khoa","123 Nguyen Thi Phuong, HA noi","21/10/2002","Nam","2men@gmail.com","21/02/2003","Online"};
-//        Object[] acc2 = {"aaimen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","23/01/2003","Online"};
-//        Object[] acc3 = {"aaiasdfasdfmen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","24/10/2003","Online"};
-//        LocalDate date1 = LocalDate.of(2004,11, 5);
-//        LocalDate date2 = LocalDate.of(2004,12, 3);
-//        LocalDate date3 = LocalDate.of(2004,12, 4);
-//
-//        acc1[3] = date1;
-//        acc2[3] = date2;
-//        acc3[3] = date3;
-//        acc1[6] = date1;
-//        acc2[6] = date2;
-//        acc3[6] = date3;
-//        userAccountData.add(acc1);
-//        userAccountData.add(acc2);
-//        userAccountData.add(acc3);
-//
-//        //Add data to table
-//        for (Object[] row: userAccountData){
-//            Object[] newRow = new Object[row.length + 1];
-//            newRow[0] = index++;
-//            System.arraycopy(row,0,newRow,1,row.length);
-//            this.model.addRow(newRow);
-//        }
-        startNextWorker();
+        startNextWorker(); // riel data
 
         // Add a custom renderer and editor for the last column
         this.getColumnModel().getColumn(columnNames.length - 1).setCellRenderer(new ButtonRenderer());
@@ -207,6 +181,7 @@ class DSNguoiDungTable extends JTable{
                     });
 
                     resetModelRow(); // Reset new Data
+                    index = 1;
                     for (Object[] row: userAccountData){
                         Object[] newRow = new Object[row.length + 1];
                         newRow[0] = index++;
@@ -793,6 +768,12 @@ class UserListThread extends SwingWorker<Void, HashMap<String, Object>> {
 
         for (HashMap<String, Object> obj : chunks)
             observer.workerDidUpdate(obj);
+    }
+
+    @Override
+    protected void done() {
+        super.done();
+        db.close();
     }
 
 }

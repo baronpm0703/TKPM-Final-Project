@@ -4,7 +4,7 @@ import java.sql.*;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 public class DBConnection {
-	static final int MAX_CONNECTION = 30;
+	static final int MAX_CONNECTION = 50;
 	static final String dbRelativePath = "/hooyah";
 	static final String dbUser = System.getenv("DB_USER");
 	static final String dbPwd = System.getenv("DB_PWD");

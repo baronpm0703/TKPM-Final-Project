@@ -3,6 +3,7 @@ package com.psvm.server.view.Components;
 import com.psvm.server.controllers.DBWrapper;
 
 import javax.swing.*;
+import javax.xml.transform.Result;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.ResultSet;
@@ -35,7 +36,6 @@ class ChatRoomListThread extends SwingWorker<Void, HashMap<String, Object>> {
         // Get Conversation
         ResultSet conversationQueryRes = db.getConversationInfo();
 
-
         HashMap<String, Object> userLogListInfo = new HashMap<>();
         while (conversationQueryRes.next()) {
             // Get Conversation Id
@@ -50,6 +50,7 @@ class ChatRoomListThread extends SwingWorker<Void, HashMap<String, Object>> {
             conDetailInfo.put("conversationName", conName);
             conDetailInfo.put("isGroup", conIsGroup);
 
+            // Con mem
             ResultSet conMemberInfo = db.getConversationMemberInfo(conID);
             HashMap<String, Object> conMember = new HashMap<>();
             while(conMemberInfo.next()) {
@@ -66,6 +67,19 @@ class ChatRoomListThread extends SwingWorker<Void, HashMap<String, Object>> {
                 conMember.put(memId, memInfo);
             }
             conDetailInfo.put("memInfo", conMember);
+
+            // Con date creation
+            ResultSet conDateInfo = db.getConversationCreateDateInfo(conID);
+            while (conDateInfo.next()) {
+                // Create Date
+                String dateString =  conDateInfo.getString("DateTime");
+                // Define the format of the input string
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                // Parse the string into a LocalDate object
+                LocalDate createDate = LocalDate.parse(dateString, formatter);
+                conDetailInfo.put("createDate", createDate);
+            }
+
             // Put in the collection
             userLogListInfo.put(conID, conDetailInfo);
         }
@@ -78,9 +92,15 @@ class ChatRoomListThread extends SwingWorker<Void, HashMap<String, Object>> {
     protected void process(List<HashMap<String, Object>> chunks) {
         super.process(chunks);
 
-        for (HashMap<String, Object> userInfo : chunks) {
-            observer.workerDidUpdate(userInfo);
+        for (HashMap<String, Object> chatRoomInfo : chunks) {
+            observer.workerDidUpdate(chatRoomInfo);
         }
+    }
+
+    @Override
+    protected void done() {
+        super.done();
+        db.close();
     }
 
 }
@@ -106,8 +126,8 @@ public class ChatRoomList extends JFrame {
     protected void startNextWorker() {
         ChatRoomListThread userWorker = new ChatRoomListThread(new ChatRoomListThread.Observer() {
             @Override
-            public void workerDidUpdate(HashMap<String, Object> userInfo) {
-                HashMapListModel listModel = new HashMapListModel(userInfo);
+            public void workerDidUpdate(HashMap<String, Object> chatRoomInfo) {
+                HashMapListModel listModel = new HashMapListModel(chatRoomInfo);
                 jList.setModel(listModel);
             }
 

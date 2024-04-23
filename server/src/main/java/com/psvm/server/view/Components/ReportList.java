@@ -41,17 +41,17 @@ class ReportListThread extends SwingWorker<Void, HashMap<String, Object>> {
         while (reportQueryRes.next()) {
             HashMap<String, Object> reportDetail = new HashMap<>();
             // Get reportedId
-            String reportedId = (String) reportQueryRes.getObject(1);
+            String reporterId = (String) reportQueryRes.getObject(1);
             // Get senderId
-            String senderId = (String) reportQueryRes.getObject(2);
+            String reportedId = (String) reportQueryRes.getObject(2);
             // Get DateTime send report
             String dateString =  reportQueryRes.getString("DateTime");
             // Define the format of the input string
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             // Parse the string into a LocalDate object
             LocalDate localDate = LocalDate.parse(dateString, formatter);
+            reportDetail.put("reporterId", reporterId);
             reportDetail.put("reportedId", reportedId);
-            reportDetail.put("senderId", senderId);
             reportDetail.put("datetime", localDate);
 
             userLogListInfo.put(String.valueOf(index), reportDetail);
@@ -69,6 +69,12 @@ class ReportListThread extends SwingWorker<Void, HashMap<String, Object>> {
         for (HashMap<String, Object> userInfo : chunks) {
             observer.workerDidUpdate(userInfo);
         }
+    }
+
+    @Override
+    protected void done() {
+        super.done();
+        db.close();
     }
 
 }
