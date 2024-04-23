@@ -45,18 +45,21 @@ create table hooyah.ConversationMessage (
 	SenderId varchar(255),
     Datetime timestamp,
     Content nvarchar(255),
-    Encryption varchar(255) default null,
+    Encryption varchar(255) default '',
     primary key (MessageId, ConversationId),
     foreign key (ConversationId, SenderId) references ConversationMember(ConversationId, MemberId) 
 );
+-- update hooyah.conversationmessage set Encryption='';
+-- ALTER TABLE hooyah.conversationmessage MODIFY COLUMN Encryption VARCHAR(255) DEFAULT '';
 
 create table hooyah.E2EE (
 	ConversationId varchar(255),
     MemberId varchar(255),
-    PublicKey varchar(255) default null,
+    PublicKey varchar(255) default '',
     primary key (ConversationId, MemberId),
     foreign key (ConversationId, MemberId) references ConversationMember(ConversationId, MemberId)
 );
+-- ALTER TABLE hooyah.E2EE MODIFY COLUMN PublicKey VARCHAR(255) DEFAULT '';
 
 create table hooyah.ConversationLog (
 	ConversationId varchar(255),

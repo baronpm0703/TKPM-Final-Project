@@ -79,3 +79,12 @@ WHERE (f.UserId = 'Highman' AND f.FriendId LIKE '%kizark%' OR f.UserId LIKE '%ki
     JOIN ConversationMember cvmem2 ON cvmem.ConversationId = cvmem2.ConversationId
     WHERE cvmem.MemberId = f.UserId AND cvmem2.MemberId = f.FriendId AND cvmem.MemberId != cvmem2.MemberId AND cv.IsGroup = false
 );
+
+-- Get messages not seen by self
+SELECT cvmes.MessageId
+FROM ConversationMessage cvmes
+WHERE cvmes.ConversationId='CV000001' AND NOT EXISTS (
+	SELECT *
+    FROM MessageSeen ms
+    WHERE ms.ConversationId = cvmes.ConversationId AND cvmes.MessageId = ms.MessageId AND ms.SeenId='Baobeo'
+);
