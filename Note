@@ -12,4 +12,12 @@ Quay lại bảng Conversation Mem với mọi suitableConId lọc ra những th
 
 
 
- Note: Yêu cầu 7??? bạn của bạn là gì
+ Note:
+ Duyệt qua member của conversation, chỉ duyệt được conversation is not group. Nếu là group có thể lỗi, Sol: nếu là gr thì không thể xóa, điều kiện là friendlistbar phải lọc được những conver nào k phải group
+ Hủy bạn bè là xóa bên trong bảng Friend
+ Tạo nhóm:
+ 	- Xét dò bảng conversation, ++ id đặt tên bằng conver + id.
+ 	- Xét bảng conversationMem, add mình vào đặt làm admin rồi mới add ngta vào
+ 	- Update bảng conLog.
+
+ Nhớ viết 1 sql để toàn bộ có bị duplicate k

@@ -56,12 +56,16 @@ class OptionPanelDSSpam extends JPanel {
         JButton filterButton = new JButton("       Lọc       ");
         filterButton.setFocusPainted(false);
         //Filter button logic
+        JFormattedTextField finalTimeField = timeField;
+        JFormattedTextField finalDateField = dateField;
         filterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                String timeFilter = finalTimeField.getText();
+                String dateFilter = finalDateField.getText();
 //                System.out.println(nameFilter);
 //                System.out.println(usernameFilter);
-//              table.filterTable(usernameFilter,nameFilter,statusFilter);
+              table.filterTable(timeFilter, dateFilter);
             }
         });
         //Add to filter Panel
@@ -192,13 +196,13 @@ class DSBaoCaoSpamTable extends JTable{
             model.removeRow(0);
         }
     }
-    void filterTable(String name){
+    void filterTable(String time, String date){
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
                 List<RowFilter<Object, Object>> filters = new ArrayList<>();
-                if (!name.isEmpty()) filters.add(RowFilter.regexFilter(name,1));
+                if (!date.isEmpty()) filters.add(RowFilter.regexFilter(date, 3));
                 if (!filters.isEmpty()){
                     RowFilter<Object,Object> combinedFilter = RowFilter.andFilter(filters);
                     sorter.setRowFilter(combinedFilter);

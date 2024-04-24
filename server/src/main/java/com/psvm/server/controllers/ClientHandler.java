@@ -146,26 +146,45 @@ public class ClientHandler implements Runnable {
 						talkCode_SendMessage(request.getData());
 						break;
 					}
-					case "read_user": {
-						Map<String, Object> data = request.getData();
-						try {
-							ResultSet queryResult = db.getFieldUserList(data.get("field").toString());
-							ResultSetMetaData queryResultMeta;
-							queryResultMeta = queryResult.getMetaData();
+					case "bu": {
+						blockCode_BlockUser(request.getData());
+						//talkCode_SendMessage(request.getData());
+						break;
+					}
+					case "ub": {
+						blockCode_UnBlockUser(request.getData());
+						break;
+					}
+					case "conMemInfo": {
+						conCode_GetMemInfo(request.getData());
+						break;
+					}
 
-							Vector<Map<String, Object>> responseData = new Vector<>();
-							while (queryResult.next()) {
-								for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
-									responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
-								}
-							}
+					case "uf": {
+						friendCode_Unfriend(request.getData());
+						break;
+					}
 
-							queryResult.getStatement().close();
-							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
-						} catch (SQLException e) {
-							System.out.println(e.getMessage());
-							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-						}
+					case "ru": {
+						//friendCode_Unfriend(request.getData());
+						reportCode_ReportUser(request.getData());
+						break;
+					}
+					case "newConv": {
+						conCode_CreateNewConv(request.getData());
+						break;
+					}
+					case "highestId": {
+						conCode_GetHighestId(request.getData());
+						break;
+					}
+					case "convAddMemWhenUareAdmin": {
+						conCode_AddMemWhenUareAdmin(request.getData());
+						break;
+					}
+					case "updateConvLog": {
+						conCode_UpdateConvLog(request.getData());
+						break;
 					}
 				}
 
@@ -390,6 +409,112 @@ public class ClientHandler implements Runnable {
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void blockCode_BlockUser(Map<String, Object> data) throws IOException {
+		try {
+			db.UserBlockUser(data.get("blocker").toString(), data.get("blocked").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void blockCode_UnBlockUser(Map<String, Object> data) throws IOException {
+		try {
+			db.UserUnBlockUser(data.get("blocker").toString(), data.get("blocked").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void friendCode_Unfriend(Map<String, Object> data) throws IOException {
+		try {
+			db.removeFriend(data.get("userId").toString(), data.get("friendId").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void reportCode_ReportUser(Map<String, Object> data) throws IOException {
+		try {
+			db.reportUser(data.get("reporterId").toString(), data.get("reportedId").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+	void conCode_CreateNewConv(Map<String, Object> data) throws IOException {
+		try {
+			db.CreateNewConv(data.get("newConId").toString(), data.get("conName").toString(), (boolean) data.get("type"));
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+	void conCode_AddMemWhenUareAdmin(Map<String, Object> data) throws IOException {
+		try {
+			db.AddMemWhenUareAdmin(data.get("conId").toString(), data.get("adMin").toString(), data.get("userId").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+	void conCode_UpdateConvLog(Map<String, Object> data) throws IOException {
+		try {
+			db.UpdateConvLog(data.get("conId").toString(), data.get("userId").toString(), (int) data.get("logType"));
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+	void conCode_GetHighestId(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.getHighestConvId();
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				responseData.add(Map.of("highestConId", queryResult.getObject(1)));
+			}
+			System.out.println(responseData);
+			queryResult.getStatement().close();
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException e) {
+			System.out.println("Error: " + e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+	void conCode_GetMemInfo(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.getInfoConversationUserParticipateIn(data.get("conId").toString());
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				if (!(boolean) queryResult.getObject(1)){
+					ResultSet memberIdResult = db.getConversationMemberId(data.get("conId").toString());
+					ResultSetMetaData queryResultMeta;
+					queryResultMeta = memberIdResult.getMetaData();
+					while (memberIdResult.next()) {
+						for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+							responseData.add(Map.of(queryResultMeta.getColumnLabel(i), memberIdResult.getObject(i)));
+						}
+					}
+				}
+			}
+			System.out.println(responseData);
+			queryResult.getStatement().close();
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException e) {
+			System.out.println("Error: " + e.getMessage());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
 		}
 	}

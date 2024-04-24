@@ -27,7 +27,23 @@ public class SocketTalk {
 	public final static String TALK_CODE_MESSAGE_SEEN = "9h";
 	public final static String TALK_CODE_SEND_MESSAGE = "11";
 
-	public final static String READ_CODE_USER_DATA = "read_user";
+	public final static String BLOCK_CODE_BLOCK_USER = "bu";
+	public final static String BLOCK_CODE_UNBLOCK_USER = "ub";
+
+	public final static String CONV_CODE_GET_MEM_INFO = "conMemInfo";
+	public final static String CONV_CODE_CREATE_NEW_CONV = "newConv";
+	public final static String CONV_CODE_GET_HIGHEST_ID = "highestId";
+
+	public final static String CONV_CODE_ADD_MEM_WHEN_U_ARE_ADMIN = "convAddMemWhenUareAdmin";
+
+
+	public final static String CONV_CODE_UPDATE_CONV_LOG = "updateConvLog";
+
+
+	public final static String FRIEND_CODE_UNFRIEND = "uf";
+
+	public final static String REPORT_CODE_REPORT_USER = "ru";
+
 	int talkId;
 	Socket socket;
 	ObjectInputStream socketIn;

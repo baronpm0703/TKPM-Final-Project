@@ -12,6 +12,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Serial;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -103,6 +105,7 @@ class DSNguoiDungTable extends JTable{
     private final int columnCount;
 
     private HashMap<String, Object> userList = new HashMap<>();
+    List<Object[]> userListData; // Store conID
     int index = 1;
     DefaultTableModel getTableModel(){
         return model;
@@ -122,6 +125,33 @@ class DSNguoiDungTable extends JTable{
         //Example data
         // CHỖ NÀY ĐỌC KĨ VÀO CHO TAO
         // TẤT cả ngày ở mySQL phải là SQL date, khi gọi hàm ở database, nhớ chuyển nó về LocalDate để add vào data
+//        List<Object[]> userAccountData = new ArrayList<>();
+//        //LocalDate mới sort được, string ko sort đc
+//        Object[] acc1 = {"haimen","Nguyễn Anh Khoa","123 Nguyen Thi Phuong, HA noi","21/10/2002","Nam","2men@gmail.com","21/02/2003","Online"};
+//        Object[] acc2 = {"aaimen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","23/01/2003","Online"};
+//        Object[] acc3 = {"aaiasdfasdfmen","Nguyễn Phú Minh Bảo","723 Nguyen Thi Phuong, HA noi","11/10/2002","Nam","2men@gmail.com","24/10/2003","Online"};
+//        LocalDate date1 = LocalDate.of(2004,11, 5);
+//        LocalDate date2 = LocalDate.of(2004,12, 3);
+//        LocalDate date3 = LocalDate.of(2004,12, 4);
+//
+//        acc1[3] = date1;
+//        acc2[3] = date2;
+//        acc3[3] = date3;
+//        acc1[6] = date1;
+//        acc2[6] = date2;
+//        acc3[6] = date3;
+//        userAccountData.add(acc1);
+//        userAccountData.add(acc2);
+//        userAccountData.add(acc3);
+//
+//
+//        //Add data to table
+//        for (Object[] row: userAccountData){
+//            Object[] newRow = new Object[row.length + 1];
+//            newRow[0] = index++;
+//            System.arraycopy(row,0,newRow,1,row.length);
+//            this.model.addRow(newRow);
+//        }
         startNextWorker(); // riel data
 
         // Add a custom renderer and editor for the last column
@@ -157,7 +187,7 @@ class DSNguoiDungTable extends JTable{
             @Override
             public void workerDidUpdate(HashMap<String, Object> userInfo) {
                 if (!userList.equals(userInfo)) {
-                    List<Object[]> userAccountData = new ArrayList<>();
+                    userListData = new ArrayList<>();
                     userInfo.forEach((userId, detail) -> {
                         Object[] acc = new Object[8];
                         acc[0] = userId; // Assign row
@@ -177,12 +207,12 @@ class DSNguoiDungTable extends JTable{
                                 acc[getIndex(field)] = gender;
                             }
                         });
-                        userAccountData.add(acc);
+                        userListData.add(acc);
                     });
 
                     resetModelRow(); // Reset new Data
                     index = 1;
-                    for (Object[] row: userAccountData){
+                    for (Object[] row: userListData){
                         Object[] newRow = new Object[row.length + 1];
                         newRow[0] = index++;
                         System.arraycopy(row,0,newRow,1,row.length);
@@ -247,7 +277,6 @@ class DSNguoiDungTable extends JTable{
         JTextField dobField = new JTextField();
         JTextField genderField = new JTextField();
         JTextField emailField = new JTextField();
-        JTextField creationDateField = new JTextField();
         JButton addButton = new JButton("Thêm");
 
         addDialog.add(new JLabel("Username:"));
@@ -262,8 +291,6 @@ class DSNguoiDungTable extends JTable{
         addDialog.add(genderField);
         addDialog.add(new JLabel("Email:"));
         addDialog.add(emailField);
-        addDialog.add(new JLabel("Ngày tạo TK (DD/MM/YYYY):"));
-        addDialog.add(creationDateField);
         //Trạng thái thì không tạo vì mới tạo làm gì đã online.
 //        String[] statuses = {"","Online","Offline","Banned"};
 //        JComboBox<String> statusField = new JComboBox<>(statuses);
@@ -280,29 +307,25 @@ class DSNguoiDungTable extends JTable{
                 String fullName = fullNameField.getText();
                 String address = addressField.getText();
                 String dobString = dobField.getText();
-                String gender = genderField.getText();
+                Boolean gender = genderField.getText().equalsIgnoreCase("Male") ? true : false;
                 String email = emailField.getText();
-                String creationDateString = creationDateField.getText();
 
                 DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                LocalDate dob;
-                LocalDate creationDate;
+                LocalDateTime dob;
 
                 try {
-                    dob = LocalDate.parse(dobString, dateFormat);
-                    creationDate = LocalDate.parse(creationDateString, dateFormat);
+                    Timestamp timestamp = Timestamp.valueOf(LocalDate.parse(dobString, dateFormat).atStartOfDay());
+                    dob =  timestamp.toLocalDateTime();
                 } catch (DateTimeParseException ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(null, "Sai format ngày", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     return;  // Exit the method if there's an error
                 }
-                java.sql.Date finalDob = java.sql.Date.valueOf(dob); // 2 cái này để thêm vào database vì nó là sql Date
-                java.sql.Date finalCreationDate = java.sql.Date.valueOf(creationDate);
-                Object[] newData = {index++,username, fullName, address, dob, gender, email, creationDate,"Offline"};
-
-                // Add vào database ở đây, nhớ sửa ngày tháng năm cho đúng.
-                // mySQLData.addStudent(newData);
-                model.addRow(newData);
+                try {
+                    createUser(username, fullName, address, dob, gender, email);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
                 addDialog.dispose();
             }
         });
@@ -311,6 +334,38 @@ class DSNguoiDungTable extends JTable{
         addDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         addDialog.setLocationRelativeTo(null);
         addDialog.setVisible(true);
+    }
+
+    void createUser(String username, String fullName, String address, LocalDateTime dob, Boolean gender, String email ) throws SQLException {
+        DBWrapper db = new DBWrapper();
+        String[] name_part = fullName.split(" ");
+        db.createUser(username, name_part[0], name_part[1], " ",address, dob, gender, email);
+        System.out.println("Add successfully");
+        db.close();
+    }
+    void updateUser(String id, String username, String fullName, String address, LocalDateTime dob, Boolean gender, String email, LocalDateTime creationDate ) throws SQLException {
+        DBWrapper db = new DBWrapper();
+        String[] name_part = fullName.split(" ");
+        db.updateUser(id, username, name_part[0], name_part[1], address, dob, gender, email, creationDate);
+        System.out.println("Update successfully");
+        db.close();
+    }
+    void deleteUser(String id) throws SQLException {
+        DBWrapper db = new DBWrapper();
+        db.deleteUser(id);
+        System.out.println("Update successfully");
+        db.close();
+    }
+    void unBanorBanUser(String id, int type) throws SQLException {
+        DBWrapper db = new DBWrapper();
+        if (type == 1) {
+            db.BanUser(id);
+            System.out.println("Ban successfully");
+        } else {
+            db.UnBanUser(id);
+            System.out.println("Ban successfully");
+        }
+        db.close();
     }
 
     void resetModelRow() {
@@ -398,23 +453,24 @@ class DSNguoiDungTable extends JTable{
                         String updatedFullName = fullNameField.getText();
                         String updatedAddress = addressField.getText();
                         String updatedDob = dobField.getText();
-                        String updatedGender = genderField.getText();
+                        boolean updatedGender = genderField.getText().equalsIgnoreCase("Male") ? true : false;
                         String updatedEmail = emailField.getText();
                         String updatedCreationDate = creationDateField.getText();
 
-                        LocalDate dob;
-                        LocalDate creationDate;
+                        LocalDateTime dob;
+                        LocalDateTime creationDate;
 
                         try {
-                            dob = LocalDate.parse(updatedDob, dateFormat);
-                            creationDate = LocalDate.parse(updatedCreationDate, dateFormat);
+                            Timestamp timestamp = Timestamp.valueOf(LocalDate.parse(updatedDob, dateFormat).atStartOfDay());
+                            dob =  timestamp.toLocalDateTime();
+                            timestamp = Timestamp.valueOf(LocalDate.parse(updatedCreationDate, dateFormat).atStartOfDay());
+                            creationDate = timestamp.toLocalDateTime();
                         } catch (DateTimeParseException ex) {
                             ex.printStackTrace();
                             JOptionPane.showMessageDialog(null, "Sai format ngày", "Lỗi", JOptionPane.ERROR_MESSAGE);
                             return;  // Exit the method if there's an error
                         }
-                        java.sql.Date finalDob = java.sql.Date.valueOf(dob); // 2 cái này để thêm vào database vì nó là sql Date
-                        java.sql.Date finalCreationDate = java.sql.Date.valueOf(creationDate);
+//
                         // Update data in the selected row
                         getModel().setValueAt(updatedUsername, selectedRow, 1);
                         getModel().setValueAt(updatedFullName, selectedRow, 2);
@@ -424,6 +480,13 @@ class DSNguoiDungTable extends JTable{
                         getModel().setValueAt(updatedEmail, selectedRow, 6);
                         getModel().setValueAt(creationDate, selectedRow, 7);
 
+                        Object[] selectedUser = userListData.get(selectedRow);
+                        try {
+                            updateUser((String) selectedUser[0], updatedUsername, updatedFullName, updatedAddress, dob, updatedGender, updatedEmail, creationDate);
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        int stop = 1;
                         // Gọi database ở đây
 //                        Object[] newData = {studentID,firstName,lastName,finalDob,address};
 //                        mySQLData.updateStudent(oldDataPrimaryKey,newData);
@@ -454,7 +517,12 @@ class DSNguoiDungTable extends JTable{
 
                 if (confirm == JOptionPane.YES_OPTION) {
                     //gọi database ở đây
-                    //mySQLData.deleteStudent(selectedStudentID);
+                    Object[] selectedUser = userListData.get(selectedRow);
+                    try {
+                        deleteUser((String) selectedUser[0]);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     model.removeRow(selectedRow);
                     updateIndexColumn();
                 }
@@ -476,6 +544,12 @@ class DSNguoiDungTable extends JTable{
                     if (confirm == JOptionPane.YES_OPTION) {
                         //gọi database ở đây
                         //mySQLData.deleteStudent(selectedStudentID);
+                        Object[] selectedUser = userListData.get(selectedRow);
+                        try {
+                            unBanorBanUser((String) selectedUser[0], 1);
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         setValueAt("Banned",selectedRow,8);
                     }
                 }
@@ -489,6 +563,12 @@ class DSNguoiDungTable extends JTable{
                     if (confirm == JOptionPane.YES_OPTION) {
                         //gọi database ở đây
                         //mySQLData.deleteStudent(selectedStudentID);
+                        Object[] selectedUser = userListData.get(selectedRow);
+                        try {
+                            unBanorBanUser((String) selectedUser[0], 0);
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         setValueAt("Offline",selectedRow,8);
                     }
                 }
@@ -508,7 +588,7 @@ class DSNguoiDungTable extends JTable{
                 DefaultTableModel historyModel = (DefaultTableModel) historyTable.getModel();
                 //data mẫu, cần hàm gọi data từ db;
                 List<Object[]>historyData = new ArrayList<>();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                //SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
 
                 //Đống này để đổi từ ngày qua string như bên trên (add, update cac thu)
@@ -522,15 +602,45 @@ class DSNguoiDungTable extends JTable{
 //                    return;  // Exit the method if there's an error
 //                }
 
-                Object[] data1 = {"01/01/2004","15:04"};
-                Object[] data2 = {"01/01/2005","21:04"};
+//                Object[] data1 = {"01/01/2004","15:04"};
+//                Object[] data2 = {"01/01/2005","21:04"};
+//
+//                historyData.add(data1);
+//                historyData.add(data2);
+//
+//                for (Object[] row: historyData){
+//                    historyModel.addRow(row);
+//                }
 
-                historyData.add(data1);
-                historyData.add(data2);
+                Object[] selectedUser = userListData.get(selectedRow);
+                DBWrapper db = new DBWrapper();
+                ResultSet userHisRes;
+                // Get DateTime With Id
+                try {
+                    userHisRes = db.DiplayUserLogWithType((String) selectedUser[0], 0);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+                // Add to model
+                while (true) {
+                    try {
+                        if (!userHisRes.next()) break;
+                        String[] datetimeArr = userHisRes.getObject(1).toString().split(" ");
 
+                        String date = datetimeArr[0];
+                        String time = datetimeArr[1];
+                        Object[] rowData = {date, time};
+
+                        historyData.add(rowData);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                }
                 for (Object[] row: historyData){
                     historyModel.addRow(row);
                 }
+                db.close();
                 DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
                 centerRenderer.setHorizontalAlignment(JLabel.CENTER);
                 historyTable.setDefaultRenderer(Object.class, centerRenderer);
@@ -561,16 +671,56 @@ class DSNguoiDungTable extends JTable{
                 //data mẫu, cần hàm gọi data từ db;
                 List<Object[]>friendData = new ArrayList<>();
 
+//                Object[] data1 = {"evilwomenmakemeactunwise","banned"};
+//                Object[] data2 = {"ifevilwhyhot?","online"};
+//
+//                friendData.add(data1);
+//                friendData.add(data2);
+//
+//                for (Object[] row: friendData){
+//                    friendModel.addRow(row);
+//                }
 
-                Object[] data1 = {"evilwomenmakemeactunwise","banned"};
-                Object[] data2 = {"ifevilwhyhot?","online"};
+                Object[] selectedUser = userListData.get(selectedRow);
+                DBWrapper db = new DBWrapper();
+                ResultSet userFriendListRes;
+                // Get DateTime With Id
+                try {
+                    userFriendListRes = db.FriendListOfUser((String) selectedUser[0]);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+                // Add to model
+                while (true) {
+                    try {
+                        if (!userFriendListRes.next()) break;
+                        String fullName = (String) userFriendListRes.getObject(1);
+                        int status = (int) userFriendListRes.getObject(2);
+                        String Detail = "";
+                        switch (status) {
+                            case 0:
+                                Detail = "Offline";
+                                break;
+                            case 1:
+                                Detail = "Online";
+                                break;
+                            case 2:
+                                Detail = "Banned";
+                                break;
 
-                friendData.add(data1);
-                friendData.add(data2);
+                        }
+                        Object[] rowData = {fullName, Detail};
 
+                        friendData.add(rowData);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                }
                 for (Object[] row: friendData){
                     friendModel.addRow(row);
                 }
+                db.close();
                 DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
                 centerRenderer.setHorizontalAlignment(JLabel.CENTER);
                 friendsTable.setDefaultRenderer(Object.class, centerRenderer);
@@ -636,6 +786,9 @@ class DSNguoiDungTable extends JTable{
 
             case "creationDate":
                 return 6;
+
+            case "status":
+                return 7;
             default:
                 return -1;
         }
@@ -744,6 +897,9 @@ class UserListThread extends SwingWorker<Void, HashMap<String, Object>> {
             // Parse the string into a LocalDate object
             LocalDate creationDate = LocalDate.parse(dateString, formatter);
 
+            // Status
+            int status = (int) userNameQueryRes.getInt("Status");
+
             HashMap<String, Object> userDetailInfo = new HashMap<>();
             userDetailInfo.put("fullName", fullName);
             userDetailInfo.put("addrs", addrs);
@@ -751,7 +907,17 @@ class UserListThread extends SwingWorker<Void, HashMap<String, Object>> {
             userDetailInfo.put("gender", gender);
             userDetailInfo.put("email", email);
             userDetailInfo.put("creationDate", creationDate);
-
+            switch (status){
+                case 0:
+                    userDetailInfo.put("status", "Offline");
+                    break;
+                case 1:
+                    userDetailInfo.put("status", "Online");
+                    break;
+                case 2:
+                    userDetailInfo.put("status", "Banned");
+                    break;
+            }
             userListInfo.put(userId, userDetailInfo);
         }
 

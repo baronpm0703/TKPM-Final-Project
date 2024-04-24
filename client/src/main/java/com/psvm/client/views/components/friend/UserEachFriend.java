@@ -1,5 +1,10 @@
 package com.psvm.client.views.components.friend;
 
+import com.psvm.client.controllers.*;
+import com.psvm.client.controllers.objects.SocketTalk;
+import com.psvm.client.settings.LocalData;
+import com.psvm.shared.socket.SocketResponse;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -7,10 +12,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.time.LocalDateTime;
 import java.io.File;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 public class UserEachFriend extends JPanel {
     // Data
@@ -182,6 +191,17 @@ public class UserEachFriend extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.showMessageDialog(null,
                         "Bạn đã tạo 1 nhóm với người này, vui lòng kiểm tra bên 'Nhóm'!");
+                CreateNewGroupWithThread newGroup = new CreateNewGroupWithThread(id);
+                newGroup.start();
+                JOptionPane.showMessageDialog(null, "Tạo Group...");
+                try {
+                    newGroup.join();
+                    if (newGroup.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                        JOptionPane.showMessageDialog(null, "Tạo Group Thành Công");
+                    } else JOptionPane.showMessageDialog(null, "Tạo Group Không Thành Công. Có Lỗi!");
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -194,7 +214,18 @@ public class UserEachFriend extends JPanel {
                             "Xác nhận", JOptionPane.YES_NO_OPTION);
                     if (response == JOptionPane.YES_OPTION) {
                         // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
+                        UnOrBlockUserButtonThread blockThread = new UnOrBlockUserButtonThread(id, 0);
+                        blockThread.start();
                         JOptionPane.showMessageDialog(null, "Chặn...");
+                        try {
+                            blockThread.join();
+                            if (blockThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                                JOptionPane.showMessageDialog(null, "Chặn Thành Công");
+                            } else JOptionPane.showMessageDialog(null, "Chặn Không Thành Công. Có Lỗi!");
+                        } catch (InterruptedException ex) {
+                            throw new RuntimeException(ex);
+                        }
+
                     }
                 }
                 else{
@@ -203,6 +234,8 @@ public class UserEachFriend extends JPanel {
                             "Xác nhận", JOptionPane.YES_NO_OPTION);
                     if (response == JOptionPane.YES_OPTION) {
                         // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
+                        UnOrBlockUserButtonThread unblockThread = new UnOrBlockUserButtonThread(id, 1);
+                        unblockThread.start();
                         JOptionPane.showMessageDialog(null, "Bỏ chặn...");
                     }
                 }
@@ -217,7 +250,17 @@ public class UserEachFriend extends JPanel {
                         "Xác nhận", JOptionPane.YES_NO_OPTION);
                 if (response == JOptionPane.YES_OPTION) {
                     // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
+                    UnFriendButtonThread unfriendThread = new UnFriendButtonThread(id);
+                    unfriendThread.start();
                     JOptionPane.showMessageDialog(null, "Huỷ kết bạn...");
+                    try {
+                        unfriendThread.join();
+                        JOptionPane.showMessageDialog(null, "Huỷ kết bạn thành công");
+
+                    } catch (InterruptedException ex) {
+                        JOptionPane.showMessageDialog(null, "Huỷ kết bạn thất bại");
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
         });
@@ -229,7 +272,16 @@ public class UserEachFriend extends JPanel {
                         "Xác nhận", JOptionPane.YES_NO_OPTION);
                 if (response == JOptionPane.YES_OPTION) {
                     // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
+                    ReportUserThread reportThread = new ReportUserThread(id);
+                    reportThread.start();
                     JOptionPane.showMessageDialog(null, "Báo cáo Spam...");
+                    try {
+                        reportThread.join();
+                        JOptionPane.showMessageDialog(null, "Báo cáo Spam thành công.");
+                    } catch (InterruptedException ex) {
+                        JOptionPane.showMessageDialog(null, "Báo cáo Spam thất bại.");
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
         });
@@ -296,3 +348,277 @@ public class UserEachFriend extends JPanel {
         return statusLabel;
     }
 }
+
+class UnOrBlockUserButtonThread extends Thread {
+
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    final String SOCKET_HOST = "localhost";
+    final int SOCKET_PORT = 5555;
+    Socket socket;
+    private String conId;
+    private int type;
+
+    private int responseCode;
+
+    public UnOrBlockUserButtonThread( String conId, int type) {
+        this.conId = conId;
+        this.type = type;
+
+        /* Multithreading + Socket */
+        try {
+            socket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            socketIn = new ObjectInputStream(socket.getInputStream());
+            socketOut = new ObjectOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        SocketResponse final_response;
+        if (type == 0) { // Block
+            GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
+            SocketResponse response = request.talk();
+
+            String userId = null;
+            for (Map<String, Object> e : response.getData()){
+                System.out.println(e.get("MemberId"));
+                if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
+                    userId = e.get("MemberId").toString();
+                }
+            }
+            BlockUserWithId final_request = new BlockUserWithId(socket, socketIn, socketOut, userId);
+            final_response = final_request.talk();
+        } else { // UnBlock
+            GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
+            SocketResponse response = request.talk();
+
+            String userId = null;
+            for (Map<String, Object> e : response.getData()){
+                System.out.println(e.get("MemberId"));
+                if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
+                    userId = e.get("MemberId").toString();
+                }
+            }
+            UnBlockUserWithId final_request = new UnBlockUserWithId(socket, socketIn, socketOut, userId);
+            final_response = final_request.talk();
+        }
+        //SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, userId, content);
+        System.out.println("response.getData()");
+
+
+        responseCode = final_response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
+
+class UnFriendButtonThread extends Thread {
+
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    final String SOCKET_HOST = "localhost";
+    final int SOCKET_PORT = 5555;
+    Socket socket;
+    private String conId;
+
+    private int responseCode;
+
+    public UnFriendButtonThread( String conId) {
+        this.conId = conId;
+
+        /* Multithreading + Socket */
+        try {
+            socket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            socketIn = new ObjectInputStream(socket.getInputStream());
+            socketOut = new ObjectOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        SocketResponse final_response;
+        GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
+        SocketResponse response = request.talk();
+
+        String userId = null;
+        for (Map<String, Object> e : response.getData()){
+            System.out.println(e.get("MemberId"));
+            if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
+                userId = e.get("MemberId").toString();
+            }
+        }
+        RemoveFriend final_request = new RemoveFriend(socket, socketIn, socketOut, userId);
+        final_response = final_request.talk();
+        //SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, userId, content);
+        System.out.println("response.getData()");
+
+        responseCode = final_response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
+
+class ReportUserThread extends Thread {
+
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    final String SOCKET_HOST = "localhost";
+    final int SOCKET_PORT = 5555;
+    Socket socket;
+    private String conId;
+
+    private int responseCode;
+
+    public ReportUserThread( String conId) {
+        this.conId = conId;
+
+        /* Multithreading + Socket */
+        try {
+            socket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            socketIn = new ObjectInputStream(socket.getInputStream());
+            socketOut = new ObjectOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        SocketResponse final_response;
+        GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
+        SocketResponse response = request.talk();
+
+        String userId = null;
+        for (Map<String, Object> e : response.getData()){
+            System.out.println(e.get("MemberId"));
+            if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
+                userId = e.get("MemberId").toString();
+            }
+        }
+        ReportUser final_request = new ReportUser(socket, socketIn, socketOut, userId);
+        final_response = final_request.talk();
+        //SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, userId, content);
+        System.out.println("response.getData()");
+
+        responseCode = final_response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
+
+class CreateNewGroupWithThread extends Thread {
+
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    final String SOCKET_HOST = "localhost";
+    final int SOCKET_PORT = 5555;
+    Socket socket;
+    private String conId;
+
+    private int responseCode;
+
+    public CreateNewGroupWithThread( String conId) {
+        this.conId = conId;
+
+        /* Multithreading + Socket */
+        try {
+            socket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            socketIn = new ObjectInputStream(socket.getInputStream());
+            socketOut = new ObjectOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        SocketResponse final_response;
+
+        // Get friendId u participate in
+        GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
+        SocketResponse response = request.talk();
+
+        // From selected conId get your friendId
+        String userId = null;
+        for (Map<String, Object> e : response.getData()){
+            System.out.println(e.get("MemberId"));
+            if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
+                userId = e.get("MemberId").toString();
+            }
+        } // Get friendId, this user is talking to
+
+        /* Create new conversation */
+        GetHighestConvId highestConvIdReq = new GetHighestConvId(socket, socketIn, socketOut);
+        SocketResponse highestConvIdRes = highestConvIdReq.talk(); // Receive res
+
+        // Res return a vector<Map<String,Object>>
+        String newConId = incrementCVNumber((String) highestConvIdRes.getData().get(0).get("highestConId")); //Convert back to string
+        String newConName = "Cuộc trò truyện " + newConId;
+
+        // Create new conversation with new id, name, ...
+        CreateNewConv conRequest = new CreateNewConv(socket, socketIn, socketOut, newConId, newConName, true);
+        SocketResponse conResponse = conRequest.talk();
+
+
+        ConvAddMemWhenUAreAdMin uAddMemToGroupReq = new ConvAddMemWhenUAreAdMin(socket, socketIn, socketOut, newConId, userId);
+        SocketResponse uAddMemToGroupRes = uAddMemToGroupReq.talk();
+
+        // For u as an admin first
+        UpdateConvLog semi_final_request = new UpdateConvLog(socket, socketIn, socketOut, newConId, LocalData.getCurrentUsername(),0);
+        SocketResponse semi_final_response = semi_final_request.talk();
+
+        // Sleep for not duplicate the date between update convLog
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // For user u add to group
+        UpdateConvLog final_request = new UpdateConvLog(socket, socketIn, socketOut, newConId, userId,2);
+        final_response = final_request.talk();
+
+        //SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, userId, content);
+        System.out.println("response.getData()");
+
+        responseCode = final_response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+
+    public static String incrementCVNumber(String input) {
+        // Extract numeric part
+        String numericPart = input.substring(2);
+
+        // Convert to integer, increment, and format back
+        int numericValue = Integer.parseInt(numericPart);
+        numericValue++;
+
+        // Format the incremented value back into the original format
+        String formattedIncremented = String.format("CV%06d", numericValue);
+
+        return formattedIncremented;
+    }
+}
+

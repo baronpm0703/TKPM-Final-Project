@@ -41,6 +41,7 @@ public class MainClient {
             throw new RuntimeException(e);
         }
 
+        System.out.println("1");
         // Spawn login box
         LoginBox loginBox = new LoginBox();
         int loginResult = loginBox.display();
@@ -48,7 +49,7 @@ public class MainClient {
         if (loginResult != 0) {
             return;
         }
-
+        System.out.println("2");
         LogActivityLoginRequest logActivityLoginRequest = new LogActivityLoginRequest(socket, socketIn, socketOut, LocalData.getCurrentUsername());
         SocketResponse logActivityLoginRequestResponse = logActivityLoginRequest.talk();
         System.out.println(logActivityLoginRequestResponse.getResponseCode());
