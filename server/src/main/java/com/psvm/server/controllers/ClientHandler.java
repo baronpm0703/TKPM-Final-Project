@@ -48,11 +48,22 @@ public class ClientHandler implements Runnable {
 				switch (request.getTalkCode()) {
 					case "1": {
 						talkCode_CreateUser(request.getData());
-
+						break;
+					}
+					case "2": {
+						talkCode_ForgetPassword(request.getData());
 						break;
 					}
 					case "3": {
 						talkCode_GetUser(request.getData());
+						break;
+					}
+					case "3_1": {
+						talkCode_LogSignInActivity(request.getData());
+						break;
+					}
+					case "3_2": {
+						talkCode_LogSignOutActivity(request.getData());
 						break;
 					}
 					case "4a_1": {
@@ -171,7 +182,7 @@ public class ClientHandler implements Runnable {
 
 	void talkCode_ForgetPassword(Map<String, Object> data) throws IOException {
 		try {
-			db.createUser(data.get("username").toString(), data.get("firstName").toString(), data.get("lastName").toString(), data.get("password").toString(), data.get("address").toString(), (LocalDateTime) data.get("dob"), (boolean) data.get("gender"), data.get("email").toString());
+			db.resetPassword(data.get("username").toString(), data.get("email").toString(), data.get("hashedPassword").toString());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
@@ -191,9 +202,29 @@ public class ClientHandler implements Runnable {
 					responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
 				}
 			}
-
+			System.out.println(responseData);
 			queryResult.getStatement().close();
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_LogSignInActivity(Map<String, Object> data) throws IOException {
+		try {
+			db.logActivitySignIn(data.get("username").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_LogSignOutActivity(Map<String, Object> data) throws IOException {
+		try {
+			db.logActivitySignOut(data.get("username").toString());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
@@ -236,7 +267,25 @@ public class ClientHandler implements Runnable {
 
 	void talkCode_FriendMessageList(Map<String, Object> data) throws IOException {
 		try {
-			ResultSet[] queryResult = db.getFriendMessageList(data.get("username").toString(), data.get("friendSearch").toString(), data.get("chatSearch").toString());
+			ResultSet[] queryResult = new ResultSet[0];
+			switch (data.get("searchOption").toString()) {
+				case "friend": {
+					queryResult = db.getFriendMessageList(data.get("username").toString(), data.get("friendSearch").toString(), data.get("chatSearch").toString(), false);
+					break;
+				}
+				case "friendOnline": {
+					queryResult = db.getOnlineFriendMessageList(data.get("username").toString(), data.get("friendSearch").toString(), data.get("chatSearch").toString());
+					break;
+				}
+				case "group": {
+					queryResult = db.getFriendMessageList(data.get("username").toString(), data.get("friendSearch").toString(), data.get("chatSearch").toString(), true);
+					break;
+				}
+				case "friendBlocked": {
+					queryResult = db.getBlockedFriendMessageList(data.get("username").toString(), data.get("friendSearch").toString(), data.get("chatSearch").toString());
+					break;
+				}
+			}
 
 			Vector<Map<String, Object>> responseData = new Vector<>();
 			for (ResultSet qrEach: queryResult) {
@@ -263,7 +312,7 @@ public class ClientHandler implements Runnable {
 
 	void talkCode_SingleFriendChatLog(Map<String, Object> data) throws IOException {
 		try {
-			ResultSet queryResult = db.getSingleFriendChatLog(data.get("username").toString(), data.get("conversationId").toString(), data.get("memberId").toString());
+			ResultSet queryResult = db.getSingleFriendChatLog(data.get("username").toString(), data.get("conversationId").toString());
 			ResultSetMetaData queryResultMeta;
 			queryResultMeta = queryResult.getMetaData();
 
@@ -300,7 +349,7 @@ public class ClientHandler implements Runnable {
 
 	void talkCode_SendMessage(Map<String, Object> data) throws IOException {
 		try {
-			db.sendMessage(data.get("username").toString(), data.get("friendId").toString(), data.get("conversationId").toString(), data.get("content").toString());
+			db.sendMessage(data.get("username").toString(), data.get("conversationId").toString(), data.get("content").toString());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());

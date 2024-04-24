@@ -5,12 +5,12 @@ public enum LocalData {
 
 	private String currentUsername;	// Remove pre-set value when login register is implemented
 	private String selectedConversation;
-	private String selectedFriend;
+	private String selectedSearchOption;
 
 	LocalData() {
 		this.currentUsername = "";
 		this.selectedConversation = "";
-		this.selectedFriend = "";
+		this.selectedSearchOption = "friend";
 	}
 
 	public static void setCurrentUsername(String username) {
@@ -27,10 +27,10 @@ public enum LocalData {
 		return INSTANCE.selectedConversation;
 	}
 
-	public static void setSelectedFriend(String selectedConversation) {
-		INSTANCE.selectedFriend = selectedConversation;
+	public static void setSelectedSearchOption(String selectedSearchOption) {
+		INSTANCE.selectedSearchOption = selectedSearchOption;
 	}
-	public static String getSelectedFriend() {
-		return INSTANCE.selectedFriend;
+	public static String getSelectedSearchOption() {
+		return INSTANCE.selectedSearchOption;
 	}
 }

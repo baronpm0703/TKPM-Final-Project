@@ -20,10 +20,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Vector;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,11 +31,10 @@ class ChatBodyThread extends SwingWorker<Void, Map<String, Object>> {
     ObjectInputStream socketIn;
     ObjectOutputStream socketOut;
     private String conversationId;
-    private String memberId;
     private Observer observer;
 
     public interface Observer {
-        public void workerDidUpdate(String conversationId, String memberId, Vector<Map<String, Object>> message);
+        public void workerDidUpdate(String conversationId, Vector<Map<String, Object>> message);
     }
 
     public ChatBodyThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, Observer observer) {
@@ -45,19 +42,19 @@ class ChatBodyThread extends SwingWorker<Void, Map<String, Object>> {
         this.socketIn = socketIn;
         this.socketOut = socketOut;
         this.conversationId = LocalData.getSelectedConversation();
-        this.memberId = LocalData.getSelectedFriend();
 
         this.observer = observer;
     }
 
     @Override
     protected Void doInBackground() throws Exception {
-        SingleFriendChatLogRequest request = new SingleFriendChatLogRequest(clientSocket, socketIn, socketOut, conversationId, memberId);
+        SingleFriendChatLogRequest request = new SingleFriendChatLogRequest(clientSocket, socketIn, socketOut, conversationId);
         SocketResponse response = request.talk();
 
         for (Map<String, Object> datum: response.getData()) {
             publish(datum);
         }
+        if (response.getData().isEmpty()) publish();
 
         return null;
     }
@@ -67,7 +64,7 @@ class ChatBodyThread extends SwingWorker<Void, Map<String, Object>> {
         super.process(chunks);
 
         Vector<Map<String, Object>> messages = new Vector<>(chunks);
-        observer.workerDidUpdate(conversationId, memberId, messages);
+        observer.workerDidUpdate(conversationId, messages);
     }
 }
 
@@ -113,16 +110,15 @@ class SendMessageButtonThread extends Thread {
     ObjectInputStream socketIn;
     ObjectOutputStream socketOut;
 
-    private String friendId, conversationId, content;
+    private String conversationId, content;
 
     private int responseCode;
 
-    public SendMessageButtonThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String friendId, String conversationId, String content) {
+    public SendMessageButtonThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String conversationId, String content) {
         this.clientSocket = clientSocket;
         this.socketIn = socketIn;
         this.socketOut = socketOut;
 
-        this.friendId = friendId;
         this.conversationId = conversationId;
         this.content = content;
     }
@@ -130,8 +126,8 @@ class SendMessageButtonThread extends Thread {
     @Override
     public void run() {
         super.run();
-
-        SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, friendId, conversationId, content);
+        SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, conversationId, content);
+        System.out.println("response.getData()");
         SocketResponse response = request.talk();
 
         responseCode = response.getResponseCode();
@@ -162,7 +158,6 @@ public class ChatBody extends JPanel {
 
     private String currentConversationId;
     private String previousConversationId;
-    private String currentMemberId;
 
     public ChatBody() {
         /* Initialize this GUI component */
@@ -257,14 +252,14 @@ public class ChatBody extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 String text = chatInput.getText();
                 if (!text.isEmpty()) {
-                    SendMessageButtonThread sendMessageButtonThread = new SendMessageButtonThread(chatBodySocket, chatBodySocketIn, chatBodySocketOut, currentMemberId, currentConversationId, text);
+                    SendMessageButtonThread sendMessageButtonThread = new SendMessageButtonThread(chatBodySocket, chatBodySocketIn, chatBodySocketOut, currentConversationId, text);
                     sendMessageButtonThread.start();
 
                     try {
                         sendMessageButtonThread.join();
 
                         if (sendMessageButtonThread.getResponseCode() == SocketResponse.RESPONSE_CODE_FAILURE) {
-                            JOptionPane.showConfirmDialog(thisPanel, "Failed to send message", "Error", JOptionPane.DEFAULT_OPTION);
+                            JOptionPane.showConfirmDialog(thisPanel, "Gửi tin nhắn thất bại", "Error", JOptionPane.DEFAULT_OPTION);
                         }
                     } catch (InterruptedException ex) {
                         System.out.println("Exception thrown while sending message in " + this.getClass().getSimpleName() + ": " + ex.getMessage());
@@ -312,10 +307,9 @@ public class ChatBody extends JPanel {
         // Thread to update chat body
         ChatBodyThread chatBodyThreadWorker = new ChatBodyThread(chatBodySocket, chatBodySocketIn, chatBodySocketOut, new ChatBodyThread.Observer() {
             @Override
-            public void workerDidUpdate(String conversationId, String memberId, Vector<Map<String, Object>> messages) {
+            public void workerDidUpdate(String conversationId, Vector<Map<String, Object>> messages) {
                 /* Update variables */
                 currentConversationId = conversationId;
-                currentMemberId = memberId;
 
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {

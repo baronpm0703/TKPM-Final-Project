@@ -144,11 +144,11 @@ public class RegisterBox extends Component {
 
 			// Check for data validity before processing
 			if (passwordInput.getText().length() < 8) {
-				JOptionPane.showConfirmDialog(this, "Có lỗi xảy ra thì tạo tài khoản: Mật khẩu phải có ít nhất 8 kí tự.", "Tạo tài khoản thất bại", JOptionPane.DEFAULT_OPTION);
+				JOptionPane.showConfirmDialog(this, "Có lỗi xảy ra khi tạo tài khoản: Mật khẩu phải có ít nhất 8 kí tự.", "Tạo tài khoản thất bại", JOptionPane.DEFAULT_OPTION);
 				continue;
 			}
 			if (!dob.isBefore(LocalDateTime.now().toLocalDate().atStartOfDay())) {
-				JOptionPane.showConfirmDialog(this, "Có lỗi xảy ra thì tạo tài khoản: Ngày sinh không đươc trong hoặc sau ngày hôm nay.", "Tạo tài khoản thất bại", JOptionPane.DEFAULT_OPTION);
+				JOptionPane.showConfirmDialog(this, "Có lỗi xảy ra khi tạo tài khoản: Ngày sinh không đươc trong hoặc sau ngày hôm nay.", "Tạo tài khoản thất bại", JOptionPane.DEFAULT_OPTION);
 				continue;
 			}
 			if (!email.matches(EMAIL_PATTERN)) {

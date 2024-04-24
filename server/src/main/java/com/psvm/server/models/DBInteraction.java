@@ -308,16 +308,19 @@ public class DBInteraction {
 				preparedStatement.setString(i, value.toString());
 			else if (value.getClass() == Integer.class)
 				preparedStatement.setInt(i, (int)value);
-			else if (value.getClass() == Boolean.class)
-				preparedStatement.setBoolean(i, (boolean) value);
+			else if (value.getClass() == Boolean.class) {
+				if ((Boolean) value)
+					preparedStatement.setBoolean(i, true);
+				else
+					preparedStatement.setBoolean(i, false);
+			}
 			else if (value.getClass() == LocalDateTime.class)
 				preparedStatement.setTimestamp(i, Timestamp.valueOf((LocalDateTime) value));
 			else
 				preparedStatement.setTimestamp(i, new Timestamp((long) value));
 		}
 
-		System.out.println(preparedStatement.toString());
-		System.out.println(preparedStatement.executeUpdate());
+		preparedStatement.executeUpdate();
 		preparedStatement.close();
 		dbConn.commit();
 	}
@@ -332,8 +335,14 @@ public class DBInteraction {
 					preparedStatement.setString(i, value.toString());
 				else if (value.getClass() == Integer.class)
 					preparedStatement.setInt(i, (int)value);
-				else if (value.getClass() == Boolean.class)
-					preparedStatement.setBoolean(i, (boolean) value);
+				else if (value.getClass() == Boolean.class) {
+					if ((Boolean) value)
+						preparedStatement.setBoolean(i, true);
+					else
+						preparedStatement.setBoolean(i, false);
+				}
+				else if (value.getClass() == LocalDateTime.class)
+					preparedStatement.setTimestamp(i, Timestamp.valueOf((LocalDateTime) value));
 				else
 					preparedStatement.setTimestamp(i, new Timestamp((long) value));
 			}
@@ -354,12 +363,17 @@ public class DBInteraction {
 					preparedStatement.setString(i, value.toString());
 				else if (value.getClass() == Integer.class)
 					preparedStatement.setInt(i, (int)value);
-				else if (value.getClass() == Boolean.class)
-					preparedStatement.setBoolean(i, (boolean) value);
+				else if (value.getClass() == Boolean.class) {
+					if ((Boolean) value)
+						preparedStatement.setBoolean(i, true);
+					else
+						preparedStatement.setBoolean(i, false);
+				}
 				else
 					preparedStatement.setTimestamp(i, new Timestamp((long) value));
 			}
 		}
+
 		ResultSet resultSet = preparedStatement.executeQuery();
 		return resultSet;
 	}

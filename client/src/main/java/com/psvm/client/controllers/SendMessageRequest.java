@@ -9,10 +9,9 @@ import java.net.Socket;
 import java.util.Map;
 
 public class SendMessageRequest extends SocketTalk {
-	public SendMessageRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String friendId, String conversationId, String content) {
+	public SendMessageRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String conversationId, String content) {
 		super(socket, socketIn, socketOut, SocketTalk.TALK_CODE_SEND_MESSAGE, Map.of(
 				"username", LocalData.getCurrentUsername(),
-				"friendId", friendId,
 				"conversationId", conversationId,
 				"content", content
 		));

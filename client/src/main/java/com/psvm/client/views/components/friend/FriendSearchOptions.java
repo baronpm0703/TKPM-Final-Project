@@ -9,7 +9,7 @@ public class FriendSearchOptions extends JPanel {
     private String currentOption;
     FriendSearchOptions(){
         setOpaque(false);
-        String[] options = {"Tìm người theo tên đăng nhập", "Tìm người theo tên", "Tìm đoạn chat"};
+        String[] options = {"Tìm người/đoạn chat", "Tìm theo nội dung đoạn chat"};
 
         JComboBox<String> comboBox = new JComboBox<>(options);
         comboBox.setSelectedIndex(0);
