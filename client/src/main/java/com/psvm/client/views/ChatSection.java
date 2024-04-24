@@ -10,7 +10,9 @@ public class ChatSection extends JPanel {
         int scrollbarWidth = UIManager.getLookAndFeelDefaults().getInt("ScrollBar.width");
         this.setPreferredSize(new Dimension(1120 - scrollbarWidth,820));
 
-        //header
+        //Detail
+        DetailOfChat detailOfChat = new DetailOfChat();
+        this.add(detailOfChat,BorderLayout.EAST);
 
         //ChatScreen
         ChatBody chatBody = new ChatBody();
@@ -18,9 +20,5 @@ public class ChatSection extends JPanel {
         chatBodyScroll.setBorder(new EmptyBorder(0,0,0,0));
         chatBodyScroll.setViewportView(chatBody);
         this.add(chatBodyScroll, BorderLayout.CENTER);
-
-        //Detail
-        DetailOfChat detailOfChat = new DetailOfChat();
-        this.add(detailOfChat,BorderLayout.EAST);
     }
 }

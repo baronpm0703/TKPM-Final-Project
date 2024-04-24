@@ -74,10 +74,14 @@ public class ClientHandler implements Runnable {
 						talkCode_SendFriendRequest(request.getData());
 						break;
 					}
+					case "4b": {
+						talkCode_GetFriendRequest(request.getData());
+						break;
+					}
 					case "4c": {
 						Map<String, Object> data = request.getData();
 						try {
-							db.respondFriendRequest(data.get("username").toString(), data.get("senderId").toString());
+							db.respondFriendRequest((Integer) data.get("response"), data.get("username").toString(), data.get("senderId").toString());
 							handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 						} catch (SQLException e) {
 							System.out.println(e.getMessage());
@@ -260,6 +264,30 @@ public class ClientHandler implements Runnable {
 			db.sendFriendRequest(data.get("username").toString(), data.get("otherUsername").toString());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+
+	void talkCode_GetFriendRequest(Map<String, Object> data) throws IOException {
+		try {
+			ResultSet queryResult = db.getFriendRequest(data.get("username").toString());
+			ResultSetMetaData queryResultMeta;
+			queryResultMeta = queryResult.getMetaData();
+
+			Vector<Map<String, Object>> responseData = new Vector<>();
+			while (queryResult.next()) {
+				Map<String, Object> row = new HashMap<>();
+				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
+					row.put(queryResultMeta.getColumnLabel(i), queryResult.getObject(i));
+				}
+
+				responseData.add(row);
+			}
+
+			queryResult.getStatement().close();
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
+		} catch (SQLException | NullPointerException e) {
 			System.out.println(e.getMessage());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
 		}

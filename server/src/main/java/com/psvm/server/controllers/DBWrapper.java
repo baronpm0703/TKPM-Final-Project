@@ -94,10 +94,11 @@ public class DBWrapper {
 	public ResultSet searchUser(String currentUsername, String otherUsername) throws SQLException {
 		String sql = "SELECT u.Username, fq.TargetId\n" +
 				"FROM User u\n" +
-				"LEFT JOIN FriendRequest fq ON fq.SenderId = ? AND fq.TargetId = u.Username\n" +
+				"LEFT JOIN FriendRequest fq ON (fq.SenderId = ? AND fq.TargetId = u.Username) OR (fq.SenderId = u.Username AND fq.TargetId = ?)\n" +
 				"WHERE u.Username LIKE ? AND u.Username!=?;";
 
 		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(currentUsername);
 		questionMarks.add(currentUsername);
 		questionMarks.add("%" + otherUsername + "%");
 		questionMarks.add(currentUsername);
@@ -115,21 +116,25 @@ public class DBWrapper {
 		dbConn.doPreparedStatement(sql, questionMarks);
 	}
 
-	public void respondFriendRequest(String currentUsername, String senderId) throws SQLException {
+	public ResultSet getFriendRequest(String username) throws SQLException {
+		String sql = "SELECT * FROM FriendRequest WHERE TargetId=?";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(username);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public void respondFriendRequest(int status, String currentUsername, String senderId) throws SQLException {
 		// Remove first sql line (before first semicolon) when done testing
-		String sql1 = "INSERT INTO FriendRequest (SenderId, TargetId, Datetime) VALUES (?, ?, current_timestamp());";
-		String sql2 = "UPDATE FriendRequest SET Status=1 WHERE SenderId=? AND TargetId=? ORDER BY Datetime DESC LIMIT 1;";
-		String[] sqls = {sql1, sql2};
+		String sql = "UPDATE FriendRequest SET Status=? WHERE SenderId=? AND TargetId=? ORDER BY Datetime DESC LIMIT 1;";
 
-		Vector<Object> questionMark1 = new Vector<>();
-		questionMark1.add(senderId);
-		questionMark1.add(currentUsername);
-		Vector<Object> questionMark2 = new Vector<>();
-		questionMark2.add(senderId);
-		questionMark2.add(currentUsername);
-		Vector<Object>[] questionMarks = new Vector[] {questionMark1, questionMark2};
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(status);
+		questionMarks.add(senderId);
+		questionMarks.add(currentUsername);
 
-		dbConn.doBatchPreparedStatement(sqls, questionMarks);
+		dbConn.doPreparedStatement(sql, questionMarks);
 	}
 
 	public void removeFriend(String currentUsername, String friendId) throws SQLException {

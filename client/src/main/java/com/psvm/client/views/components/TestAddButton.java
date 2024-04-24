@@ -38,10 +38,10 @@ class TestAddButtonThread extends Thread {
 	public void run() {
 		super.run();
 
-		FriendRequestResponseRequest request = new FriendRequestResponseRequest(clientSocket, socketIn, socketOut, "Highman", "Kizark");
-		SocketResponse response = request.talk();
-
-		responseCode = response.getResponseCode();
+//		FriendRequestResponseRequest request = new FriendRequestResponseRequest(clientSocket, socketIn, socketOut, "Highman", "Kizark");
+//		SocketResponse response = request.talk();
+//
+//		responseCode = response.getResponseCode();
 	}
 
 	public int getResponseCode() {

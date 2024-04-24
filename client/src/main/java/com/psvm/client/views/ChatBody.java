@@ -152,6 +152,7 @@ public class ChatBody extends JPanel {
 
     private JPanel chatBody;
     private JScrollPane scrollPane;
+    private JPanel inputTextArea;
     private int currentRow = 0;
 
     private Vector<Map<String, Object>> totalMessages = new Vector<>();
@@ -167,7 +168,7 @@ public class ChatBody extends JPanel {
         scrollPane = initUIChatBody();
 
         this.add(scrollPane, BorderLayout.CENTER);
-        JPanel inputTextArea = initUIInputTextArea();
+        inputTextArea = initUIInputTextArea();
         this.add(inputTextArea, BorderLayout.SOUTH);
 
         /* Multithreading + Socket */
@@ -313,6 +314,9 @@ public class ChatBody extends JPanel {
 
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
+                    // Remove chat input box if no conversation is selected
+					inputTextArea.setVisible(!currentConversationId.isEmpty());
+
                     // If conversationId changes, it means the client has selected another conversation=
                     if (!conversationId.equals(previousConversationId)) {
                         chatBody.removeAll();

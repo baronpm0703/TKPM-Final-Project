@@ -3,6 +3,7 @@ package com.psvm.client.views.components.friend;
 import com.psvm.client.controllers.FriendMessageListRequest;
 import com.psvm.client.controllers.SearchUserRequest;
 import com.psvm.client.views.ListFriendInSearchDialog;
+import com.psvm.client.views.ListRequestInSearchDialog;
 import com.psvm.shared.socket.SocketResponse;
 
 import javax.swing.*;
@@ -90,7 +91,7 @@ public class AddFriendIconButton extends JButton {
     private void showOptionsPopupMenu() {
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem option1 = new JMenuItem("Thêm bạn bè");
-        JMenuItem option2 = new JMenuItem("Tạo nhóm");
+        JMenuItem option2 = new JMenuItem("Lời mời kết bạn");
 
         option1.addActionListener(new ActionListener() {
             @Override
@@ -104,8 +105,8 @@ public class AddFriendIconButton extends JButton {
         option2.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Tạo nhóm selected");
                 // Add your Option 2 functionality here
+                acceptFriendRequestDialog();
             }
         });
 
@@ -206,5 +207,33 @@ public class AddFriendIconButton extends JButton {
         } catch (InterruptedException e) {
             System.out.println("Exception thrown while search for users in " + this.getClass().getSimpleName() + ": " + e.getMessage());
         }
+    }
+
+    private void acceptFriendRequestDialog() {
+        JDialog dialog = new JDialog((Frame) null, "Lời mời kết bạn", true);
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(null);
+
+        // Create a panel for content with padding
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setOpaque(false);
+        contentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        // Table
+        ListRequestInSearchDialog listRequestInSearchDialog = new ListRequestInSearchDialog();
+        JScrollPane scrollFriend = new JScrollPane(listRequestInSearchDialog);
+        scrollFriend.setPreferredSize(new Dimension(400, 200));
+        scrollFriend.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollFriend.getViewport().addChangeListener(e -> {
+            scrollFriend.revalidate();
+            scrollFriend.repaint();
+        });
+        scrollFriend.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        contentPanel.add(scrollFriend, BorderLayout.CENTER);
+
+        // Set the content panel to the dialog
+        dialog.setContentPane(contentPanel);
+
+        dialog.setVisible(true);
     }
 }

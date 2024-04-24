@@ -17,6 +17,7 @@ public class SocketTalk {
 	public final static String TALK_CODE_LOG_ACTIVITY_SIGN_OUT = "3_2";
 	public final static String TALK_CODE_SEARCH_USER = "4a_1";
 	public final static String TALK_CODE_SEND_FRIEND_REQUEST = "4a_2";
+	public final static String TALK_CODE_GET_FRIEND_REQUEST = "4b";
 	public final static String TALK_CODE_FRIEND_MESSAGE_LIST = "4f";
 	public final static String TALK_CODE_PROCESS_FRIEND_REQUEST = "4c";
 	public final static String TALK_CODE_FRIEND_REMOVE = "4d";
