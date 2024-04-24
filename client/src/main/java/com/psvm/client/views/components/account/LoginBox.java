@@ -170,7 +170,7 @@ public class LoginBox extends Component {
 				Vector<Map<String, Object>> data = loginBoxThread.getData();
 
 				// Check if the user is not banned, if true then allows log in
-				if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS) {
+				if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS && Integer.parseInt(data.get(0).get("UserFound").toString()) == 1) {
 					if (Integer.parseInt(data.get(1).get("Status").toString()) != 2) {
 						break;
 					}
@@ -179,7 +179,7 @@ public class LoginBox extends Component {
 					}
 				}
 				else {
-					JOptionPane.showConfirmDialog(this, "Có lỗi xảy ra khi đăng nhập. Vui lòng kiểm tra lại thông tin đăng kí.", "Đăng nhập thất bại", JOptionPane.DEFAULT_OPTION);
+					JOptionPane.showConfirmDialog(this, "Có lỗi xảy ra khi đăng nhập. Vui lòng kiểm tra lại thông tin đăng nhập.", "Đăng nhập thất bại", JOptionPane.DEFAULT_OPTION);
 				}
 			} catch (IOException | InterruptedException | NullPointerException e) {
 				System.out.println("Error occurred while logging in " + this.getClass().getSimpleName() + ": " + e.getMessage());

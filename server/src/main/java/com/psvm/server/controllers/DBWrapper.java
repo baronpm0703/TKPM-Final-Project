@@ -149,6 +149,15 @@ public class DBWrapper {
 		dbConn.doPreparedStatement(sql, questionMarks);
 	}
 
+	public ResultSet getUserInfo(String username) throws SQLException {
+		String sql = "SELECT Username, FirstName, LastName FROM User WHERE Username=?";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(username);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
 	public void BanUser(String bannedUserName) throws SQLException {
 		int Status = 2;
 		String sql = "Update hooyah.user Set Status = ? Where Username = ?; ";

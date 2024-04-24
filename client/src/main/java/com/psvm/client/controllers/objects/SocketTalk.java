@@ -18,9 +18,10 @@ public class SocketTalk {
 	public final static String TALK_CODE_SEARCH_USER = "4a_1";
 	public final static String TALK_CODE_SEND_FRIEND_REQUEST = "4a_2";
 	public final static String TALK_CODE_GET_FRIEND_REQUEST = "4b";
-	public final static String TALK_CODE_FRIEND_MESSAGE_LIST = "4f";
 	public final static String TALK_CODE_PROCESS_FRIEND_REQUEST = "4c";
 	public final static String TALK_CODE_FRIEND_REMOVE = "4d";
+	public final static String TALK_CODE_GET_USER_INFO = "4e";
+	public final static String TALK_CODE_FRIEND_MESSAGE_LIST = "4f";
 	public final static String TALK_CODE_FRIEND_LIST = "5";
 	public final static String TALK_CODE_SINGLE_FRIEND_CHAT_LOG = "9d";
 	public final static String TALK_CODE_MESSAGE_SEEN = "9h";

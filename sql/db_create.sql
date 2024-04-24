@@ -9,7 +9,7 @@ create table hooyah.User (
     DoB timestamp,
     Gender bool,
     Email varchar(255),
-    Status tinyint(1) default 0,
+    Status tinyint default 0,
     StatusDetail nvarchar(255),
     CreationDate timestamp
 );
@@ -82,7 +82,7 @@ create table hooyah.MessageSeen (
 create table hooyah.Friend (
 	UserId varchar(255),
     FriendId varchar(255),
-    Status tinyint(1) default 0,
+    Status tinyint default 0,
     primary key (UserId, FriendId)
 );
 
@@ -135,14 +135,24 @@ DELIMITER ;
 
 insert into hooyah.User
 values 
-	('Highman', 'Nguyễn', 'Anh Khoa', '123456', '1234 gadgdf', '2003-01-01', true, 'dagdg@email', 0, '', '2023-02-12'),
-	('Kizark', 'Nguyễn', 'Lâm Hải', 'abcdef', '35 fdsgfd', '2003-02-02', true, 'fasd@email', 0, '', '2023-02-12'),
-	('Baobeo', 'Nguyễn Phú', 'Minh Bảo', 'abc123', '5435 ashhh', '2003-03-03', true, 'hhh@email', 0, '', '2023-02-12'),
-	('adhd', 'agdsg', 'gadsghf', '123', '222 ttt', '1970-04-04', false, 'ytrhy@email', 0, '', '2023-02-12');
-    
+	('Highman', 'Nguyễn', 'Anh Khoa', '25d55ad283aa400af464c76d713c07ad', '1234 gadgdf', '2003-01-01', true, 'dagdg@email', 0, '', '2023-02-12'),
+	('Kizark', 'Nguyễn', 'Lâm Hải', '25d55ad283aa400af464c76d713c07ad', '35 fdsgfd', '2003-02-02', true, 'fasd@email', 0, '', '2023-02-12'),
+	('Baobeo', 'Nguyễn Phú', 'Minh Bảo', '25d55ad283aa400af464c76d713c07ad', '5435 ashhh', '2003-03-03', true, 'hhh@email', 0, '', '2023-02-12'),
+	('adhd', 'agdsg', 'gadsghf', '25d55ad283aa400af464c76d713c07ad', '222 gfdgsfd', '1970-04-04', false, 'ytrhy@email', 0, '', '2023-02-12'),
+	('HaiMen', 'Hai', 'Mèn', '25d55ad283aa400af464c76d713c07ad', '222 hdhgf', '1970-04-04', true, 'fdasf@gmail', 2, '', '2023-02-12');
+
 insert into hooyah.UserLog
 values
-	('Highman', '2023-11-12', 0, '');
+	('Highman', '2023-11-12', 0, ''),
+	('Highman', '2023-11-13', 1, ''),
+	('HaiMen', '2023-11-12', 0, ''),
+	('HaiMen', '2023-11-13', 1, ''),
+	('Kizark', '2023-11-11', 0, ''),
+	('Kizark', '2023-11-12', 1, ''),
+	('Baobeo', '2023-11-10', 0, ''),
+	('Baobeo', '2023-11-12', 1, ''),
+	('adhd', '2023-11-11', 0, ''),
+	('adhd', '2023-11-12', 1, '');
 
 insert into hooyah.Conversation (ConversationId, ConversationName, IsGroup)
 values

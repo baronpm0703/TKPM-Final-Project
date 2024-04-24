@@ -102,6 +102,10 @@ public class ClientHandler implements Runnable {
 
 						break;
 					}
+					case "4e": {
+						talkCode_GetUserInfo(request.getData());
+						break;
+					}
 					case "4f": {
 						talkCode_FriendMessageList(request.getData());
 						break;
@@ -203,7 +207,8 @@ public class ClientHandler implements Runnable {
 			Vector<Map<String, Object>> responseData = new Vector<>();
 			while (queryResult.next()) {
 				for (int i = 1; i <= queryResultMeta.getColumnCount(); i++) {
-					responseData.add(Map.of(queryResultMeta.getColumnLabel(i), queryResult.getObject(i)));
+					int value = queryResult.getObject(i) == null ? -1 : Integer.parseInt(queryResult.getObject(i).toString());
+					responseData.add(Map.of(queryResultMeta.getColumnLabel(i), value));
 				}
 			}
 			System.out.println(responseData);
@@ -291,6 +296,10 @@ public class ClientHandler implements Runnable {
 			System.out.println(e.getMessage());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
 		}
+	}
+
+	void talkCode_GetUserInfo(Map<String, Object> data) throws IOException {
+
 	}
 
 	void talkCode_FriendMessageList(Map<String, Object> data) throws IOException {
