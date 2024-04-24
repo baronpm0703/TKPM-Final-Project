@@ -114,8 +114,19 @@ create trigger hooyah.TRG_Request_Response
 after update on FriendRequest
 for each row
 begin
+	declare highestId int;
+	select MAX(CAST(SUBSTRING(ConversationId, 3) AS UNSIGNED)) into highestId from conversation;
+    
 	if old.Status=0 and new.Status=1 then
-		insert into Friend (UserId, FriendId) values (old.SenderId, old.TargetId);
+		insert into hooyah.Friend (UserId, FriendId) values (old.SenderId, old.TargetId);
+        
+        insert into hooyah.Conversation (ConversationId, ConversationName, IsGroup)
+        values (CONCAT('CV', LPAD(highestId + 1, 6, '0')), 'Cuộc trò chuyện', false);
+        
+        insert into hooyah.ConversationMember
+        values
+			(CONCAT('CV', LPAD(highestId + 1, 6, '0')), old.SenderId, true),
+			(CONCAT('CV', LPAD(highestId + 1, 6, '0')), old.TargetId, true);
 	end if;
 end;
 //

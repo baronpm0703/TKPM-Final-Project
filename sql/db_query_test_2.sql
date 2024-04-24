@@ -12,8 +12,9 @@ WITH ranked_data AS (
 	GROUP BY cv.ConversationId, cv.ConversationName, cvmes.MessageId, cvmes.SenderId, cvmem2.MemberId
 )
 SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, IsGroup
-FROM ranked_data rd
-WHERE rn = 1 AND IsGroup=true AND NOT EXISTS (
+	FROM ranked_data rd
+	JOIN User u ON u.Username = rd.MemberId
+WHERE u.Status = 1 AND rn = 1 AND IsGroup=false AND NOT EXISTS (
 	SELECT *
     FROM MessageSeen ms
     WHERE ms.MessageId = rd.MessageId AND ms.ConversationId = rd.ConversationId AND ms.SeenId = 'Highman'
@@ -38,7 +39,8 @@ WITH ranked_data AS (
 )
 SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, IsGroup
 FROM ranked_data rd
-WHERE rn = 1 AND IsGroup=false AND NOT EXISTS (
+JOIN User u ON u.Username = rd.MemberId
+WHERE u.Status = 1 AND rn = 1 AND IsGroup=false AND NOT EXISTS (
 	SELECT *
     FROM MessageSeen ms
     WHERE ms.MessageId = rd.MessageId AND ms.ConversationId = rd.ConversationId AND ms.SeenId = 'Highman'
@@ -63,7 +65,8 @@ WITH ranked_data AS (
 )
 SELECT DISTINCT rd.ConversationId, rd.ConversationName, rd.MessageId, rd.MemberId, SenderId, rd.Datetime, Content, IsGroup
 FROM ranked_data rd
-WHERE rn = 1 AND IsGroup=false AND EXISTS (
+JOIN User u ON u.Username = rd.MemberId
+WHERE u.Status = 1 AND rn = 1 AND IsGroup=false AND EXISTS (
 	SELECT *
     FROM MessageSeen ms
     WHERE ms.MessageId = rd.MessageId AND ms.ConversationId = rd.ConversationId AND ms.SeenId = 'Highman'
@@ -73,16 +76,8 @@ WHERE rn = 1 AND IsGroup=false AND EXISTS (
 SELECT cv.ConversationId, cvmem.MemberId
 FROM Conversation cv
 JOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId
+JOIN User u ON u.Username = cvmem.MemberId
 LEFT JOIN ConversationMessage cvmes ON cv.ConversationId = cvmes.ConversationId 
-WHERE cv.IsGroup=false AND cvmem.MemberId != 'Highman' AND cvmem.MemberId LIKE '%kiz%'
+WHERE u.Status = 1 AND cv.IsGroup=false AND cvmem.MemberId != 'Highman' AND cvmem.MemberId LIKE '%kiz%'
 GROUP BY cv.ConversationId, cvmem.MemberId
 HAVING COUNT(cvmes.MessageId) = 0;
-
--- Get messages not seen by self
-SELECT cvmes.MessageId
-FROM ConversationMessage cvmes
-WHERE cvmes.ConversationId='CV000001' AND NOT EXISTS (
-	SELECT *
-    FROM MessageSeen ms
-    WHERE ms.ConversationId = cvmes.ConversationId AND cvmes.MessageId = ms.MessageId AND ms.SeenId='Baobeo'
-);
