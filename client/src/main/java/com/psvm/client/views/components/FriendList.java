@@ -43,6 +43,7 @@ class FriendListThread extends SwingWorker<Void, Vector<String>> {
 
 		Vector<String> temp = new Vector<>();
 		temp.add(response.getData().toString());
+		System.out.println(temp);
 		publish(temp);
 
 		return null;

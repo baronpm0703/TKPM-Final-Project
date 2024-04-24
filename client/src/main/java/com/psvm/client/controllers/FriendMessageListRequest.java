@@ -9,10 +9,11 @@ import java.net.Socket;
 import java.util.Map;
 
 public class FriendMessageListRequest extends SocketTalk {
-	public FriendMessageListRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String searchContent) {
+	public FriendMessageListRequest(Socket socket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String friendSearch, String chatSearch) {
 		super(socket, socketIn, socketOut, SocketTalk.TALK_CODE_FRIEND_MESSAGE_LIST, Map.of(
 				"username", LocalData.getCurrentUsername(),
-				"search", searchContent
+				"friendSearch", friendSearch,
+				"chatSearch", chatSearch
 			)
 		);
 	}

@@ -26,6 +26,7 @@ create table hooyah.UserLog (
 create table hooyah.Conversation (
 	ConversationId varchar(255) primary key,
 	ConversationName nvarchar(255),
+    IsGroup bool,
     IsE2EE bool default false
 );
 
@@ -101,8 +102,12 @@ create table hooyah.SpamReport (
     foreign key (ReportedId) references User(Username)
 );
 
+create table hooyah.Emptiness (
+	placeholder int
+);
+
 DELIMITER //
-create trigger TRG_Request_Response
+create trigger hooyah.TRG_Request_Response
 after update on FriendRequest
 for each row
 begin
@@ -120,11 +125,15 @@ values
 	('Kizark', 'Nguyễn', 'Lâm Hải', 'abcdef', '35 fdsgfd', '2003-02-02', true, 'fasd@email', 0, '', '2023-02-12'),
 	('Baobeo', 'Nguyễn Phú', 'Minh Bảo', 'abc123', '5435 ashhh', '2003-03-03', true, 'hhh@email', 0, '', '2023-02-12'),
 	('adhd', 'agdsg', 'gadsghf', '123', '222 ttt', '1970-04-04', false, 'ytrhy@email', 0, '', '2023-02-12');
-
-insert into hooyah.Conversation (ConversationId, ConversationName)
+    
+insert into hooyah.UserLog
 values
-	('CV000001', 'Cuộc trò chuyện'),
-	('CV000002', 'Cuộc trò chuyện');
+	('Highman', '2023-11-12', 0, '');
+
+insert into hooyah.Conversation (ConversationId, ConversationName, IsGroup)
+values
+	('CV000001', 'Cuộc trò chuyện', false),
+	('CV000002', 'Cuộc trò chuyện', true);
 
 insert into hooyah.ConversationMember
 values
@@ -137,6 +146,7 @@ insert into hooyah.ConversationMember values ('CV000002', 'adhd', true);
 
 insert into hooyah.Friend (UserId, FriendId)
 values ('Highman', 'Baobeo');
+insert into hooyah.Friend (UserId, FriendId) values ('Highman', 'adhd');
 
 insert into hooyah.FriendRequest (SenderId, TargetId, Datetime) values ('Kizark', 'Highman', current_timestamp());
 update hooyah.FriendRequest
@@ -197,3 +207,15 @@ values
 	(6, 'CV000002', 'Kizark'),
 	(6, 'CV000002', 'adhd'),
 	(6, 'CV000002', 'Baobeo');
+    
+insert into hooyah.userlog (UserId, Datetime, LogType, LogDetail)
+values 
+	('Kizark', '2022-11-12 06:30:01', 0, 'Login'),
+    ('Baobeo', '2023-11-12 06:30:01', 0, 'Login'),
+    ('adhd', '2022-11-12 06:30:01', 1, 'Logout'),
+    ('Highman', '2023-11-12 06:30:01', 1, 'Logout');
+
+insert into hooyah.spamreport (ReporterId, ReportedId, Datetime) 
+values 
+	('adhd', 'Highman', '2022-11-11 06:30:01'),
+	('Kizark', 'Baobeo', '2022-11-12 06:30:01');
