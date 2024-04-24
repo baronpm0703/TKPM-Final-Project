@@ -70,6 +70,14 @@ public class DBWrapper {
 		dbConn.doPreparedStatement(sql, questionMarks);
 	}
 
+	public void deleteConv(String conid) throws SQLException {
+		String sql = "Delete from Conversation Where ConversationId = ?";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(conid);
+		dbConn.doPreparedStatement(sql, questionMarks);
+	}
+
 
 	public ResultSet getUser(String username, String hashedPassword) throws SQLException {
 		String sql = "SELECT COUNT(Username) as UserFound, Status FROM User WHERE Username=? AND Password=?;";
@@ -846,6 +854,14 @@ public class DBWrapper {
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}
 
+	public ResultSet determineIsBlocked(String blocker, String blockedUser) throws SQLException {
+		String sql = "Select status from Friend where UserId = ? and FriendId = ?";
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(blocker);
+		questionMarks.add(blockedUser);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
 	public void UserBlockUser(String blocker, String blockedUser) throws SQLException {
 		int blockStatus = 1;
 		int blockedStatus = 2;
@@ -854,7 +870,6 @@ public class DBWrapper {
 		questionMarks.add(blockStatus);
 		questionMarks.add(blocker);
 		questionMarks.add(blockedUser);
-
 
 		dbConn.doPreparedStatement(sql, questionMarks);
 		UserBeingBlockedByUser(blocker, blockedUser);
@@ -872,12 +887,20 @@ public class DBWrapper {
 	}
 	public void UserUnBlockUser(String blocker, String blockedUser) throws SQLException {
 		int normarlStatus = 0;
-		String sql = "Update hooyah.friend Set Status = ? Where UserId= ? and FriendId= ?;\n" +
-				"Update hooyah.friend Set Status = ? Where UserId= ? and FriendId= ?";
+		String sql = "Update hooyah.friend Set Status = ? Where UserId= ? and FriendId= ?";
 		Vector<Object> questionMarks = new Vector<>();
 		questionMarks.add(normarlStatus);
 		questionMarks.add(blocker);
 		questionMarks.add(blockedUser);
+
+		dbConn.doPreparedStatement(sql, questionMarks);
+		UnBlockUserBeingBlockedByUser(blocker, blockedUser);
+	}
+
+	public void UnBlockUserBeingBlockedByUser(String blocker, String blockedUser) throws SQLException {
+		int normarlStatus = 0;
+		String sql = "Update hooyah.friend Set Status = ? Where UserId= ? and FriendId= ?";
+		Vector<Object> questionMarks = new Vector<>();
 		questionMarks.add(normarlStatus);
 		questionMarks.add(blockedUser);
 		questionMarks.add(blocker);

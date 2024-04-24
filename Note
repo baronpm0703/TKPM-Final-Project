@@ -21,3 +21,6 @@ Quay lại bảng Conversation Mem với mọi suitableConId lọc ra những th
  	- Update bảng conLog.
 
  Nhớ viết 1 sql để toàn bộ có bị duplicate k
+
+ Xóa bạn bè sẽ xóa luôn conversation
+

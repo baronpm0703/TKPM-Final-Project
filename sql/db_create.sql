@@ -156,7 +156,7 @@ insert into hooyah.ConversationMember values ('CV000002', 'Highman', true);
 insert into hooyah.ConversationMember values ('CV000002', 'adhd', true);
 
 insert into hooyah.Friend (UserId, FriendId)
-values ('Highman', 'Baobeo');
+values ('Baobeo', 'Highman'), ('Highman', 'Baobeo');
 insert into hooyah.Friend (UserId, FriendId) values ('Highman', 'adhd');
 
 insert into hooyah.FriendRequest (SenderId, TargetId, Datetime) values ('Kizark', 'Highman', current_timestamp());

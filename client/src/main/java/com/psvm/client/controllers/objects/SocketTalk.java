@@ -37,9 +37,10 @@ public class SocketTalk {
 	public final static String TALK_CODE_SET_MEMBER_ADMIN_STATUS = "10g";
 	public final static String TALK_CODE_SEND_MESSAGE = "11";
 
-	public final static String BLOCK_CODE_BLOCK_USER = "bu";
+	public final static String BLOCK_CODE_UN_OR_BLOCK_USER = "uobu";
 	public final static String BLOCK_CODE_UNBLOCK_USER = "ub";
 
+	public final static String CONV_CODE_DEL_CONV = "delConv";
 	public final static String CONV_CODE_GET_MEM_INFO = "conMemInfo";
 	public final static String CONV_CODE_CREATE_NEW_CONV = "newConv";
 	public final static String CONV_CODE_GET_HIGHEST_ID = "highestId";
