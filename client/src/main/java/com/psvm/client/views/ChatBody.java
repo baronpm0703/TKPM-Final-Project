@@ -339,6 +339,14 @@ public class ChatBody extends JPanel {
 
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
+                    // Remove chat body on command
+                    if (LocalData.getToRemoveChat()) {
+                        previousConversationId = null;
+                        chatBody.removeAll();
+                        totalMessages.clear();
+                        LocalData.setToRemoveChat(false);
+                    }
+
                     // Remove chat input box if no conversation is selected
 					inputTextArea.setVisible(!currentConversationId.isEmpty());
 
@@ -350,10 +358,10 @@ public class ChatBody extends JPanel {
                     }
 
                     // Repaint chat body on command
-                    if (LocalData.getToReloadMessageList()) {
+                    if (LocalData.getToReloadChat()) {
                         chatBody.removeAll();
                         totalMessages.clear();
-                        LocalData.setToReloadMessageList(false);
+                        LocalData.setToReloadChat(false);
                     }
 
                     messages.removeAll(totalMessages);

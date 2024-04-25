@@ -125,7 +125,7 @@ public class ListGroupOfUser extends JPanel {
 	}
 
 	public void manuallySelectMessage(String conversationId) {
-		UserEachGroup selectMessage = (UserEachGroup) getComponent(messageIndexer.indexOf(conversationId));
+		UserEachGroup selectMessage = (UserEachGroup) this.getComponent(messageIndexer.indexOf(conversationId));
 
 		selectMessage.setBackground(Color.decode("#ADD8E6"));
 		currentSelectedFriend = selectMessage;
@@ -133,6 +133,13 @@ public class ListGroupOfUser extends JPanel {
 
 	public void setData(Vector<Map<String, Object>> friends) {
 		JPanel thisPanel = this;
+
+		// Reload message list on command
+		if (LocalData.getToReloadMessageList()) {
+			resetList();
+			LocalData.setToReloadMessageList(false);
+		}
+
 		SwingUtilities.invokeLater(() -> {
 			/* Add unseen messages while online */
 			Vector<Map<String, Object>> unseenOnlineMessages = (Vector<Map<String, Object>>) friends.get(0).get("data");
@@ -143,16 +150,15 @@ public class ListGroupOfUser extends JPanel {
 			{
 				String convoName = (Boolean.parseBoolean(friend.get("IsGroup").toString())) ? friend.get("ConversationName").toString() : friend.get("MemberId").toString();
 				if (!messageIndexer.contains(friend.get("ConversationId").toString())) {
-					UserEachGroup userEachGroup = new UserEachGroup(friend.get("ConversationId").toString(), "af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Online");
+					UserEachGroup userEachGroup = new UserEachGroup(friend.get("ConversationId").toString(), friend.get("ConversationId").toString(), "af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Online");
 					thisPanel.add(userEachGroup, unseenOnlineMessagesIndex);
 					messageIndexer.add(unseenOnlineMessagesIndex, friend.get("ConversationId").toString());
 					addHoverEffect(userEachGroup);
 				}
 				else {
 					int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 1);
-					System.out.println(newIndex);
-					UserEachFriend userEachFriend = (UserEachFriend) thisPanel.getComponent(newIndex);
-					userEachFriend.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Online");
+					UserEachGroup userEachGroup = (UserEachGroup) thisPanel.getComponent(newIndex);
+					userEachGroup.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Online");
 				}
 
 				// Manually set the selected effect
@@ -169,15 +175,15 @@ public class ListGroupOfUser extends JPanel {
 			for (Map<String, Object> friend: unseenOfflineMessages) {
 				String convoName = (Boolean.parseBoolean(friend.get("IsGroup").toString())) ? friend.get("ConversationName").toString() : friend.get("MemberId").toString();
 				if (!messageIndexer.contains(friend.get("ConversationId").toString())) {
-					UserEachGroup userEachGroup = new UserEachGroup(friend.get("ConversationId").toString(), "af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Offline");
+					UserEachGroup userEachGroup = new UserEachGroup(friend.get("ConversationId").toString(), friend.get("ConversationId").toString(), "af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Offline");
 					thisPanel.add(userEachGroup, unseenOnlineMessagesIndex + unseenOfflineMessagesIndex);
 					messageIndexer.add(unseenOnlineMessagesIndex + unseenOfflineMessagesIndex, friend.get("ConversationId").toString());
 					addHoverEffect(userEachGroup);
 				}
 				else {
 					int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 2);
-					UserEachFriend userEachFriend = (UserEachFriend) thisPanel.getComponent(newIndex);
-					userEachFriend.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Offline");
+					UserEachGroup userEachGroup = (UserEachGroup) thisPanel.getComponent(newIndex);
+					userEachGroup.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"Offline");
 				}
 
 				// Manually set the selected effect
@@ -194,15 +200,15 @@ public class ListGroupOfUser extends JPanel {
 			for (Map<String, Object> friend: seenMessages) {
 				String convoName = (Boolean.parseBoolean(friend.get("IsGroup").toString())) ? friend.get("ConversationName").toString() : friend.get("MemberId").toString();
 				if (!messageIndexer.contains(friend.get("ConversationId").toString())) {
-					UserEachGroup userEachGroup = new UserEachGroup(friend.get("ConversationId").toString(), "af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"");
+					UserEachGroup userEachGroup = new UserEachGroup(friend.get("ConversationId").toString(), friend.get("ConversationId").toString(), "af", convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"");
 					thisPanel.add(userEachGroup, unseenOnlineMessagesIndex + unseenOfflineMessagesIndex + seenMessagesIndex);
 					messageIndexer.add(unseenOnlineMessagesIndex + unseenOfflineMessagesIndex + seenMessagesIndex, friend.get("ConversationId").toString());
 					addHoverEffect(userEachGroup);
 				}
 				else {
 					int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 3);
-					UserEachFriend userEachFriend = (UserEachFriend) thisPanel.getComponent(newIndex);
-					userEachFriend.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"");
+					UserEachGroup userEachGroup = (UserEachGroup) thisPanel.getComponent(newIndex);
+					userEachGroup.setData(convoName, friend.get("Content").toString(), ((Timestamp) friend.get("Datetime")).toLocalDateTime(),"");
 				}
 
 				// Manually set the selected effect

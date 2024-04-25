@@ -189,8 +189,6 @@ public class UserEachFriend extends JPanel {
         addGroupItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null,
-                        "Bạn đã tạo 1 nhóm với người này, vui lòng kiểm tra bên 'Nhóm'!");
                 CreateNewGroupWithThread newGroup = new CreateNewGroupWithThread(id);
                 newGroup.start();
                 JOptionPane.showMessageDialog(null, "Tạo Group...");
