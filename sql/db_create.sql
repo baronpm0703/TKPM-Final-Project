@@ -47,8 +47,7 @@ create table hooyah.ConversationMessage (
     Content nvarchar(255),
     Encryption varchar(255) default '',
     primary key (MessageId, ConversationId),
-    foreign key (ConversationId) references Conversation(ConversationId),
-    foreign key (SenderId) references User(Username)
+    foreign key (ConversationId, SenderId) references ConversationMember(ConversationId, MemberId) 
 );
 -- update hooyah.conversationmessage set Encryption='';
 -- ALTER TABLE hooyah.conversationmessage MODIFY COLUMN Encryption VARCHAR(255) DEFAULT '';
@@ -91,7 +90,7 @@ create table hooyah.FriendRequest (
 	SenderId varchar(255),
     TargetId varchar(255),
     Datetime timestamp,
-    Status tinyint default 0,
+    Status tinyint(1) default 0,
     primary key (SenderId, TargetId, Datetime),
     foreign key (SenderId) references User(Username),
     foreign key (TargetId) references User(Username)
@@ -122,7 +121,7 @@ begin
 		insert into hooyah.Friend (UserId, FriendId) values (old.SenderId, old.TargetId);
         
         insert into hooyah.Conversation (ConversationId, ConversationName, IsGroup)
-        values (CONCAT('CV', LPAD(highestId + 1, 6, '0')), CONCAT('Cuộc trò chuyện CV', LPAD(highestId + 1, 6, '0')), false);
+        values (CONCAT('CV', LPAD(highestId + 1, 6, '0')), 'Cuộc trò chuyện', false);
         
         insert into hooyah.ConversationMember
         values
@@ -144,8 +143,8 @@ values
 
 insert into hooyah.Conversation (ConversationId, ConversationName, IsGroup)
 values
-	('CV000001', 'Cuộc trò chuyện CV000001', false),
-	('CV000002', 'Cuộc trò chuyện CV000002', true);
+	('CV000001', 'Cuộc trò chuyện', false),
+	('CV000002', 'Cuộc trò chuyện', true);
 
 insert into hooyah.ConversationMember
 values
@@ -157,7 +156,8 @@ insert into hooyah.ConversationMember values ('CV000002', 'Highman', true);
 insert into hooyah.ConversationMember values ('CV000002', 'adhd', true);
 
 insert into hooyah.Friend (UserId, FriendId)
-values ('Highman', 'Baobeo');
+values ('Baobeo', 'Highman'), ('Highman', 'Baobeo');
+insert into hooyah.Friend (UserId, FriendId) values ('Highman', 'adhd');
 
 insert into hooyah.FriendRequest (SenderId, TargetId, Datetime) values ('Kizark', 'Highman', current_timestamp());
 update hooyah.FriendRequest

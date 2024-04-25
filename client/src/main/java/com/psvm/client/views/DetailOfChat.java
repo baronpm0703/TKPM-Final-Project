@@ -171,6 +171,7 @@ public class DetailOfChat extends JPanel {
 
     protected void startFriendChatDetailWorker() {
         JPanel thisPanel = this;
+
         // Thread to update chat body
         FriendChatDetailThread friendChatDetailThread = new FriendChatDetailThread(friendChatDetailSocket, friendChatDetailSocketIn, friendChatDetailSocketOut, LocalData.getCurrentUsername(), LocalData.getSelectedConversation(), new FriendChatDetailThread.Observer() {
             @Override
@@ -189,14 +190,6 @@ public class DetailOfChat extends JPanel {
 
                         // Update variables
                         previousUsername = username;
-                    }
-
-                    // Turn off chat detail on command
-                    if (LocalData.getToRemoveChatDetail()) {
-                        thisPanel.removeAll();
-                        thisPanel.revalidate();
-                        thisPanel.repaint();
-                        LocalData.setToRemoveChatDetail(false);
                     }
                 });
             }
@@ -234,14 +227,6 @@ public class DetailOfChat extends JPanel {
                         }
 
                         previousGroupConvoId = conversationId;
-                    }
-
-                    // Turn off chat detail on command
-                    if (LocalData.getToRemoveChatDetail()) {
-                        thisPanel.removeAll();
-                        thisPanel.revalidate();
-                        thisPanel.repaint();
-                        LocalData.setToRemoveChatDetail(false);
                     }
                 });
             }

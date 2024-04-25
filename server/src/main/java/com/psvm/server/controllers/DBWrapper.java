@@ -71,15 +71,11 @@ public class DBWrapper {
 	}
 
 	public void deleteConv(String conid) throws SQLException {
-		String sql1 = "Delete from ConversationMember Where ConversationId = ?";
-		Vector<Object> questionMarks1 = new Vector<>();
-		questionMarks1.add(conid);
-		dbConn.doPreparedStatement(sql1, questionMarks1);
+		String sql = "Delete from Conversation Where ConversationId = ?";
 
-		String sql2 = "Delete from Conversation Where ConversationId = ?";
-		Vector<Object> questionMarks2 = new Vector<>();
-		questionMarks2.add(conid);
-		dbConn.doPreparedStatement(sql2, questionMarks2);
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(conid);
+		dbConn.doPreparedStatement(sql, questionMarks);
 	}
 
 
