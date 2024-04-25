@@ -88,6 +88,11 @@ public class FriendListChoosingCategory extends JPanel {
 					LocalData.setSelectedSearchOption("friendBlocked");
 					//blocked
 				}
+
+				// Turn off current chat body and chat detail whenver a category is chosen
+				LocalData.setToRemoveChat(true);
+				LocalData.setToRemoveChatDetail(true);
+				LocalData.setSelectedConversation("");
 			}
 		});
 

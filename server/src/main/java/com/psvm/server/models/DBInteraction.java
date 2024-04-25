@@ -126,7 +126,6 @@ public class DBInteraction {
 				}
 				j++;
 			}
-			System.out.println(values);
 			dbAction.executeUpdate("UPDATE " + tableName + " SET " + values.toString() + " WHERE " + where.toString() + ";");
 			dbConn.commit();
 		}

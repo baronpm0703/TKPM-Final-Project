@@ -876,10 +876,12 @@ public class DBWrapper {
 	}
 
 	public ResultSet determineIsBlocked(String blocker, String blockedUser) throws SQLException {
-		String sql = "Select status from Friend where UserId = ? and FriendId = ?";
+		String sql = "Select status from Friend where (UserId = ? and FriendId = ?) or (UserId = ? and FriendId = ?)";
 		Vector<Object> questionMarks = new Vector<>();
 		questionMarks.add(blocker);
 		questionMarks.add(blockedUser);
+		questionMarks.add(blockedUser);
+		questionMarks.add(blocker);
 
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}

@@ -1,7 +1,9 @@
 package com.psvm.client.views;
 
 import com.psvm.client.controllers.DeleteChatHistoryRequest;
+import com.psvm.client.controllers.GetConversationInfo;
 import com.psvm.client.controllers.SendMessageRequest;
+import com.psvm.client.controllers.UnorBlockUserWithId;
 import com.psvm.client.settings.LocalData;
 import com.psvm.shared.socket.SocketResponse;
 
@@ -22,8 +24,63 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.rmi.ConnectIOException;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+
+class UnOrBlockUserButtonDetailThread extends Thread {
+
+    ObjectInputStream socketIn;
+    ObjectOutputStream socketOut;
+
+    final String SOCKET_HOST = "localhost";
+    final int SOCKET_PORT = 5555;
+    Socket socket;
+    private String conId;
+
+    private int responseCode;
+
+    public UnOrBlockUserButtonDetailThread( String conId) {
+        this.conId = conId;
+
+        /* Multithreading + Socket */
+        try {
+            socket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            socketIn = new ObjectInputStream(socket.getInputStream());
+            socketOut = new ObjectOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        SocketResponse final_response;
+        GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
+        SocketResponse response = request.talk();
+
+        String userId = null;
+        for (Map<String, Object> e : response.getData()){
+            System.out.println(e.get("MemberId"));
+            if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
+                userId = e.get("MemberId").toString();
+            }
+        }
+
+        UnorBlockUserWithId final_request = new UnorBlockUserWithId(socket, socketIn, socketOut, userId);
+        final_response = final_request.talk();
+        //SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, userId, content);
+        System.out.println("response.getData()");
+
+
+        responseCode = final_response.getResponseCode();
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+}
 
 class DeleteChatHistoryButtonThread extends Thread {
     private Socket clientSocket;
@@ -149,7 +206,7 @@ public class DetailOfAFriend extends JPanel {
 
         gbc.gridy++;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        JButton blockUser = new JButton("Chặn người này");
+        JButton blockUser = new JButton("Chặn/Bỏ chặn người này");
         blockUser.setForeground(Color.BLUE);
         blockUser.setFocusPainted(false);
         add(blockUser, gbc);
@@ -174,12 +231,22 @@ public class DetailOfAFriend extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int response = JOptionPane.showConfirmDialog(null,
-                        "Bạn có chắc muốn chặn người này?",
+                        "Thực hiện hành động này?\n(nếu bạn đang chặn người này thì bạn sẽ bỏ chặn)",
                         "Xác nhận", JOptionPane.YES_NO_OPTION);
                 if (response == JOptionPane.YES_OPTION) {
-                    blocked = true;
                     // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                    JOptionPane.showMessageDialog(null, "Chặn người này...");
+                    UnOrBlockUserButtonDetailThread blockThread = new UnOrBlockUserButtonDetailThread(conversationId);
+                    blockThread.start();
+                    JOptionPane.showMessageDialog(null, "Đang Xác Thực...");
+                    try {
+                        blockThread.join();
+                        if (blockThread.getResponseCode() == SocketResponse.RESPONSE_BLOCK_CODE_BLOCK) {
+                            JOptionPane.showMessageDialog(null, "Chặn Thành Công");
+                        } else JOptionPane.showMessageDialog(null, "Bỏ Chặn Thành Công. ");
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
                 }
             }
         });

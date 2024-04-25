@@ -161,18 +161,12 @@ public class UserEachFriend extends JPanel {
         addGroupItem.setForeground(Color.blue);
         popupMenu.add(addGroupItem);
         JMenuItem blockItem;
-        if (!blocked){
-            blockItem = new JMenuItem("🚫 Bỏ/Chặn người này");
-            blockItem.setForeground(Color.red);
-            blockItem.setFont(new Font(null,Font.PLAIN,16));
-            popupMenu.add(blockItem);
-        }
-        else{
-            blockItem = new JMenuItem("🚫 Bỏ chặn người này");
-            blockItem.setForeground(Color.red);
-            blockItem.setFont(new Font(null,Font.PLAIN,16));
-            popupMenu.add(blockItem);
-        }
+
+        blockItem = new JMenuItem("🚫 Chặn/Bỏ chặn người này");
+        blockItem.setForeground(Color.red);
+        blockItem.setFont(new Font(null,Font.PLAIN,16));
+        popupMenu.add(blockItem);
+
         JMenuItem unfriendItem = new JMenuItem("❌ Huỷ bạn bè");
         unfriendItem.setFont(new Font(null,Font.PLAIN,16));
         unfriendItem.setForeground(Color.blue);
@@ -206,36 +200,23 @@ public class UserEachFriend extends JPanel {
         blockItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!blocked){
-                    int response = JOptionPane.showConfirmDialog(null,
-                            "Bạn có chắc muốn chặn người này?",
-                            "Xác nhận", JOptionPane.YES_NO_OPTION);
-                    if (response == JOptionPane.YES_OPTION) {
-                        // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                        UnOrBlockUserButtonThread blockThread = new UnOrBlockUserButtonThread(id);
-                        blockThread.start();
-                        JOptionPane.showMessageDialog(null, "Đang Xác Thực...");
-                        try {
-                            blockThread.join();
-                            if (blockThread.getResponseCode() == SocketResponse.RESPONSE_BLOCK_CODE_BLOCK) {
-                                JOptionPane.showMessageDialog(null, "Chặn Thành Công");
-                            } else JOptionPane.showMessageDialog(null, "Bỏ Chặn Thành Công. ");
-                        } catch (InterruptedException ex) {
-                            throw new RuntimeException(ex);
-                        }
+                int response = JOptionPane.showConfirmDialog(null,
+                        "Thực hiện hành động này?\n(nếu bạn đang chặn người này thì bạn sẽ bỏ chặn)",
+                        "Xác nhận", JOptionPane.YES_NO_OPTION);
+                if (response == JOptionPane.YES_OPTION) {
+                    // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
+                    UnOrBlockUserButtonThread blockThread = new UnOrBlockUserButtonThread(id);
+                    blockThread.start();
+                    JOptionPane.showMessageDialog(null, "Đang Xác Thực...");
+                    try {
+                        blockThread.join();
+                        if (blockThread.getResponseCode() == SocketResponse.RESPONSE_BLOCK_CODE_BLOCK) {
+                            JOptionPane.showMessageDialog(null, "Chặn Thành Công");
+                        } else JOptionPane.showMessageDialog(null, "Bỏ Chặn Thành Công. ");
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
 
-                    }
-                }
-                else{
-                    int response = JOptionPane.showConfirmDialog(null,
-                            "Bạn có chắc muốn bỏ chặn người này?",
-                            "Xác nhận", JOptionPane.YES_NO_OPTION);
-                    if (response == JOptionPane.YES_OPTION) {
-                        // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                        UnOrBlockUserButtonThread unblockThread = new UnOrBlockUserButtonThread(id);
-                        unblockThread.start();
-                        JOptionPane.showMessageDialog(null, "Bỏ chặn...");
-                    }
                 }
             }
         });

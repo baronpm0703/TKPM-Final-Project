@@ -629,6 +629,7 @@ public class ClientHandler implements Runnable {
 			ResultSet isBlockedQuery = db.determineIsBlocked(data.get("blocker").toString(), data.get("blocked").toString());
 			while (isBlockedQuery.next()){
 				boolean isBlocked = (int) isBlockedQuery.getObject(1) != 0;
+				System.out.println(isBlocked);
 				if (!isBlocked) {
 					db.UserBlockUser(data.get("blocker").toString(), data.get("blocked").toString());
 					handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_BLOCK_CODE_BLOCK, null));

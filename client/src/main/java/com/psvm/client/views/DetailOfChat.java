@@ -175,8 +175,17 @@ public class DetailOfChat extends JPanel {
         FriendChatDetailThread friendChatDetailThread = new FriendChatDetailThread(friendChatDetailSocket, friendChatDetailSocketIn, friendChatDetailSocketOut, LocalData.getCurrentUsername(), LocalData.getSelectedConversation(), new FriendChatDetailThread.Observer() {
             @Override
             public void workerDidUpdate(Vector<Map<String, Object>> messages) {
+                if (LocalData.getToRemoveChatDetail()) previousGroupConvoId = null;
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
+                    // Turn off chat detail on command
+                    if (LocalData.getToRemoveChatDetail()) {
+                        thisPanel.removeAll();
+                        thisPanel.revalidate();
+                        thisPanel.repaint();
+                        LocalData.setToRemoveChatDetail(false);
+                    }
+
                     boolean isGroup = (boolean) messages.get(0).get("IsGroup");
                     if (!isGroup) {
                         String username = messages.get(1).get("Username").toString();
@@ -189,14 +198,6 @@ public class DetailOfChat extends JPanel {
 
                         // Update variables
                         previousUsername = username;
-                    }
-
-                    // Turn off chat detail on command
-                    if (LocalData.getToRemoveChatDetail()) {
-                        thisPanel.removeAll();
-                        thisPanel.revalidate();
-                        thisPanel.repaint();
-                        LocalData.setToRemoveChatDetail(false);
                     }
                 });
             }
@@ -222,11 +223,21 @@ public class DetailOfChat extends JPanel {
         GroupChatDetailThread groupChatDetailThread = new GroupChatDetailThread(groupChatDetailSocket, groupChatDetailSocketIn, groupChatDetailSocketOut, LocalData.getSelectedConversation(), new GroupChatDetailThread.Observer() {
             @Override
             public void workerDidUpdate(Vector<Map<String, Object>> messages) {
+                if (LocalData.getToRemoveChatDetail()) previousUsername = null;
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
+                    // Turn off chat detail on command
+                    if (LocalData.getToRemoveChatDetail()) {
+                        thisPanel.removeAll();
+                        thisPanel.revalidate();
+                        thisPanel.repaint();
+                        LocalData.setToRemoveChatDetail(false);
+                    }
+
                     boolean isGroup = (boolean) messages.get(0).get("IsGroup");
                     if (isGroup) {
                         String conversationId = messages.get(1).get("ConversationId").toString();
+                        System.out.println(conversationId + " - " + previousGroupConvoId + " - " + !conversationId.equals(previousGroupConvoId));
                         if (!conversationId.equals(previousGroupConvoId)) {
                             String conversationName = messages.get(2).get("ConversationName").toString();
 
@@ -234,14 +245,6 @@ public class DetailOfChat extends JPanel {
                         }
 
                         previousGroupConvoId = conversationId;
-                    }
-
-                    // Turn off chat detail on command
-                    if (LocalData.getToRemoveChatDetail()) {
-                        thisPanel.removeAll();
-                        thisPanel.revalidate();
-                        thisPanel.repaint();
-                        LocalData.setToRemoveChatDetail(false);
                     }
                 });
             }
