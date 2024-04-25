@@ -196,7 +196,7 @@ public class DetailOfAFriend extends JPanel {
                     try {
                         deleteChatHistoryButtonThread.join();
                         if (deleteChatHistoryButtonThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
-                            LocalData.setToReloadMessageList(true);
+                            LocalData.setToReloadChat(true);
                         }
                     } catch (InterruptedException ex) {
                         ex.printStackTrace();

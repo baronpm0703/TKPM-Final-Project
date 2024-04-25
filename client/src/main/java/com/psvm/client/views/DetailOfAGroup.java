@@ -232,7 +232,6 @@ class RemoveGroupMemberThread extends Thread {
 
 public class DetailOfAGroup extends JPanel {
     // Multithreading + Socket
-    ScheduledExecutorService service = Executors.newScheduledThreadPool(2);
     final String SOCKET_HOST = "localhost";
     final int SOCKET_PORT = 5555;
     Socket renameChatSocket;
@@ -426,7 +425,10 @@ public class DetailOfAGroup extends JPanel {
                     try {
                         leaveGroupThread.join();
                         if (leaveGroupThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
-
+                            LocalData.setToRemoveChat(true);
+                            LocalData.setToReloadMessageList(true);
+                            LocalData.setSelectedConversation("");
+                            LocalData.setToRemoveChatDetail(true);
                         }
                     } catch (InterruptedException ex) {
                         throw new RuntimeException(ex);

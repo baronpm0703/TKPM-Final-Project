@@ -34,6 +34,7 @@ public class DBWrapper {
 		questionMarks.add(email);
 
 		dbConn.doPreparedStatement(sql, questionMarks);
+
 	}
 	public void resetPassword(String username, String email, String hashedPassword) throws SQLException {
 		String sql = "UPDATE User SET Password=? WHERE Username=? AND Email=?";
@@ -71,11 +72,15 @@ public class DBWrapper {
 	}
 
 	public void deleteConv(String conid) throws SQLException {
-		String sql = "Delete from Conversation Where ConversationId = ?";
+		String sql1 = "Delete from ConversationMember Where ConversationId = ?";
+		Vector<Object> questionMarks1 = new Vector<>();
+		questionMarks1.add(conid);
+		dbConn.doPreparedStatement(sql1, questionMarks1);
 
-		Vector<Object> questionMarks = new Vector<>();
-		questionMarks.add(conid);
-		dbConn.doPreparedStatement(sql, questionMarks);
+		String sql2 = "Delete from Conversation Where ConversationId = ?";
+		Vector<Object> questionMarks2 = new Vector<>();
+		questionMarks2.add(conid);
+		dbConn.doPreparedStatement(sql2, questionMarks2);
 	}
 
 
@@ -85,6 +90,16 @@ public class DBWrapper {
 		Vector<Object> questionMarks = new Vector<>();
 		questionMarks.add(username);
 		questionMarks.add(hashedPassword);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getFriendCount(String userId) throws SQLException {
+		String sql = "SELECT count(Status) as friendNum from Friend Where UserId = ? or FriendId = ?";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(userId);
+		questionMarks.add(userId);
 
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}
@@ -847,11 +862,17 @@ public class DBWrapper {
 		dbConn.doBatchPreparedStatement(new String[]{sql2, sql3}, new Vector[]{questionMarks2, questionMarks3});
 	}
 
-	public ResultSet getFieldUserList(String field) throws SQLException {
-		String sql = "SELECT " + field + " FROM User";
-		Vector<Object> questionMarks = new Vector<>();
-
-		return dbConn.doPreparedQuery(sql, questionMarks);
+	public ResultSet getFieldUserList(String field, String year) throws SQLException {
+		if (year.isEmpty()) {
+			String sql = "SELECT " + field + " FROM User";
+			Vector<Object> questionMarks = new Vector<>();
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		} else {
+			String sql = "SELECT " + field + " FROM User where year(CreationDate) = ?";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(year);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
 	}
 
 	public ResultSet determineIsBlocked(String blocker, String blockedUser) throws SQLException {
@@ -945,9 +966,18 @@ public class DBWrapper {
 
 
 	public ResultSet getUserLogListWithDetailInfo() throws SQLException {
-		String sql = "Select UserId, concat_ws(' ', FirstName, LastName) as Hoten, Datetime From userlog  Left Join user On userlog.UserId = user.Username";
+		String sql = "Select UserId, concat_ws(' ', FirstName, LastName) as Hoten, Datetime From userlog  Left Join user On userlog.UserId = user.Username Order By Datetime Asc ";
 		Vector<Object> questionMarks = new Vector<>();
 //		questionMarks.add(dateTime);
+
+		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getNewRegisterInfo(String userId) throws SQLException {
+		String sql = "Select UserId, concat_ws(' ', FirstName, LastName) as Hoten, Datetime From hooyah.userlog  Left Join hooyah.user On userlog.UserId = user.Username \n" +
+				"Where userlog.UserId = ? and LogType = '0' Order By DateTime ASC Limit 1";
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(userId);
 
 		return dbConn.doPreparedQuery(sql, questionMarks);
 	}

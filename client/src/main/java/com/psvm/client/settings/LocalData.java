@@ -9,7 +9,8 @@ public enum LocalData {
 	private String conversationScrollSearch;
 	private boolean toReloadMessageList;
 	private boolean toReloadChat;
-	private boolean toDisableChat;
+	private boolean toRemoveChat;
+	private boolean toRemoveChatDetail;
 
 	LocalData() {
 		this.currentUsername = "";
@@ -19,7 +20,8 @@ public enum LocalData {
 
 		this.toReloadMessageList = false;
 		this.toReloadChat = false;
-		this.toDisableChat = false;
+		this.toRemoveChat = false;
+		this.toRemoveChatDetail = false;
 	}
 
 	public static void setCurrentUsername(String username) {
@@ -51,7 +53,22 @@ public enum LocalData {
 	}
 
 	public static void setToReloadMessageList(boolean bool) {
-		INSTANCE.toReloadMessageList = true;
+		INSTANCE.toReloadMessageList = bool;
 	}
 	public static boolean getToReloadMessageList() { return INSTANCE.toReloadMessageList; }
+
+	public static void setToReloadChat(boolean bool) {
+		INSTANCE.toReloadChat = bool;
+	}
+	public static boolean getToReloadChat() { return INSTANCE.toReloadChat; }
+
+	public static void setToRemoveChat(boolean bool) {
+		INSTANCE.toRemoveChat = bool;
+	}
+	public static boolean getToRemoveChat() { return INSTANCE.toRemoveChat; }
+
+	public static void setToRemoveChatDetail(boolean bool) {
+		INSTANCE.toRemoveChatDetail = bool;
+	}
+	public static boolean getToRemoveChatDetail() { return INSTANCE.toRemoveChatDetail; }
 }

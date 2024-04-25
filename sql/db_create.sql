@@ -47,7 +47,8 @@ create table hooyah.ConversationMessage (
     Content nvarchar(255),
     Encryption varchar(255) default '',
     primary key (MessageId, ConversationId),
-    foreign key (ConversationId, SenderId) references ConversationMember(ConversationId, MemberId) 
+    foreign key (ConversationId) references Conversation(ConversationId),
+    foreign key (SenderId) references User(Username)
 );
 -- update hooyah.conversationmessage set Encryption='';
 -- ALTER TABLE hooyah.conversationmessage MODIFY COLUMN Encryption VARCHAR(255) DEFAULT '';
@@ -90,7 +91,7 @@ create table hooyah.FriendRequest (
 	SenderId varchar(255),
     TargetId varchar(255),
     Datetime timestamp,
-    Status tinyint(1) default 0,
+    Status tinyint default 0,
     primary key (SenderId, TargetId, Datetime),
     foreign key (SenderId) references User(Username),
     foreign key (TargetId) references User(Username)
@@ -121,7 +122,7 @@ begin
 		insert into hooyah.Friend (UserId, FriendId) values (old.SenderId, old.TargetId);
         
         insert into hooyah.Conversation (ConversationId, ConversationName, IsGroup)
-        values (CONCAT('CV', LPAD(highestId + 1, 6, '0')), 'Cuộc trò chuyện', false);
+        values (CONCAT('CV', LPAD(highestId + 1, 6, '0')), CONCAT('Cuộc trò chuyện CV', LPAD(highestId + 1, 6, '0')), false);
         
         insert into hooyah.ConversationMember
         values
@@ -143,8 +144,8 @@ values
 
 insert into hooyah.Conversation (ConversationId, ConversationName, IsGroup)
 values
-	('CV000001', 'Cuộc trò chuyện', false),
-	('CV000002', 'Cuộc trò chuyện', true);
+	('CV000001', 'Cuộc trò chuyện CV000001', false),
+	('CV000002', 'Cuộc trò chuyện CV000002', true);
 
 insert into hooyah.ConversationMember
 values
@@ -156,8 +157,7 @@ insert into hooyah.ConversationMember values ('CV000002', 'Highman', true);
 insert into hooyah.ConversationMember values ('CV000002', 'adhd', true);
 
 insert into hooyah.Friend (UserId, FriendId)
-values ('Baobeo', 'Highman'), ('Highman', 'Baobeo');
-insert into hooyah.Friend (UserId, FriendId) values ('Highman', 'adhd');
+values ('Highman', 'Baobeo');
 
 insert into hooyah.FriendRequest (SenderId, TargetId, Datetime) values ('Kizark', 'Highman', current_timestamp());
 update hooyah.FriendRequest
@@ -234,3 +234,17 @@ insert into hooyah.spamreport (ReporterId, ReportedId, Datetime)
 values 
 	('adhd', 'Highman', '2022-11-11 06:30:01'),
 	('Kizark', 'Baobeo', '2022-11-12 06:30:01');
+    
+insert into hooyah.conversationlog values 
+	('CV000001', '2023-12-1 00:00:00', 0, 'Baobeo','Created'),
+    ('CV000001', '2023-12-1 01:00:00', 2, 'Highman','Member added'),
+     ('CV000001', '2023-12-1 02:00:00', 4, 'Highman','Made admin'),
+     ('CV000002', '2024-1-1  01:10:00', 0, 'adhd','Created'),
+     ('CV000002', '2024-1-1  01:03:00', 2, 'Baobeo','Member added'),
+     ('CV000002', '2024-1-1  01:00:10', 2, 'Highman','Member added'),
+     ('CV000002', '2024-1-1  02:00:00', 2, 'Kizark','Member added'),
+     ('CV000002', '2024-1-2  02:10:00', 4, 'Highman','Made admin'),
+     ('CV000003', '2024-1-3  03:00:40', 0, 'Highman','Created'),
+     ('CV000003', '2024-1-3  03:00:50', 2, 'Kizark','Member added'),
+     ('CV000003', '2024-1-3  04:01:00', 4, 'Kizark','Made admin');
+     

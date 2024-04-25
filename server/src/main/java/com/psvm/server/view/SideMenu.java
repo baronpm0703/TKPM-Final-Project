@@ -5,6 +5,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 class SideMenu extends JPanel{
     private final ContentPane contentPane;
@@ -102,6 +103,7 @@ class SideMenu extends JPanel{
                         contentPane.renderDSNhomChat();
                         break;
                     case "Danh sách liên lạc của người dùng":
+                        contentPane.renderDSLienLacNguoiDung();
                         break;
                     case "Danh sách báo cáo spam":
                         contentPane.renderDSBaoCaoSpam();
@@ -110,12 +112,20 @@ class SideMenu extends JPanel{
                         contentPane.renderDSNguoiDungDangNhap();
                         break;
                     case "Danh sách người dùng đăng ký":
+                        contentPane.renderDSNguoiDungDangKyMoi();
                         break;
                     case "Biểu đồ người dùng đăng ký":
+                        try {
+                            contentPane.renderBieuDoSoLuongDangKy();
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         break;
                     case "Danh sách hoạt động của người dùng":
+                        contentPane.renderDSNguoiDungHoatDong();
                         break;
                     case "Biểu đồ hoạt động của người dùng":
+                        contentPane.renderBieuDoHoatDong();
                         break;
                     default:
                         contentPane.renderDSNguoiDung();

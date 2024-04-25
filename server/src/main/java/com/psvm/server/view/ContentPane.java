@@ -2,6 +2,7 @@ package com.psvm.server.view;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.SQLException;
 
 public class ContentPane extends JPanel {
     ContentPane() {
@@ -65,6 +66,63 @@ public class ContentPane extends JPanel {
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(table);
         this.add(scrollPane,BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
+    void renderDSLienLacNguoiDung(){
+        removeComponent();
+        String[] columnNames = {"STT","Tên", "Số lượng bạn bè"};
+        this.setLayout(new BorderLayout());
+        DSLienLacNguoiDungTable table = new DSLienLacNguoiDungTable(columnNames);
+        OptionPanelDSLienLacNguoiDung optionPanel = new OptionPanelDSLienLacNguoiDung(table);
+        this.add(optionPanel,BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(table);
+        this.add(scrollPane,BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
+    void renderDSNguoiDungDangKyMoi(){
+        removeComponent();
+        String[] columnNames = {"STT","Tên", "Thời gian"};
+        this.setLayout(new BorderLayout());
+        DSNguoiDungDangKyMoiTable table = new DSNguoiDungDangKyMoiTable(columnNames);
+        OptionPanelDSNguoiDungDangKyMoi optionPanel = new OptionPanelDSNguoiDungDangKyMoi(table);
+        this.add(optionPanel,BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(table);
+        this.add(scrollPane,BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
+    void renderDSNguoiDungHoatDong(){
+        removeComponent();
+        String[] columnNames = {"STT","Tên", "Thời gian hoạt lần cuối","Số lần mở ứng dụng","Số lần chat với người","Số lần chat với nhóm"};
+        this.setLayout(new BorderLayout());
+        DSNguoiDungHoatDongTable table = new DSNguoiDungHoatDongTable(columnNames);
+        OptionPanelDSNguoiDungHoatDong optionPanel = new OptionPanelDSNguoiDungHoatDong(table);
+        this.add(optionPanel,BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(table);
+        this.add(scrollPane,BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
+    void renderBieuDoSoLuongDangKy() throws SQLException {
+        removeComponent();
+        BieuDoSoLuongDangKyPanel bieuDoSoLuongDangKyPanel = new BieuDoSoLuongDangKyPanel();
+        OptionPanelBieuDoSoLuongDangKy optionPanel = new OptionPanelBieuDoSoLuongDangKy(bieuDoSoLuongDangKyPanel);
+        this.add(optionPanel,BorderLayout.NORTH);
+        this.add(bieuDoSoLuongDangKyPanel,BorderLayout.CENTER);
+        this.revalidate();
+        this.repaint();
+    }
+    void renderBieuDoHoatDong(){
+        removeComponent();
+        BieuDoHoatDongPanel bieuDoHoatDongPanel = new BieuDoHoatDongPanel();
+        OptionPanelBieuDoHoatDong optionPanel = new OptionPanelBieuDoHoatDong(bieuDoHoatDongPanel);
+        this.add(optionPanel,BorderLayout.NORTH);
+        this.add(bieuDoHoatDongPanel,BorderLayout.CENTER);
         this.revalidate();
         this.repaint();
     }
