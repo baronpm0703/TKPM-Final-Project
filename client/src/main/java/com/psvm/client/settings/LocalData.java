@@ -7,12 +7,19 @@ public enum LocalData {
 	private String selectedConversation;
 	private String selectedSearchOption;
 	private String conversationScrollSearch;
+	private boolean toReloadMessageList;
+	private boolean toReloadChat;
+	private boolean toDisableChat;
 
 	LocalData() {
 		this.currentUsername = "";
 		this.selectedConversation = "";
 		this.selectedSearchOption = "friend";
 		this.conversationScrollSearch = "";
+
+		this.toReloadMessageList = false;
+		this.toReloadChat = false;
+		this.toDisableChat = false;
 	}
 
 	public static void setCurrentUsername(String username) {
@@ -42,4 +49,9 @@ public enum LocalData {
 	public static String getConversationScrollSearch() {
 		return INSTANCE.conversationScrollSearch;
 	}
+
+	public static void setToReloadMessageList(boolean bool) {
+		INSTANCE.toReloadMessageList = true;
+	}
+	public static boolean getToReloadMessageList() { return INSTANCE.toReloadMessageList; }
 }

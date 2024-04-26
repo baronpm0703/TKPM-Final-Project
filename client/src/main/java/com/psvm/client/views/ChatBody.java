@@ -349,6 +349,13 @@ public class ChatBody extends JPanel {
                         previousConversationId = conversationId;
                     }
 
+                    // Repaint chat body on command
+                    if (LocalData.getToReloadMessageList()) {
+                        chatBody.removeAll();
+                        totalMessages.clear();
+                        LocalData.setToReloadMessageList(false);
+                    }
+
                     messages.removeAll(totalMessages);
                     totalMessages.addAll(messages);
 

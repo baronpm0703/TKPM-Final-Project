@@ -192,6 +192,16 @@ public class DetailOfAFriend extends JPanel {
                 if (response == JOptionPane.YES_OPTION) {
                     DeleteChatHistoryButtonThread deleteChatHistoryButtonThread = new DeleteChatHistoryButtonThread(deleteChatHistorySocket, deleteChatHistorySocketIn, deleteChatHistorySocketOut, conversationId);
                     deleteChatHistoryButtonThread.start();
+
+                    try {
+                        deleteChatHistoryButtonThread.join();
+                        if (deleteChatHistoryButtonThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                            LocalData.setToReloadMessageList(true);
+                        }
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+
                 }
             }
         });

@@ -16,4 +16,3 @@ public class GetConversationInfo extends SocketTalk {
     }
 }
 
-

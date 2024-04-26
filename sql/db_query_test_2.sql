@@ -73,12 +73,11 @@ WHERE u.Status = 1 AND rn = 1 AND IsGroup=false AND EXISTS (
 );
 
 -- Other friends with no message
-SELECT cv.ConversationId, cvmem2.MemberId
+SELECT cv.ConversationId, cvmem.MemberId
 FROM Conversation cv
 JOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId
-JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId
-JOIN User u ON u.Username = cvmem2.MemberId
+JOIN User u ON u.Username = cvmem.MemberId
 LEFT JOIN ConversationMessage cvmes ON cv.ConversationId = cvmes.ConversationId 
-WHERE u.Status = 1 AND cv.IsGroup=false AND cvmem.MemberId = 'Highman' AND cvmem2.MemberId != 'Highman' AND cvmem2.MemberId LIKE '%%'
-GROUP BY cv.ConversationId, cvmem2.MemberId
+WHERE u.Status = 1 AND cv.IsGroup=false AND cvmem.MemberId != 'Highman' AND cvmem.MemberId LIKE '%kiz%'
+GROUP BY cv.ConversationId, cvmem.MemberId
 HAVING COUNT(cvmes.MessageId) = 0;
