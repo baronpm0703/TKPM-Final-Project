@@ -7,6 +7,9 @@ import java.util.Vector;
 public class SocketResponse implements Serializable {
 	public final static int RESPONSE_CODE_FAILURE = 0;
 	public final static int RESPONSE_CODE_SUCCESS = 1;
+
+	public final static int RESPONSE_BLOCK_CODE_BLOCK = 2;
+	public final static int RESPONSE_BLOCK_CODE_UN_BLOCK = 3;
 	int responseCode;
 	Vector<Map<String, Object>> data;
 

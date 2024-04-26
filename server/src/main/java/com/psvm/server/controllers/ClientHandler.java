@@ -183,13 +183,12 @@ public class ClientHandler implements Runnable {
 						talkCode_SendMessage(request.getData());
 						break;
 					}
-					case "bu": {
-						blockCode_BlockUser(request.getData());
-						//talkCode_SendMessage(request.getData());
+					case "uobu": {
+						blockCode_UnorBlockUser(request.getData());
 						break;
 					}
-					case "ub": {
-						blockCode_UnBlockUser(request.getData());
+					case "delConv": {
+						conCode_DelteConv(request.getData());
 						break;
 					}
 					case "conMemInfo": {
@@ -625,25 +624,27 @@ public class ClientHandler implements Runnable {
 		}
 	}
 
-	void blockCode_BlockUser(Map<String, Object> data) throws IOException {
+	void blockCode_UnorBlockUser(Map<String, Object> data) throws IOException {
 		try {
-			db.UserBlockUser(data.get("blocker").toString(), data.get("blocked").toString());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+			ResultSet isBlockedQuery = db.determineIsBlocked(data.get("blocker").toString(), data.get("blocked").toString());
+			while (isBlockedQuery.next()){
+				boolean isBlocked = (int) isBlockedQuery.getObject(1) != 0;
+				if (!isBlocked) {
+					db.UserBlockUser(data.get("blocker").toString(), data.get("blocked").toString());
+					handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_BLOCK_CODE_BLOCK, null));
+				} else {
+					db.UserUnBlockUser(data.get("blocker").toString(), data.get("blocked").toString());
+					handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_BLOCK_CODE_UN_BLOCK, null));
+				}
+			}
+
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
 		}
 	}
 
-	void blockCode_UnBlockUser(Map<String, Object> data) throws IOException {
-		try {
-			db.UserUnBlockUser(data.get("blocker").toString(), data.get("blocked").toString());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
-		}
-	}
+
 
 	void friendCode_Unfriend(Map<String, Object> data) throws IOException {
 		try {
@@ -685,6 +686,15 @@ public class ClientHandler implements Runnable {
 	void conCode_UpdateConvLog(Map<String, Object> data) throws IOException {
 		try {
 			db.UpdateConvLog(data.get("conId").toString(), data.get("userId").toString(), (int) data.get("logType"));
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, null));
+		}
+	}
+	void conCode_DelteConv(Map<String, Object> data) throws IOException {
+		try {
+			db.deleteConv(data.get("conId").toString());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());

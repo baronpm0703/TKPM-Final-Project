@@ -162,7 +162,7 @@ public class UserEachFriend extends JPanel {
         popupMenu.add(addGroupItem);
         JMenuItem blockItem;
         if (!blocked){
-            blockItem = new JMenuItem("🚫 Chặn người này");
+            blockItem = new JMenuItem("🚫 Bỏ/Chặn người này");
             blockItem.setForeground(Color.red);
             blockItem.setFont(new Font(null,Font.PLAIN,16));
             popupMenu.add(blockItem);
@@ -214,14 +214,14 @@ public class UserEachFriend extends JPanel {
                             "Xác nhận", JOptionPane.YES_NO_OPTION);
                     if (response == JOptionPane.YES_OPTION) {
                         // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                        UnOrBlockUserButtonThread blockThread = new UnOrBlockUserButtonThread(id, 0);
+                        UnOrBlockUserButtonThread blockThread = new UnOrBlockUserButtonThread(id);
                         blockThread.start();
-                        JOptionPane.showMessageDialog(null, "Chặn...");
+                        JOptionPane.showMessageDialog(null, "Đang Xác Thực...");
                         try {
                             blockThread.join();
-                            if (blockThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                            if (blockThread.getResponseCode() == SocketResponse.RESPONSE_BLOCK_CODE_BLOCK) {
                                 JOptionPane.showMessageDialog(null, "Chặn Thành Công");
-                            } else JOptionPane.showMessageDialog(null, "Chặn Không Thành Công. Có Lỗi!");
+                            } else JOptionPane.showMessageDialog(null, "Bỏ Chặn Thành Công. ");
                         } catch (InterruptedException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -234,7 +234,7 @@ public class UserEachFriend extends JPanel {
                             "Xác nhận", JOptionPane.YES_NO_OPTION);
                     if (response == JOptionPane.YES_OPTION) {
                         // giữ hay bỏ gì tuỳ cái dialog này tuỳ ko quan trọng
-                        UnOrBlockUserButtonThread unblockThread = new UnOrBlockUserButtonThread(id, 1);
+                        UnOrBlockUserButtonThread unblockThread = new UnOrBlockUserButtonThread(id);
                         unblockThread.start();
                         JOptionPane.showMessageDialog(null, "Bỏ chặn...");
                     }
@@ -358,13 +358,11 @@ class UnOrBlockUserButtonThread extends Thread {
     final int SOCKET_PORT = 5555;
     Socket socket;
     private String conId;
-    private int type;
 
     private int responseCode;
 
-    public UnOrBlockUserButtonThread( String conId, int type) {
+    public UnOrBlockUserButtonThread( String conId) {
         this.conId = conId;
-        this.type = type;
 
         /* Multithreading + Socket */
         try {
@@ -380,33 +378,19 @@ class UnOrBlockUserButtonThread extends Thread {
     public void run() {
         super.run();
         SocketResponse final_response;
-        if (type == 0) { // Block
-            GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
-            SocketResponse response = request.talk();
+        GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
+        SocketResponse response = request.talk();
 
-            String userId = null;
-            for (Map<String, Object> e : response.getData()){
-                System.out.println(e.get("MemberId"));
-                if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
-                    userId = e.get("MemberId").toString();
-                }
+        String userId = null;
+        for (Map<String, Object> e : response.getData()){
+            System.out.println(e.get("MemberId"));
+            if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
+                userId = e.get("MemberId").toString();
             }
-            BlockUserWithId final_request = new BlockUserWithId(socket, socketIn, socketOut, userId);
-            final_response = final_request.talk();
-        } else { // UnBlock
-            GetConversationInfo request = new GetConversationInfo(socket, socketIn, socketOut,conId);
-            SocketResponse response = request.talk();
-
-            String userId = null;
-            for (Map<String, Object> e : response.getData()){
-                System.out.println(e.get("MemberId"));
-                if (!e.get("MemberId").toString().equals(LocalData.getCurrentUsername())){
-                    userId = e.get("MemberId").toString();
-                }
-            }
-            UnBlockUserWithId final_request = new UnBlockUserWithId(socket, socketIn, socketOut, userId);
-            final_response = final_request.talk();
         }
+
+        UnorBlockUserWithId final_request = new UnorBlockUserWithId(socket, socketIn, socketOut, userId);
+        final_response = final_request.talk();
         //SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, userId, content);
         System.out.println("response.getData()");
 
@@ -458,7 +442,9 @@ class UnFriendButtonThread extends Thread {
                 userId = e.get("MemberId").toString();
             }
         }
-        RemoveFriend final_request = new RemoveFriend(socket, socketIn, socketOut, userId);
+        RemoveFriend semi_final_request = new RemoveFriend(socket, socketIn, socketOut, userId);
+        SocketResponse semi_final_res = semi_final_request.talk();
+        DeleteConversation final_request = new DeleteConversation(socket, socketIn, socketOut,conId);
         final_response = final_request.talk();
         //SendMessageRequest request = new SendMessageRequest(clientSocket, socketIn, socketOut, userId, content);
         System.out.println("response.getData()");
