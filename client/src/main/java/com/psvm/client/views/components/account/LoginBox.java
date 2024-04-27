@@ -172,12 +172,7 @@ public class LoginBox extends Component {
 				// Check if the user is not banned, if true then allows log in
 				if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS && Integer.parseInt(data.get(0).get("UserFound").toString()) == 1) {
 					if (Integer.parseInt(data.get(1).get("Status").toString()) != 2) {
-						if (Integer.parseInt(data.get(1).get("Status").toString()) != 1) {
-							break;
-						}
-						else {
-							JOptionPane.showConfirmDialog(this, "Có lỗi xảy ra khi đăng nhập. Tài khoản đã có người đăng nhập.", "Đăng nhập thất bại", JOptionPane.DEFAULT_OPTION);
-						}
+						break;
 					}
 					else {
 						JOptionPane.showConfirmDialog(this, "Có lỗi xảy ra khi đăng nhập. Tài khoản đã bị ban.", "Đăng nhập thất bại", JOptionPane.DEFAULT_OPTION);

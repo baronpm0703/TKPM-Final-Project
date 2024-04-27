@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Vector;
 
 public class DBWrapper {
@@ -422,16 +421,15 @@ public class DBWrapper {
 		Vector<Object> questionMarks4 = new Vector<>();
 		// If the client is search for chat message's content then no Unmessaged friends will be displayed
 		if (chatSearch.isEmpty()) {
-			sql4 = "SELECT cv.ConversationId, cv.ConversationName, cvmem2.MemberId\n" +
+			sql4 = "SELECT cv.ConversationId, cvmem2.MemberId\n" +
 					"FROM Conversation cv\n" +
 					"JOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
 					"JOIN ConversationMember cvmem2 ON cv.ConversationId = cvmem2.ConversationId\n" +
 					"LEFT JOIN ConversationMessage cvmes ON cv.ConversationId = cvmes.ConversationId \n" +
-					"WHERE cv.IsGroup=? AND cvmem.MemberId = ? AND cvmem2.MemberId != ? AND cvmem2.MemberId LIKE ?\n" +
+					"WHERE cv.IsGroup=false AND cvmem.MemberId = ? AND cvmem2.MemberId != ? AND cvmem2.MemberId LIKE ?\n" +
 					"GROUP BY cv.ConversationId, cvmem2.MemberId\n" +
 					"HAVING COUNT(cvmes.MessageId) = 0;";
 
-			questionMarks4.add(isGroup);
 			questionMarks4.add(currentUsername);
 			questionMarks4.add(currentUsername);
 			questionMarks4.add("%" + friendSearch + "%");
@@ -833,36 +831,6 @@ public class DBWrapper {
 		dbConn.doPreparedStatement(sql, questionMarks);
 	}
 
-	public Vector<Map<String, Object>> getFriendshipStatus(String currentUsername, String conversationId) throws SQLException {
-		String sql = "SELECT f.UserId, f.FriendId, f.Status\n" +
-				"FROM Conversation cv\n" +
-				"JOIN ConversationMember cvmem ON cv.ConversationId = cvmem.ConversationId\n" +
-				"JOIN Friend f ON cvmem.MemberId != ? AND ((f.UserId = ? AND f.FriendId = cvmem.MemberId) OR (f.UserId = cvmem.MemberId AND f.FriendId = ?))\n" +
-				"WHERE cv.IsGroup = false AND cv.ConversationId=?";
-
-		Vector<Object> questionMarks = new Vector<>();
-		questionMarks.add(currentUsername);
-		questionMarks.add(currentUsername);
-		questionMarks.add(currentUsername);
-		questionMarks.add(conversationId);
-
-		ResultSet resultSet = dbConn.doPreparedQuery(sql, questionMarks);
-		if (resultSet.next()) {
-			Vector<Map<String, Object>> data = new Vector<>();
-			String userId = resultSet.getString("UserId");
-			String friendId = resultSet.getString("FriendId");
-			int status = resultSet.getInt("Status");
-			data.add(Map.of(
-					"userId", userId,
-					"friendId", friendId,
-					"status", status
-			));
-
-			return data;
-		}
-		return null;
-	}
-
 	public void sendMessage(String currentUsername, String conversationId, String content) throws SQLException {
 		String sql1 = "SELECT COUNT(cvmes.MessageId) as MessageCount\n" +
 				"FROM ConversationMessage cvmes\n" +
@@ -1005,6 +973,30 @@ public class DBWrapper {
 //		questionMarks.add(dateTime);
 
 		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+
+	public ResultSet getOnlineDateFromUserLog(String year, String month) throws SQLException {
+		if (year.isEmpty()) {
+			String sql = "Select  Datetime From Userlog  Left Join user On Userlog.UserId = user.Username Order By Datetime Asc ";
+			Vector<Object> questionMarks = new Vector<>();
+
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		} else {
+			if (month.isEmpty()) {
+				String sql = "Select Datetime From Userlog Left Join user On Userlog.UserId = user.Username Where year(Datetime) = ? Order By Datetime Asc ";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(year);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			} else {
+				String sql = "Select Datetime From Userlog Left Join user On Userlog.UserId = user.Username Where year(Datetime) = ? and month(Datetime) = ? Order By Datetime Asc ";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(year);
+				questionMarks.add(month);
+
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}
+		}
+
 	}
 
 	public ResultSet getNewRegisterInfo(String userId) throws SQLException {

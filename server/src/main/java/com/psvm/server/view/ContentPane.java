@@ -11,11 +11,7 @@ public class ContentPane extends JPanel {
         this.add(jLabel);
     }
     void removeComponent(){
-        Component[] componentList = this.getComponents();
-        for(Component c : componentList){
-            //Find the components you want to remove
-            this.remove(c);
-        }
+        this.removeAll();
     }
     void renderDSNguoiDung() {
         removeComponent();
@@ -117,7 +113,7 @@ public class ContentPane extends JPanel {
         this.revalidate();
         this.repaint();
     }
-    void renderBieuDoHoatDong(){
+    void renderBieuDoHoatDong() throws SQLException {
         removeComponent();
         BieuDoHoatDongPanel bieuDoHoatDongPanel = new BieuDoHoatDongPanel();
         OptionPanelBieuDoHoatDong optionPanel = new OptionPanelBieuDoHoatDong(bieuDoHoatDongPanel);

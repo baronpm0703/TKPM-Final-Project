@@ -24,26 +24,31 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
-class RegisterChartThread extends SwingWorker<Void, HashMap<String, HashMap<String, Integer>>> {
+class OnlineUserChartThread extends SwingWorker<Void, HashMap<String, HashMap<String, Integer>>> {
     private final DBWrapper db;
     private Observer observer;
+
+    private String selectedYear;
+    private String selectedMonth;
+
 
     public interface Observer {
         public void workerDidUpdate(HashMap<String, HashMap<String, Integer>> userInfo) throws SQLException;
     }
-    private String selectedYear;
 
-    public RegisterChartThread(String selectedYear, Observer observer) {
+
+    public OnlineUserChartThread(String selectedYear, String selectedMonth, Observer observer) {
         // Connect DB
         this.db = new DBWrapper();
         this.observer = observer;
         this.selectedYear = selectedYear;
+        this.selectedMonth = selectedMonth;
     }
 
     @Override
     protected Void doInBackground() throws Exception {
         // Get Data from server
-        ResultSet queryResult = db.getFieldUserList("CreationDate",selectedYear);
+        ResultSet queryResult = db.getOnlineDateFromUserLog(selectedYear, selectedMonth);
         ResultSetMetaData queryResultMeta;
         queryResultMeta = queryResult.getMetaData();
 
@@ -53,10 +58,32 @@ class RegisterChartThread extends SwingWorker<Void, HashMap<String, HashMap<Stri
                 String time = queryResult.getObject(i).toString().split(" ")[0];
                 String[] arrTime = time.split("-");
 
-                userRegData.computeIfAbsent(arrTime[0], k -> new HashMap<>())
-                        .merge(arrTime[1], 1, Integer::sum);
+
+                //Month
+                if (selectedMonth.isEmpty()) {
+                    userRegData.computeIfAbsent(arrTime[0], k -> new HashMap<>())
+                            .merge(arrTime[1], 1, Integer::sum);
+                } else {
+                    //Day
+                    userRegData.computeIfAbsent(arrTime[1], k -> new HashMap<>())
+                            .merge(arrTime[2], 1, Integer::sum);
+                }
+
             }
         }
+
+        if (!selectedMonth.isEmpty()) {
+            updateNonExistingDay(userRegData);
+        } else updateNonExistingMonths(userRegData);
+
+
+        System.out.println(userRegData);
+        publish(userRegData);
+
+        return null;
+    }
+
+    private static void updateNonExistingMonths(HashMap<String, HashMap<String, Integer>> userRegData) {
         for (Map.Entry<String, HashMap<String, Integer>> yearEntry : userRegData.entrySet()) {
             String year = yearEntry.getKey();
             HashMap<String, Integer> monthData = yearEntry.getValue();
@@ -85,11 +112,34 @@ class RegisterChartThread extends SwingWorker<Void, HashMap<String, HashMap<Stri
             // Replace the existing HashMap with the sorted one
             yearEntry.setValue(sortedMonthData);
         }
-        publish(userRegData);
-
-        return null;
     }
 
+    private static void updateNonExistingDay(HashMap<String, HashMap<String, Integer>> userRegData) {
+        for (Map.Entry<String, HashMap<String, Integer>> monthEntry : userRegData.entrySet()) {
+            HashMap<String, Integer> dayData = monthEntry.getValue();
+
+            // Iterate over days (assuming days are represented as two-digit strings)
+            for (int day = 1; day <= 31; day++) {
+                String dayStr = String.format("%02d", day);
+
+                // Update the day with a value of 0 if it doesn't exist
+                dayData.putIfAbsent(dayStr, 0);
+            }
+
+            // Sort the entry set of the inner HashMap by day
+            List<Map.Entry<String, Integer>> sortedDays = new ArrayList<>(dayData.entrySet());
+            Collections.sort(sortedDays, Map.Entry.comparingByKey());
+
+            // Create a new sorted HashMap for the month
+            HashMap<String, Integer> sortedDayData = new LinkedHashMap<>();
+            for (Map.Entry<String, Integer> entry : sortedDays) {
+                sortedDayData.put(entry.getKey(), entry.getValue());
+            }
+
+            // Replace the existing HashMap with the sorted one
+            monthEntry.setValue(sortedDayData);
+        }
+    }
     @Override
     protected void process(List<HashMap<String, HashMap<String, Integer>>> chunks) {
         super.process(chunks);
@@ -111,7 +161,7 @@ class RegisterChartThread extends SwingWorker<Void, HashMap<String, HashMap<Stri
 
 }
 
-public class RegistrationChart extends JFrame {
+public class OnlineUserChart extends JFrame {
 
     ScheduledExecutorService service = Executors.newScheduledThreadPool(10);
     private final DBWrapper db;
@@ -122,7 +172,7 @@ public class RegistrationChart extends JFrame {
     private HashMap<String, HashMap<String, Integer>> userRegsiterList = new HashMap<>();
 
 
-    public RegistrationChart(String title) throws SQLException {
+    public OnlineUserChart(String title) throws SQLException {
         super(title);
 
         // Connect DB
@@ -149,17 +199,18 @@ public class RegistrationChart extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 isFiltering = true;
-                startNextWorker("2022");
+                startNextWorker("2022", "10");
+                //startNextWorker("2022", "");
             }
         });
 
         // Start
-        startNextWorker("");
+        startNextWorker("","");
         add(addBtn);
     }
 
-    protected void startNextWorker(String selectedYear) {
-        RegisterChartThread userWorker = new RegisterChartThread(selectedYear, new RegisterChartThread.Observer() {
+    protected void startNextWorker(String selectedYear, String seletedMonth) {
+        OnlineUserChartThread userWorker = new OnlineUserChartThread(selectedYear, seletedMonth, new OnlineUserChartThread.Observer() {
             @Override
             public void workerDidUpdate(HashMap<String, HashMap<String, Integer>> regInfo) throws SQLException {
                 if (!userRegsiterList.equals(regInfo)) {
@@ -168,7 +219,7 @@ public class RegistrationChart extends JFrame {
 
                     // Create chart
                     chart = ChartFactory.createLineChart(
-                            "Số lượng người đăng ký mới theo năm",
+                            "Số lượng người đăng nhập mới theo năm",
                             "Tháng",
                             "Số lượng",
                             dataset
@@ -188,7 +239,7 @@ public class RegistrationChart extends JFrame {
                 if (userWorker.getState() == SwingWorker.StateValue.DONE) {
                     userWorker.removePropertyChangeListener(this);
                     if (!isFiltering)
-                        startNextWorker(selectedYear);
+                        startNextWorker(selectedYear, seletedMonth);
                     else isFiltering = false;
                 }
             }
@@ -200,7 +251,7 @@ public class RegistrationChart extends JFrame {
     private CategoryDataset createDataset() throws SQLException {
 
         // Get Data from server
-        ResultSet queryResult = db.getFieldUserList("CreationDate", "");
+        ResultSet queryResult = db.getOnlineDateFromUserLog("", "");
         ResultSetMetaData queryResultMeta;
         queryResultMeta = queryResult.getMetaData();
 
@@ -214,6 +265,7 @@ public class RegistrationChart extends JFrame {
                         .merge(arrTime[1], 1, Integer::sum);
             }
         }
+        updateNonExistingMonths(userRegData);
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         System.out.println(userRegData);
 
@@ -238,11 +290,68 @@ public class RegistrationChart extends JFrame {
         return dataset;
     }
 
+    private static void updateNonExistingMonths(HashMap<String, HashMap<String, Integer>> userRegData) {
+        for (Map.Entry<String, HashMap<String, Integer>> yearEntry : userRegData.entrySet()) {
+            String year = yearEntry.getKey();
+            HashMap<String, Integer> monthData = yearEntry.getValue();
+
+            // Iterate over months (assuming months are represented as two-digit strings)
+            for (int month = 1; month <= 12; month++) {
+                String monthStr = String.format("%02d", month);
+
+                // Update the month with a value of 0 if it doesn't exist
+                monthData.putIfAbsent(monthStr, 0);
+            }
+        }
+        for (Map.Entry<String, HashMap<String, Integer>> yearEntry : userRegData.entrySet()) {
+            HashMap<String, Integer> monthData = yearEntry.getValue();
+
+            // Sort the entry set of the inner HashMap by month
+            List<Map.Entry<String, Integer>> sortedMonths = new ArrayList<>(monthData.entrySet());
+            Collections.sort(sortedMonths, Map.Entry.comparingByKey());
+
+            // Create a new sorted HashMap for the year
+            HashMap<String, Integer> sortedMonthData = new LinkedHashMap<>();
+            for (Map.Entry<String, Integer> entry : sortedMonths) {
+                sortedMonthData.put(entry.getKey(), entry.getValue());
+            }
+
+            // Replace the existing HashMap with the sorted one
+            yearEntry.setValue(sortedMonthData);
+        }
+    }
+
+    private static void updateNonExistingDay(HashMap<String, HashMap<String, Integer>> userRegData) {
+        for (Map.Entry<String, HashMap<String, Integer>> monthEntry : userRegData.entrySet()) {
+            HashMap<String, Integer> dayData = monthEntry.getValue();
+
+            // Iterate over days (assuming days are represented as two-digit strings)
+            for (int day = 1; day <= 31; day++) {
+                String dayStr = String.format("%02d", day);
+
+                // Update the day with a value of 0 if it doesn't exist
+                dayData.putIfAbsent(dayStr, 0);
+            }
+
+            // Sort the entry set of the inner HashMap by day
+            List<Map.Entry<String, Integer>> sortedDays = new ArrayList<>(dayData.entrySet());
+            Collections.sort(sortedDays, Map.Entry.comparingByKey());
+
+            // Create a new sorted HashMap for the month
+            HashMap<String, Integer> sortedDayData = new LinkedHashMap<>();
+            for (Map.Entry<String, Integer> entry : sortedDays) {
+                sortedDayData.put(entry.getKey(), entry.getValue());
+            }
+
+            // Replace the existing HashMap with the sorted one
+            monthEntry.setValue(sortedDayData);
+        }
+    }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            RegistrationChart example = null;
+            OnlineUserChart example = null;
             try {
-                example = new RegistrationChart("Biểu đồ đăng ký mới");
+                example = new OnlineUserChart("Biểu đồ Hoạt động mới");
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

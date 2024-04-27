@@ -125,7 +125,11 @@ class SideMenu extends JPanel{
                         contentPane.renderDSNguoiDungHoatDong();
                         break;
                     case "Biểu đồ hoạt động của người dùng":
-                        contentPane.renderBieuDoHoatDong();
+                        try {
+                            contentPane.renderBieuDoHoatDong();
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         break;
                     default:
                         contentPane.renderDSNguoiDung();
