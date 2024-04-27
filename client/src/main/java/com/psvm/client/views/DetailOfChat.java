@@ -237,7 +237,6 @@ public class DetailOfChat extends JPanel {
                     boolean isGroup = (boolean) messages.get(0).get("IsGroup");
                     if (isGroup) {
                         String conversationId = messages.get(1).get("ConversationId").toString();
-                        System.out.println(conversationId + " - " + previousGroupConvoId + " - " + !conversationId.equals(previousGroupConvoId));
                         if (!conversationId.equals(previousGroupConvoId)) {
                             String conversationName = messages.get(2).get("ConversationName").toString();
 

@@ -114,6 +114,7 @@ class SendMessageButtonThread extends Thread {
     private String conversationId, content;
 
     private int responseCode;
+    private Vector<Map<String, Object>> data;
 
     public SendMessageButtonThread(Socket clientSocket, ObjectInputStream socketIn, ObjectOutputStream socketOut, String conversationId, String content) {
         this.clientSocket = clientSocket;
@@ -132,11 +133,13 @@ class SendMessageButtonThread extends Thread {
         SocketResponse response = request.talk();
 
         responseCode = response.getResponseCode();
+        data = response.getData();
     }
 
     public int getResponseCode() {
         return responseCode;
     }
+    public Vector<Map<String, Object>> getData() { return data; }
 }
 
 public class ChatBody extends JPanel {
@@ -275,7 +278,26 @@ public class ChatBody extends JPanel {
                         sendMessageButtonThread.join();
 
                         if (sendMessageButtonThread.getResponseCode() == SocketResponse.RESPONSE_CODE_FAILURE) {
-                            JOptionPane.showConfirmDialog(thisPanel, "Gửi tin nhắn thất bại", "Error", JOptionPane.DEFAULT_OPTION);
+                            Vector<Map<String, Object>> responseData = sendMessageButtonThread.getData();
+                            if (responseData == null)
+                                JOptionPane.showConfirmDialog(thisPanel, "Gửi tin nhắn thất bại", "Error", JOptionPane.DEFAULT_OPTION);
+                            else {
+                                String errorMsg = "";
+                                if ((Integer) responseData.get(0).get("status") == 1) {
+                                    if (responseData.get(0).get("userId").equals(LocalData.getCurrentUsername()))
+                                        errorMsg = "Bạn đang chặn người này.";
+                                    else if (responseData.get(0).get("friendId").equals(LocalData.getCurrentUsername()))
+                                        errorMsg = "Bạn đang bị người này chặn.";
+                                }
+                                else if ((Integer) responseData.get(0).get("status") == 2) {
+                                    if (responseData.get(0).get("userId").equals(LocalData.getCurrentUsername()))
+                                        errorMsg = "Bạn đang bị người này chặn.";
+                                    else if (responseData.get(0).get("friendId").equals(LocalData.getCurrentUsername()))
+                                        errorMsg = "Bạn đang chặn người này.";
+                                }
+
+                                JOptionPane.showConfirmDialog(thisPanel, errorMsg, "Error", JOptionPane.DEFAULT_OPTION);
+                            }
                         }
                     } catch (InterruptedException ex) {
                         System.out.println("Exception thrown while sending message in " + this.getClass().getSimpleName() + ": " + ex.getMessage());
@@ -339,6 +361,16 @@ public class ChatBody extends JPanel {
 
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
+                    // If messages is empty it means all messages have been deleted (this if-clause is for other people who have the same conversation open)
+                    System.out.println(messages);
+                    if (messages.isEmpty()) {
+                        chatBody.removeAll();
+                        totalMessages.clear();
+
+                        thisPanel.revalidate();
+                        thisPanel.repaint();
+                    }
+
                     // Remove chat body on command
                     if (LocalData.getToRemoveChat()) {
                         previousConversationId = null;
@@ -357,15 +389,15 @@ public class ChatBody extends JPanel {
                         previousConversationId = conversationId;
                     }
 
+                    messages.removeAll(totalMessages);
+                    totalMessages.addAll(messages);
+
                     // Repaint chat body on command
                     if (LocalData.getToReloadChat()) {
                         chatBody.removeAll();
                         totalMessages.clear();
                         LocalData.setToReloadChat(false);
                     }
-
-                    messages.removeAll(totalMessages);
-                    totalMessages.addAll(messages);
 
                     for (Map<String, Object> message: messages) {
                         totalMessageContent.add((String) message.get("Content"));

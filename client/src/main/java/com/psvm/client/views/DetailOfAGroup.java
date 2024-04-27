@@ -704,6 +704,13 @@ public class DetailOfAGroup extends JPanel {
 
             memberPanel.add(buttons, BorderLayout.EAST);
         }
+        else {
+            JPanel buttons = new JPanel(new FlowLayout());
+            buttons.add(new JButton(" "));
+
+            memberPanel.add(buttons, BorderLayout.EAST);
+        }
+
         return memberPanel;
     }
     private JSeparator createSeparator() {

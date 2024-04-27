@@ -198,14 +198,14 @@ public class ListFriendOfUser extends JPanel {
             // If tempCloneGlobal is note empty after this line then the data has been shrunk
             tempCloneGlobal.removeAll(tempCloneLocal);
             for (Map<String, Object> datum: tempCloneGlobal) {
-                if (tempMoved.contains(datum.get("ConversationId").toString())) {
-                    continue;
-                }
-
                 deletedConvos.add(datum.get("ConversationId").toString());
                 unseenOnlineMessagesIndex--;
                 // Remove from Object list
                 totalUnseenOnlineMessages.remove(datum);
+            }
+            // Prevent moved elements from being mistaken for deleted and being removed
+            for (String movedId: tempMoved) {
+                deletedConvos.remove(movedId);
             }
 
 
@@ -241,14 +241,14 @@ public class ListFriendOfUser extends JPanel {
             // If tempCloneGlobal is note empty after this line then the data has been shrunk
             tempCloneGlobal.removeAll(tempCloneLocal);
             for (Map<String, Object> datum: tempCloneGlobal) {
-                if (tempMoved.contains(datum.get("ConversationId").toString())) {
-                    continue;
-                }
-
                 deletedConvos.add(datum.get("ConversationId").toString());
                 unseenOfflineMessagesIndex--;
                 // Remove from Object list
                 totalUnseenOfflineMessages.remove(datum);
+            }
+            // Prevent moved elements from being mistaken for deleted and being removed
+            for (String movedId: tempMoved) {
+                deletedConvos.remove(movedId);
             }
 
 
@@ -284,14 +284,14 @@ public class ListFriendOfUser extends JPanel {
             // If tempCloneGlobal is not empty after this line then the data has been shrunk
             tempCloneGlobal.removeAll(tempCloneLocal);
             for (Map<String, Object> datum: tempCloneGlobal) {
-                if (tempMoved.contains(datum.get("ConversationId").toString())) {
-                    continue;
-                }
-
                 deletedConvos.add(datum.get("ConversationId").toString());
                 seenMessagesIndex--;
                 // Remove from Object list
                 totalSeenMessages.remove(datum);
+            }
+            // Prevent moved elements from being mistaken for deleted and being removed
+            for (String movedId: tempMoved) {
+                deletedConvos.remove(movedId);
             }
 
             /* Add other friends with no messages */
@@ -316,6 +316,7 @@ public class ListFriendOfUser extends JPanel {
                     // Store the id of conversations that have been moved
                     tempMoved.add(friend.get("ConversationId").toString());
                 }
+//                System.out.println("tempMoved: " + tempMoved);
 
                 // Manually set the selected effect
                 if (currentSelectedFriendId != null && currentSelectedFriendId.equals(friend.get("ConversationId").toString()))
@@ -325,14 +326,14 @@ public class ListFriendOfUser extends JPanel {
             // If tempCloneGlobal is note empty after this line then the data has been shrunk
             tempCloneGlobal.removeAll(tempCloneLocal);
             for (Map<String, Object> datum: tempCloneGlobal) {
-                if (tempMoved.contains(datum.get("ConversationId").toString())) {
-                    continue;
-                }
-
                 deletedConvos.add(datum.get("ConversationId").toString());
                 noMessagesIndex--;
                 // Remove from Object list
                 totalNoMessages.remove(datum);
+            }
+            // Prevent moved elements from being mistaken for deleted and being removed
+            for (String movedId: tempMoved) {
+                deletedConvos.remove(movedId);
             }
 
 
