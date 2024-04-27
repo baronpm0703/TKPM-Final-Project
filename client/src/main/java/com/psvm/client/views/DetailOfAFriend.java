@@ -75,8 +75,14 @@ class UnOrBlockUserButtonDetailThread extends Thread {
 
 
         responseCode = final_response.getResponseCode();
-    }
 
+        try {
+            socketIn.close();
+            socketOut.close();
+            socket.close();
+        } catch (IOException e) {
+        }
+    }
     public int getResponseCode() {
         return responseCode;
     }
@@ -137,15 +143,6 @@ public class DetailOfAFriend extends JPanel {
         this.username = username;
 
         initialize();
-
-        /* Multithreading + Socket */
-        try {
-            deleteChatHistorySocket = new Socket(SOCKET_HOST, SOCKET_PORT);
-            deleteChatHistorySocketIn = new ObjectInputStream(deleteChatHistorySocket.getInputStream());
-            deleteChatHistorySocketOut = new ObjectOutputStream(deleteChatHistorySocket.getOutputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     void initialize() {
@@ -257,18 +254,29 @@ public class DetailOfAFriend extends JPanel {
                         "Bạn có chắc muốn xoá lịch sử chat?",
                         "Xác nhận", JOptionPane.YES_NO_OPTION);
                 if (response == JOptionPane.YES_OPTION) {
-                    DeleteChatHistoryButtonThread deleteChatHistoryButtonThread = new DeleteChatHistoryButtonThread(deleteChatHistorySocket, deleteChatHistorySocketIn, deleteChatHistorySocketOut, conversationId);
-                    deleteChatHistoryButtonThread.start();
-
                     try {
-                        deleteChatHistoryButtonThread.join();
-                        if (deleteChatHistoryButtonThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
-                            LocalData.setToReloadChat(true);
-                        }
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                    }
+                        Socket deleteChatHistorySocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+                        ObjectInputStream deleteChatHistorySocketIn = new ObjectInputStream(deleteChatHistorySocket.getInputStream());
+                        ObjectOutputStream deleteChatHistorySocketOut = new ObjectOutputStream(deleteChatHistorySocket.getOutputStream());
 
+                        DeleteChatHistoryButtonThread deleteChatHistoryButtonThread = new DeleteChatHistoryButtonThread(deleteChatHistorySocket, deleteChatHistorySocketIn, deleteChatHistorySocketOut, conversationId);
+                        deleteChatHistoryButtonThread.start();
+
+                        try {
+                            deleteChatHistoryButtonThread.join();
+                            if (deleteChatHistoryButtonThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                                LocalData.setToReloadChat(true);
+                            }
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
+                        }
+
+                        deleteChatHistorySocketIn.close();
+                        deleteChatHistorySocketOut.close();
+                        deleteChatHistorySocket.close();
+                    } catch (IOException ie) {
+                        throw new RuntimeException(ie);
+                    }
                 }
             }
         });

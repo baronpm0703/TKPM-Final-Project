@@ -303,7 +303,7 @@ public class ListFriendOfUser extends JPanel {
             totalNoMessages.addAll(noMessages);
             for (Map<String, Object> friend: noMessages) {
                 if (!messageIndexer.contains(friend.get("ConversationId").toString())) {
-                    UserEachFriend userEachFriend = new UserEachFriend(friend.get("ConversationId").toString(), "af", friend.get("MemberId").toString(), "", LocalDateTime.of(LocalDate.now(), LocalTime.now()),"");
+                    UserEachFriend userEachFriend = new UserEachFriend(friend.get("ConversationId").toString(), "af", friend.get("MemberId").toString(), "", null,"");
                     thisPanel.add(userEachFriend, unseenOnlineMessagesIndex + unseenOfflineMessagesIndex + seenMessagesIndex + noMessagesIndex);
                     messageIndexer.add(unseenOnlineMessagesIndex + unseenOfflineMessagesIndex + seenMessagesIndex + noMessagesIndex, friend.get("ConversationId").toString());
                     addHoverEffect(userEachFriend);
@@ -311,7 +311,7 @@ public class ListFriendOfUser extends JPanel {
                 else {
                     int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 4);
                     UserEachFriend userEachFriend = (UserEachFriend) thisPanel.getComponent(newIndex);
-                    userEachFriend.setData(friend.get("MemberId").toString(), "", LocalDateTime.of(LocalDate.now(), LocalTime.now()),"");
+                    userEachFriend.setData(friend.get("MemberId").toString(), "", null,"");
 
                     // Store the id of conversations that have been moved
                     tempMoved.add(friend.get("ConversationId").toString());

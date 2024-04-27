@@ -53,9 +53,6 @@ public class UserEachGroup extends UserEachFriend {
 	// Multithreading + Socket
 	final String SOCKET_HOST = "localhost";
 	final int SOCKET_PORT = 5555;
-	Socket leaveGroupSocket;
-	ObjectInputStream leaveGroupSocketIn;
-	ObjectOutputStream leaveGroupSocketOut;
 
 	private String conversationId;
 
@@ -91,15 +88,6 @@ public class UserEachGroup extends UserEachFriend {
 
 			}
 		});
-
-		/* Multithreading + Socket */
-		try {
-			leaveGroupSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
-			leaveGroupSocketIn = new ObjectInputStream(leaveGroupSocket.getInputStream());
-			leaveGroupSocketOut = new ObjectOutputStream(leaveGroupSocket.getOutputStream());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 	private void showPopupMenuForGroup(int x, int y){
 
@@ -119,19 +107,29 @@ public class UserEachGroup extends UserEachFriend {
 						"Bạn có muốn rời khỏi nhóm này?",
 						"Xác nhận", JOptionPane.YES_NO_OPTION);
 				if (response == JOptionPane.YES_OPTION) {
-					LeaveGroupThread leaveGroupThread = new LeaveGroupThread(leaveGroupSocket, leaveGroupSocketIn, leaveGroupSocketOut, LocalData.getCurrentUsername(), conversationId);
-					leaveGroupThread.start();
-
 					try {
-						leaveGroupThread.join();
-						if (leaveGroupThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
-							LocalData.setToRemoveChat(true);
-							LocalData.setToReloadMessageList(true);
-							LocalData.setSelectedConversation("");
-							LocalData.setToRemoveChatDetail(true);
+						Socket leaveGroupSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+						ObjectInputStream leaveGroupSocketIn = new ObjectInputStream(leaveGroupSocket.getInputStream());
+						ObjectOutputStream leaveGroupSocketOut = new ObjectOutputStream(leaveGroupSocket.getOutputStream());
+
+						LeaveGroupThread leaveGroupThread = new LeaveGroupThread(leaveGroupSocket, leaveGroupSocketIn, leaveGroupSocketOut, LocalData.getCurrentUsername(), conversationId);
+						leaveGroupThread.start();
+
+						try {
+							leaveGroupThread.join();
+							if (leaveGroupThread.getResponseCode() == SocketResponse.RESPONSE_CODE_SUCCESS) {
+								LocalData.setToRemoveChat(true);
+								LocalData.setToReloadMessageList(true);
+								LocalData.setSelectedConversation("");
+								LocalData.setToRemoveChatDetail(true);
+							}
+						} catch (InterruptedException ex) {
+							throw new RuntimeException(ex);
 						}
-					} catch (InterruptedException ex) {
-						throw new RuntimeException(ex);
+
+						leaveGroupSocket.close();
+					} catch (IOException ie) {
+						throw new RuntimeException(ie);
 					}
 				}
 			}

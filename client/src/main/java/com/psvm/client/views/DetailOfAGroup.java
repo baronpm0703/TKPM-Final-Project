@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Executors;
@@ -266,21 +267,6 @@ public class DetailOfAGroup extends JPanel {
         this.name = name;
 
         initialize();
-
-        /* Multithreading + Socket */
-        try {
-            renameChatSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
-            renameChatSocketIn = new ObjectInputStream(renameChatSocket.getInputStream());
-            renameChatSocketOut = new ObjectOutputStream(renameChatSocket.getOutputStream());
-            searchNonMemberSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
-            searchNonMemberSocketIn = new ObjectInputStream(searchNonMemberSocket.getInputStream());
-            searchNonMemberSocketOut = new ObjectOutputStream(searchNonMemberSocket.getOutputStream());
-            leaveGroupSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
-            leaveGroupSocketIn = new ObjectInputStream(leaveGroupSocket.getInputStream());
-            leaveGroupSocketOut = new ObjectOutputStream(leaveGroupSocket.getOutputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     void initialize() {
@@ -308,7 +294,14 @@ public class DetailOfAGroup extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 String newName = JOptionPane.showInputDialog("Nhập tên mới:");
                 if (newName != null && !newName.isEmpty()) {
-                    RenameChatThread renameChatThread = new RenameChatThread(renameChatSocket, renameChatSocketIn, renameChatSocketOut, conversationId, newName);
+                    try {
+                        renameChatSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+                        renameChatSocketIn = new ObjectInputStream(renameChatSocket.getInputStream());
+                        renameChatSocketOut = new ObjectOutputStream(renameChatSocket.getOutputStream());
+                    } catch (IOException ex) {
+					}
+
+					RenameChatThread renameChatThread = new RenameChatThread(renameChatSocket, renameChatSocketIn, renameChatSocketOut, conversationId, newName);
                     renameChatThread.start();
 
                     try {
@@ -320,6 +313,11 @@ public class DetailOfAGroup extends JPanel {
                         throw new RuntimeException(ex);
                     }
 
+                    try {
+                        renameChatSocket.close();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
         });
@@ -419,6 +417,13 @@ public class DetailOfAGroup extends JPanel {
                         "Bạn có chắc muốn rời khỏi nhóm?",
                         "Xác nhận", JOptionPane.YES_NO_OPTION);
                 if (response == JOptionPane.YES_OPTION) {
+                    try {
+                        leaveGroupSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+                        leaveGroupSocketIn = new ObjectInputStream(leaveGroupSocket.getInputStream());
+                        leaveGroupSocketOut = new ObjectOutputStream(leaveGroupSocket.getOutputStream());
+                    } catch (IOException ie) {
+                        throw new RuntimeException(ie);
+                    }
                     LeaveGroupThread leaveGroupThread = new LeaveGroupThread(leaveGroupSocket, leaveGroupSocketIn, leaveGroupSocketOut, LocalData.getCurrentUsername(), conversationId);
                     leaveGroupThread.start();
 
@@ -431,6 +436,12 @@ public class DetailOfAGroup extends JPanel {
                             LocalData.setToRemoveChatDetail(true);
                         }
                     } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    try {
+                        leaveGroupSocket.close();
+                    } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
                 }
@@ -530,6 +541,13 @@ public class DetailOfAGroup extends JPanel {
         if (searchNonMemberThread != null && !searchNonMemberThread.isInterrupted()) {
             searchNonMemberThread.interrupt();
         }
+
+        try {
+            searchNonMemberSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+            searchNonMemberSocketIn = new ObjectInputStream(searchNonMemberSocket.getInputStream());
+            searchNonMemberSocketOut = new ObjectOutputStream(searchNonMemberSocket.getOutputStream());
+        } catch (IOException e) {
+        }
         searchNonMemberThread = new SearchNonMemberThread(searchNonMemberSocket, searchNonMemberSocketIn, searchNonMemberSocketOut, friendName, conversationId);
         searchNonMemberThread.start();
 
@@ -541,6 +559,12 @@ public class DetailOfAGroup extends JPanel {
             scrollFriend.repaint();
         } catch (InterruptedException e) {
             System.out.println("Exception thrown while search for users in " + this.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+
+        try {
+            searchNonMemberSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
     static ImageIcon createCircularAvatar(String imagePath, int width, int height) {

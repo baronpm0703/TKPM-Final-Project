@@ -134,10 +134,15 @@ public class DBWrapper {
 	}
 
 	public ResultSet searchUser(String currentUsername, String otherUsername) throws SQLException {
-		String sql = "SELECT u.Username, fq.TargetId\n" +
+		String sql = "SELECT DISTINCT u.Username, fq.Status, f.UserId, f.FriendId\n" +
 				"FROM User u\n" +
 				"LEFT JOIN FriendRequest fq ON (fq.SenderId = ? AND fq.TargetId = u.Username) OR (fq.SenderId = u.Username AND fq.TargetId = ?)\n" +
-				"WHERE u.Username LIKE ? AND u.Username!=?;";
+				"LEFT JOIN Friend f ON f.FriendId=u.Username OR f.UserId=u.Username\n" +
+				"WHERE u.Username LIKE ? AND u.Username!=? AND fq.Datetime >= all (\n" +
+				"\tSELECT fq2.Datetime\n" +
+				"    FROM FriendRequest fq2\n" +
+				"    WHERE fq2.SenderId = fq.SenderId AND fq2.TargetId = fq.TargetId\n" +
+				");";
 
 		Vector<Object> questionMarks = new Vector<>();
 		questionMarks.add(currentUsername);

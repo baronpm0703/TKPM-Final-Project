@@ -715,7 +715,6 @@ public class ClientHandler implements Runnable {
 			while (queryResult.next()) {
 				responseData.add(Map.of("highestConId", queryResult.getObject(1)));
 			}
-			System.out.println(responseData);
 			queryResult.getStatement().close();
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
 		} catch (SQLException e) {
@@ -739,7 +738,6 @@ public class ClientHandler implements Runnable {
 					}
 				}
 			}
-			System.out.println(responseData);
 			queryResult.getStatement().close();
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, responseData));
 		} catch (SQLException e) {

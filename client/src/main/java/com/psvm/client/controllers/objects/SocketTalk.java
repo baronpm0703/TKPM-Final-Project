@@ -82,4 +82,12 @@ public class SocketTalk {
 			return null;
 		}
 	}
+
+	public void close() {
+		try {
+			socket.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

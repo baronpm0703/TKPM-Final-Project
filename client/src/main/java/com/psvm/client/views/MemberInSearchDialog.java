@@ -21,9 +21,6 @@ import java.net.Socket;
 public class MemberInSearchDialog extends JPanel {
     final String SOCKET_HOST = "localhost";
     final int SOCKET_PORT = 5555;
-    Socket addGroupMemberSocket;
-    ObjectInputStream addGroupMemberSocketIn;
-    ObjectOutputStream addGroupMemberSocketOut;
 
     //chỗ này cần phải có 1 cái xử lí để lấy danh sách pending add friend request của thằng user mà muốn add để có thể check. (Khi tắt cái dialog đi là xác nhận
     private String avatar;
@@ -41,15 +38,6 @@ public class MemberInSearchDialog extends JPanel {
         this.setBorder(new EmptyBorder(0,0,0,0));
         this.setBackground(Color.WHITE);
         initialize();
-
-        /* Multithreading + Socket */
-        try {
-            addGroupMemberSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
-            addGroupMemberSocketIn = new ObjectInputStream(addGroupMemberSocket.getInputStream());
-            addGroupMemberSocketOut = new ObjectOutputStream(addGroupMemberSocket.getOutputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
     String getUsername(){
         return username;
@@ -107,20 +95,30 @@ public class MemberInSearchDialog extends JPanel {
         toggleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Thread to create friend request
-                AddGroupMemberRequest addGroupMemberRequest = new AddGroupMemberRequest(addGroupMemberSocket, addGroupMemberSocketIn, addGroupMemberSocketOut, conversationId, username);
-                System.out.println("responseCode");
-                SocketResponse response = addGroupMemberRequest.talk();
+                try {
+                    Socket addGroupMemberSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+                    ObjectInputStream addGroupMemberSocketIn = new ObjectInputStream(addGroupMemberSocket.getInputStream());
+                    ObjectOutputStream addGroupMemberSocketOut = new ObjectOutputStream(addGroupMemberSocket.getOutputStream());
 
-                int responseCode = response.getResponseCode();
-                if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS) {
-                    // Implement sau khi có cách xử lí (Huỷ lời mời kết bạn, nếu có thể làm kịp sẽ làm sau)
-    //                if (toggleButton.getIcon().toString().equals(new ImageIcon(addFriendIcon).toString())) {
-    //                    toggleButton.setIcon(new ImageIcon(doneIcon));
-    //                } else {
-    //                    toggleButton.setIcon(new ImageIcon(addFriendIcon));
-    //                }
-                    toggleButton.setIcon(new ImageIcon(scaledDoneImage));
+                    // Thread to create friend request
+                    AddGroupMemberRequest addGroupMemberRequest = new AddGroupMemberRequest(addGroupMemberSocket, addGroupMemberSocketIn, addGroupMemberSocketOut, conversationId, username);
+                    System.out.println("responseCode");
+                    SocketResponse response = addGroupMemberRequest.talk();
+
+                    int responseCode = response.getResponseCode();
+                    if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                        // Implement sau khi có cách xử lí (Huỷ lời mời kết bạn, nếu có thể làm kịp sẽ làm sau)
+                        //                if (toggleButton.getIcon().toString().equals(new ImageIcon(addFriendIcon).toString())) {
+                        //                    toggleButton.setIcon(new ImageIcon(doneIcon));
+                        //                } else {
+                        //                    toggleButton.setIcon(new ImageIcon(addFriendIcon));
+                        //                }
+                        toggleButton.setIcon(new ImageIcon(scaledDoneImage));
+                    }
+
+                    addGroupMemberSocket.close();
+                } catch (IOException ie) {
+                    throw new RuntimeException(ie);
                 }
             }
         });

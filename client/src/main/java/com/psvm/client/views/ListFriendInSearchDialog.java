@@ -18,15 +18,25 @@ public class ListFriendInSearchDialog extends JPanel {
     public void setData(Vector<Map<String, Object>> data) {
         this.removeAll();
         for (Map<String, Object> datum: data) {
-            if (datum.get("TargetId") == null) {
-                FriendInSearchDialog friendInSearchDialog = new FriendInSearchDialog("asdasd",datum.get("Username").toString(), datum.get("Username").toString(), false);
-                this.add(friendInSearchDialog);
-            }
-            else {
+            System.out.println(datum);
+            if (datum.get("Status") != null && (Integer) datum.get("Status") == 0) {
                 FriendInSearchDialog friendInSearchDialog = new FriendInSearchDialog("asdasd",datum.get("Username").toString(), datum.get("Username").toString(), true);
                 this.add(friendInSearchDialog);
             }
-
+            else if (datum.get("Status") != null && (Integer) datum.get("Status") == 1) {
+                if (datum.get("UserId") == null && datum.get("FriendId") == null) {
+                    FriendInSearchDialog friendInSearchDialog = new FriendInSearchDialog("asdasd",datum.get("Username").toString(), datum.get("Username").toString(), false);
+                    this.add(friendInSearchDialog);
+                }
+                else {
+                    FriendInSearchDialog friendInSearchDialog = new FriendInSearchDialog("asdasd",datum.get("Username").toString(), datum.get("Username").toString(), true);
+                    this.add(friendInSearchDialog);
+                }
+            }
+            else {
+                FriendInSearchDialog friendInSearchDialog = new FriendInSearchDialog("asdasd",datum.get("Username").toString(), datum.get("Username").toString(), false);
+                this.add(friendInSearchDialog);
+            }
         }
         this.add(Box.createVerticalGlue());
     }

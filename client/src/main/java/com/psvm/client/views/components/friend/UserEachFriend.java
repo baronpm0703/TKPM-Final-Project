@@ -108,11 +108,17 @@ public class UserEachFriend extends JPanel {
         this.add(friendName, gbc);
 
         // Component 3 (button in the third column)
-        friendLastTime = new JLabel(formatLocalDateTime(lastTime));
+        if (lastTime != null) {
+            friendLastTime = new JLabel(formatLocalDateTime(lastTime));
+        }
+        else {
+            friendLastTime = new JLabel("                        ");
+        }
         gbc.gridx = 2;
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 0, 0); // Reset insets
         this.add(friendLastTime, gbc);
+
 
         // Component 4 (button in the second row)
         lastMessage= new JLabel(lastChat);
@@ -145,7 +151,10 @@ public class UserEachFriend extends JPanel {
 
         friendName.setText(name);
         lastMessage.setText(lastChat);
-        friendLastTime.setText(formatLocalDateTime(lastTime));
+        if (lastTime != null)
+            friendLastTime.setText(formatLocalDateTime(lastTime));
+        else
+            friendLastTime.setText("                        ");
         this.remove(statusMessage);
         statusMessage = createUserStatusDot(lastChatStatus);
         this.add(statusMessage, gbc);
@@ -293,17 +302,8 @@ public class UserEachFriend extends JPanel {
         }
     }
     private static String formatLocalDateTime(LocalDateTime dateTime) {
-        LocalDateTime now = LocalDateTime.now();
-
-        if (dateTime.toLocalDate().isEqual(now.toLocalDate())) {
-            // Same day
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-            return dateTime.format(formatter);
-        } else {
-            // Different day
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            return dateTime.format(formatter);
-        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy");
+        return dateTime.format(formatter);
     }
 
     private static JLabel createUserStatusDot(String userStatus) {

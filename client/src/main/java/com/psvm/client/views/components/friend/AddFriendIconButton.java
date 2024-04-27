@@ -151,17 +151,16 @@ public class AddFriendIconButton extends JButton {
         searchFriendField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
+                System.out.println("fdafsd");
                 getFriendField(searchFriendField.getText());
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                getFriendField(searchFriendField.getText());
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                getFriendField(searchFriendField.getText());
             }
         });
 
@@ -192,7 +191,7 @@ public class AddFriendIconButton extends JButton {
         // If the client is not actively typing in the search field then the list is not updated
         if (!isSearchFieldFocused) return;
 
-        if (searchUserThread != null && !searchUserThread.isInterrupted()) {
+        if (searchUserThread != null) {
             searchUserThread.interrupt();
         }
         searchUserThread = new SearchUserThread(searchUserSocket, searchUserSocketIn, searchUserSocketOut, friendName);

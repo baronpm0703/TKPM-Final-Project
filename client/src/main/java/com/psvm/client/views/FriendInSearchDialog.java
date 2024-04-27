@@ -22,9 +22,6 @@ import java.time.format.DateTimeFormatter;
 public class FriendInSearchDialog extends JPanel {
     final String SOCKET_HOST = "localhost";
     final int SOCKET_PORT = 5555;
-    Socket sendFriendRequestSocket;
-    ObjectInputStream sendFriendRequestSocketIn;
-    ObjectOutputStream sendFriendRequestSocketOut;
 
     //chỗ này cần phải có 1 cái xử lí để lấy danh sách pending add friend request của thằng user mà muốn add để có thể check. (Khi tắt cái dialog đi là xác nhận
     private boolean addStatus;
@@ -41,15 +38,6 @@ public class FriendInSearchDialog extends JPanel {
         this.setBorder(new EmptyBorder(0,0,0,0));
         this.setBackground(Color.WHITE);
         initialize();
-
-        /* Multithreading + Socket */
-        try {
-            sendFriendRequestSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
-            sendFriendRequestSocketIn = new ObjectInputStream(sendFriendRequestSocket.getInputStream());
-            sendFriendRequestSocketOut = new ObjectOutputStream(sendFriendRequestSocket.getOutputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
     String getUsername(){
         return username;
@@ -105,26 +93,40 @@ public class FriendInSearchDialog extends JPanel {
             toggleButton = new JButton(new ImageIcon(scaledAddFriendImage));
         } else {
             toggleButton = new JButton(new ImageIcon(scaledDoneImage));
+            toggleButton.setEnabled(false);
         }
         toggleButton.setBorderPainted(false);
         toggleButton.setContentAreaFilled(false);
         toggleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Thread to create friend request
-                FriendRequestSendRequest friendRequestSendRequest = new FriendRequestSendRequest(sendFriendRequestSocket, sendFriendRequestSocketIn, sendFriendRequestSocketOut, username);
-                SocketResponse response = friendRequestSendRequest.talk();
+                /* Multithreading + Socket */
+                try {
+                    Socket sendFriendRequestSocket = new Socket(SOCKET_HOST, SOCKET_PORT);
+                    ObjectInputStream sendFriendRequestSocketIn = new ObjectInputStream(sendFriendRequestSocket.getInputStream());
+                    ObjectOutputStream sendFriendRequestSocketOut = new ObjectOutputStream(sendFriendRequestSocket.getOutputStream());
 
-                int responseCode = response.getResponseCode();
-                if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS) {
-                    // Implement sau khi có cách xử lí (Huỷ lời mời kết bạn, nếu có thể làm kịp sẽ làm sau)
-    //                if (toggleButton.getIcon().toString().equals(new ImageIcon(addFriendIcon).toString())) {
-    //                    toggleButton.setIcon(new ImageIcon(doneIcon));
-    //                } else {
-    //                    toggleButton.setIcon(new ImageIcon(addFriendIcon));
-    //                }
-                    toggleButton.setIcon(new ImageIcon(scaledDoneImage));
+                    // Thread to create friend request
+                    FriendRequestSendRequest friendRequestSendRequest = new FriendRequestSendRequest(sendFriendRequestSocket, sendFriendRequestSocketIn, sendFriendRequestSocketOut, username);
+                    SocketResponse response = friendRequestSendRequest.talk();
+
+                    int responseCode = response.getResponseCode();
+                    if (responseCode == SocketResponse.RESPONSE_CODE_SUCCESS) {
+                        // Implement sau khi có cách xử lí (Huỷ lời mời kết bạn, nếu có thể làm kịp sẽ làm sau)
+                        //                if (toggleButton.getIcon().toString().equals(new ImageIcon(addFriendIcon).toString())) {
+                        //                    toggleButton.setIcon(new ImageIcon(doneIcon));
+                        //                } else {
+                        //                    toggleButton.setIcon(new ImageIcon(addFriendIcon));
+                        //                }
+                        toggleButton.setIcon(new ImageIcon(scaledDoneImage));
+                        toggleButton.setEnabled(false);
+                    }
+
+                    sendFriendRequestSocket.close();
+                } catch (IOException ie) {
+                    throw new RuntimeException(ie);
                 }
+
             }
         });
         return toggleButton;

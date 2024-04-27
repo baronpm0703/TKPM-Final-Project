@@ -307,7 +307,7 @@ public class ListGroupOfUser extends JPanel {
 			totalNoMessages.addAll(noMessages);
 			for (Map<String, Object> friend: noMessages) {
 				if (!messageIndexer.contains(friend.get("ConversationId").toString())) {
-					UserEachGroup userEachGroup = new UserEachGroup(friend.get("ConversationId").toString(), friend.get("ConversationId").toString(), "af", friend.get("ConversationName").toString(), "", LocalDateTime.of(LocalDate.now(), LocalTime.now()),"");
+					UserEachGroup userEachGroup = new UserEachGroup(friend.get("ConversationId").toString(), friend.get("ConversationId").toString(), "af", friend.get("ConversationName").toString(), "", null,"");
 					thisPanel.add(userEachGroup, unseenOnlineMessagesIndex + unseenOfflineMessagesIndex + seenMessagesIndex + noMessagesIndex);
 					messageIndexer.add(unseenOnlineMessagesIndex + unseenOfflineMessagesIndex + seenMessagesIndex + noMessagesIndex, friend.get("ConversationId").toString());
 					addHoverEffect(userEachGroup);
@@ -315,7 +315,7 @@ public class ListGroupOfUser extends JPanel {
 				else {
 					int newIndex = moveMessage(messageIndexer.indexOf(friend.get("ConversationId").toString()), 4);
 					UserEachGroup userEachGroup = (UserEachGroup) thisPanel.getComponent(newIndex);
-					userEachGroup.setData(friend.get("ConversationId").toString(), "", LocalDateTime.of(LocalDate.now(), LocalTime.now()),"");
+					userEachGroup.setData(friend.get("ConversationId").toString(), "", null,"");
 
 					// Store the id of conversations that have been moved
 					tempMoved.add(friend.get("ConversationId").toString());

@@ -362,7 +362,6 @@ public class ChatBody extends JPanel {
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
                     // If messages is empty it means all messages have been deleted (this if-clause is for other people who have the same conversation open)
-                    System.out.println(messages);
                     if (messages.isEmpty()) {
                         chatBody.removeAll();
                         totalMessages.clear();

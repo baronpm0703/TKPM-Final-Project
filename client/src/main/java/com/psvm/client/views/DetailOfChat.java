@@ -123,6 +123,7 @@ public class DetailOfChat extends JPanel {
     private String currentConversationId;
     private String previousUsername;
     private String previousGroupConvoId;
+    private String previousDetailType = "friend";
 
     //Cái này thì tốt nhất là mày truyền một class của người dùng vào cái Constructor để lấy thông tin
     //Mấy cái bên dưới t làm đại thôi, truyền sao mày thấy tiện là được
@@ -175,19 +176,20 @@ public class DetailOfChat extends JPanel {
         FriendChatDetailThread friendChatDetailThread = new FriendChatDetailThread(friendChatDetailSocket, friendChatDetailSocketIn, friendChatDetailSocketOut, LocalData.getCurrentUsername(), LocalData.getSelectedConversation(), new FriendChatDetailThread.Observer() {
             @Override
             public void workerDidUpdate(Vector<Map<String, Object>> messages) {
-                if (LocalData.getToRemoveChatDetail()) previousGroupConvoId = null;
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
-                    // Turn off chat detail on command
-                    if (LocalData.getToRemoveChatDetail()) {
-                        thisPanel.removeAll();
-                        thisPanel.revalidate();
-                        thisPanel.repaint();
-                        LocalData.setToRemoveChatDetail(false);
-                    }
-
                     boolean isGroup = (boolean) messages.get(0).get("IsGroup");
                     if (!isGroup) {
+                        // Turn off chat detail on command
+                        if (previousDetailType.equals("group") && LocalData.getToRemoveChatDetail()) {
+                            thisPanel.removeAll();
+                            thisPanel.revalidate();
+                            thisPanel.repaint();
+                            LocalData.setToRemoveChatDetail(false);
+                            previousGroupConvoId = "";
+                        }
+                        previousDetailType = "friend";
+
                         String username = messages.get(1).get("Username").toString();
                         if (!username.equals(previousUsername)) {
                             String fName = messages.get(2).get("FirstName").toString();
@@ -223,19 +225,20 @@ public class DetailOfChat extends JPanel {
         GroupChatDetailThread groupChatDetailThread = new GroupChatDetailThread(groupChatDetailSocket, groupChatDetailSocketIn, groupChatDetailSocketOut, LocalData.getSelectedConversation(), new GroupChatDetailThread.Observer() {
             @Override
             public void workerDidUpdate(Vector<Map<String, Object>> messages) {
-                if (LocalData.getToRemoveChatDetail()) previousUsername = null;
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
-                    // Turn off chat detail on command
-                    if (LocalData.getToRemoveChatDetail()) {
-                        thisPanel.removeAll();
-                        thisPanel.revalidate();
-                        thisPanel.repaint();
-                        LocalData.setToRemoveChatDetail(false);
-                    }
-
                     boolean isGroup = (boolean) messages.get(0).get("IsGroup");
                     if (isGroup) {
+                        // Turn off chat detail on command
+                        if (previousDetailType.equals("friend") && LocalData.getToRemoveChatDetail()) {
+                            thisPanel.removeAll();
+                            thisPanel.revalidate();
+                            thisPanel.repaint();
+                            LocalData.setToRemoveChatDetail(false);
+                            previousUsername = "";
+                        }
+                        previousDetailType = "group";
+
                         String conversationId = messages.get(1).get("ConversationId").toString();
                         if (!conversationId.equals(previousGroupConvoId)) {
                             String conversationName = messages.get(2).get("ConversationName").toString();
