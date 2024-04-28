@@ -124,9 +124,36 @@ class OptionPanelDSNguoiDungHoatDong extends JPanel{
         filterPanel2.add(chatWithGroup);
         filterPanel2.add(filterButton);
 
+        JButton refreshButton = new JButton("Làm mới bộ lọc");
+        refreshButton.setFocusPainted(false);
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                nameField.setText("");
+                yearChoice.setText("");
+                dayChoice.setSelectedIndex(0);
+                monthChoice.setSelectedIndex(0);
+                yearChoice2.setText("");
+                dayChoice2.setSelectedIndex(0);
+                monthChoice2.setSelectedIndex(0);
+                dropdownLogin.setSelectedIndex(0);
+                loginTime.setText("");
+
+                dropdownWithFriend.setSelectedIndex(0);
+                chatWithFriend.setText("");
+
+                dropdownWithGroup.setSelectedIndex(0);
+                chatWithGroup.setText("");
+                table.filterTable("","","","","","","","","","","","","");
+            }
+        });
+        filterPanel2.add(refreshButton);
+
+
         //Add to Option Panel
         this.add(filterPanel1,BorderLayout.WEST);
         this.add(filterPanel2,BorderLayout.SOUTH);
+
 
     }
 }

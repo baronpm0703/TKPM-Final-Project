@@ -93,6 +93,24 @@ class OptionPanelDSNguoiDungDangKyMoi extends JPanel{
         filterPanel.add(nameField);
         filterPanel.add(filterButton);
 
+        JButton refreshButton = new JButton("Làm mới bộ lọc");
+        refreshButton.setFocusPainted(false);
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dayChoice.setSelectedIndex(0);
+                monthChoice.setSelectedIndex(0);
+                yearChoice.setText("");
+                dayChoice2.setSelectedIndex(0);
+                monthChoice2.setSelectedIndex(0);
+                yearChoice2.setText("");
+                nameField.setText("");
+
+                table.filterTable("","","","","","","");
+            }
+        });
+        filterPanel.add(refreshButton);
+
         //Add to Option Panel
         this.add(filterPanel,BorderLayout.WEST);
 

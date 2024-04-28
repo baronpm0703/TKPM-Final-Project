@@ -42,8 +42,10 @@ class OptionPanelBieuDoHoatDong extends JPanel{
 
 
         //number of friend field
-        String[] items = {"2022", "2023"}; //Thêm năm khác vào tùw database
-        JComboBox<String> dropdown = new JComboBox<>(items);
+        String[] itemsMonth = {"","1", "2","3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}; //Thêm năm khác vào tùw database
+        JComboBox<String> dropdownMonth = new JComboBox<>(itemsMonth);
+        String[] itemsYear = {"","2022", "2023"}; //Thêm năm khác vào tùw database
+        JComboBox<String> dropdownYear = new JComboBox<>(itemsYear);
         //Filter button
         JButton filterButton = new JButton("       Xác nhận       ");
         filterButton.setFocusPainted(false);
@@ -51,14 +53,31 @@ class OptionPanelBieuDoHoatDong extends JPanel{
         filterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String choice = (String) dropdown.getSelectedItem();
-                panel.filter( choice);
+                String choiceYear = (String) dropdownYear.getSelectedItem();
+                String choiceMonth = (String) dropdownMonth.getSelectedItem();
+                if (choiceYear.isEmpty() && !choiceMonth.isEmpty()) {}
+                else panel.filter(choiceYear, choiceMonth);
             }
         });
         //Add to filter Panel
+        filterPanel.add(new JLabel("Tháng: "));
+        filterPanel.add(dropdownMonth);
         filterPanel.add(new JLabel("Năm: "));
-        filterPanel.add(dropdown);
+        filterPanel.add(dropdownYear);
         filterPanel.add(filterButton);
+
+        JButton refreshButton = new JButton("Làm mới bộ lọc");
+        refreshButton.setFocusPainted(false);
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dropdownYear.setSelectedIndex(0);
+                dropdownMonth.setSelectedIndex(0);
+                panel.filter("", "");
+            }
+        });
+        filterPanel.add(refreshButton);
+
         //Add to Option Panel
         this.add(filterPanel,BorderLayout.WEST);
     }
@@ -230,16 +249,12 @@ class BieuDoHoatDongPanel extends JPanel{
         }
     }
 
-    void filter(String year) {
+    void filter(String year, String month) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (!year.isEmpty()){
-                    //vẽ ra biểu đồ
-                    isFiltering = true;
-                    startNextWorker(year,"");
-                }
-
+                isFiltering = true;
+                startNextWorker(year,month);
             }
         });
     }

@@ -75,6 +75,19 @@ class OptionPanelDSSpam extends JPanel {
         filterPanel.add(dateField);
         filterPanel.add(filterButton);
 
+        // Refresh
+        JButton refreshButton = new JButton("Làm mới bộ lọc");
+        refreshButton.setFocusPainted(false);
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                finalTimeField.setText("");
+                finalDateField.setText("");
+                table.filterTable("","");
+            }
+        });
+        filterPanel.add(refreshButton);
+
         //Utilities Panel
         JPanel utilities = new JPanel();
         utilities.setOpaque(false);

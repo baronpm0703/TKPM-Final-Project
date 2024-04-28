@@ -59,6 +59,18 @@ class OptionPanelBieuDoSoLuongDangKy extends JPanel{
         filterPanel.add(new JLabel("Năm: "));
         filterPanel.add(dropdown);
         filterPanel.add(filterButton);
+
+        // Refresh
+        JButton refreshButton = new JButton("Làm mới bộ lọc");
+        refreshButton.setFocusPainted(false);
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dropdown.setSelectedIndex(0);
+                panel.filter("");
+            }
+        });
+        filterPanel.add(refreshButton);
         //Add to Option Panel
         this.add(filterPanel,BorderLayout.WEST);
     }
