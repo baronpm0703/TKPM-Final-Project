@@ -616,6 +616,12 @@ public class ClientHandler implements Runnable {
 
 	void talkCode_SendMessage(Map<String, Object> data) throws IOException {
 		try {
+			Vector<Map<String, Object>> responseData = db.getFriendshipStatus(data.get("username").toString(), data.get("conversationId").toString());
+			if (responseData != null && (Integer) responseData.get(0).get("status") != 0 && (Integer) responseData.get(0).get("status") != -1) {
+				handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_FAILURE, responseData));
+				return;
+			}
+
 			db.sendMessage(data.get("username").toString(), data.get("conversationId").toString(), data.get("content").toString());
 			handlerOut.writeObject(new SocketResponse(SocketResponse.RESPONSE_CODE_SUCCESS, null));
 		} catch (SQLException e) {
