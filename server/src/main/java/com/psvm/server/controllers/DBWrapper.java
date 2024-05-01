@@ -1033,6 +1033,135 @@ public class DBWrapper {
 				return dbConn.doPreparedQuery(sql, questionMarks);
 			}
 		}
+	}
+	public ResultSet getOnlineInfoFromUserLogWithSDateEDate(String userId,String startDate, String endDate) throws SQLException {
+		if (startDate.isEmpty() && endDate.isEmpty()) {
+			String sql = "SELECT Userid, count(userId) as AccessCount FROM Userlog where LogType = 0 and UserId=?;";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(userId);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
+		else {
+			if (startDate.isEmpty()) {
+				String sql = "SELECT Userid, count(userId) as AccessCount FROM hooyah.userlog where Datetime <= ? and LogType = 0 and UserId= ?;";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(endDate);
+				questionMarks.add(userId);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}	else if (endDate.isEmpty()){
+				String sql = "SELECT Userid, count(userId) as AccessCount FROM hooyah.userlog where Datetime >= ? and LogType = 0 and UserId= ?;";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(startDate);
+				questionMarks.add(userId);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}
+			String sql = "SELECT Userid, count(userId) as AccessCount FROM hooyah.userlog where Datetime >= ? and Datetime <= ? and LogType = 0 and UserId= ?;";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(startDate);
+			questionMarks.add(endDate);
+			questionMarks.add(userId);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
+
+	}
+
+	public ResultSet getOnlineDateTimeFromUserLog(String userId,String startDate, String endDate) throws SQLException {
+		if (startDate.isEmpty() && endDate.isEmpty()) {
+			String sql = "SELECT Datetime FROM Userlog where LogType = 0 and UserId=? Order by Datetime Desc Limit 1;";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(userId);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
+		else {
+			if (startDate.isEmpty()) {
+				String sql = "SELECT Datetime FROM hooyah.userlog where Datetime <= ? and LogType = 0 and UserId= ? Order by Datetime Desc Limit 1;";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(endDate);
+				questionMarks.add(userId);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}	else if (endDate.isEmpty()){
+				String sql = "SELECT Datetime FROM hooyah.userlog where Datetime >= ? and LogType = 0 and UserId= ? Order by Datetime Desc Limit 1;";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(startDate);
+				questionMarks.add(userId);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}
+			String sql = "SELECT Datetime FROM hooyah.userlog where Datetime >= ? and Datetime <= ? and LogType = 0 and UserId= ?;";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(startDate);
+			questionMarks.add(endDate);
+			questionMarks.add(userId);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
+
+	}
+
+	public ResultSet getHowManyTimeUserChatWithFriend(String userId,String startDate, String endDate) throws SQLException {
+		if (startDate.isEmpty() && endDate.isEmpty()) {
+			String sql = "SELECT SenderId, Count(ConversationId) as ChatFCount FROM hooyah.conversationmessage where SenderId = ? and ConversationId in (\n" +
+					"Select ConversationId from hooyah.conversation where IsGroup = 0 )";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(userId);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
+		else {
+			if (startDate.isEmpty()) {
+				String sql = "SELECT SenderId, Count(ConversationId) as ChatFCount FROM hooyah.conversationmessage where Datetime <= ? and SenderId = ? and ConversationId in (\n" +
+						"Select ConversationId from hooyah.conversation where IsGroup = 0 )";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(endDate);
+				questionMarks.add(userId);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}	else if (endDate.isEmpty()){
+				String sql = "SELECT SenderId, Count(ConversationId) as ChatFCount FROM hooyah.conversationmessage where Datetime >= ? and SenderId = ? and ConversationId in (\n" +
+						"Select ConversationId from hooyah.conversation where IsGroup = 0 )";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(startDate);
+				questionMarks.add(userId);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}
+			String sql = "SELECT SenderId, Count(ConversationId) as ChatFCount FROM hooyah.conversationmessage where Datetime >= ? and Datetime <= ? and SenderId = ? and ConversationId in (\n" +
+					"Select ConversationId from hooyah.conversation where IsGroup = 0 )";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(startDate);
+			questionMarks.add(endDate);
+			questionMarks.add(userId);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
+
+	}
+	public ResultSet getHowManyTimeUserChatWithGroup(String userId,String startDate, String endDate) throws SQLException {
+		if (startDate.isEmpty() && endDate.isEmpty()) {
+			String sql = "SELECT SenderId, Count(ConversationId) as ChatGCount FROM hooyah.conversationmessage where SenderId = ? and ConversationId in (\n" +
+					"Select ConversationId from hooyah.conversation where IsGroup = 1 )";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(userId);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
+		else {
+			if (startDate.isEmpty()) {
+				String sql = "SELECT SenderId, Count(ConversationId) as ChatGCount FROM hooyah.conversationmessage where Datetime <= ? and SenderId = ? and ConversationId in (\n" +
+						"Select ConversationId from hooyah.conversation where IsGroup = 1 )";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(endDate);
+				questionMarks.add(userId);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}	else if (endDate.isEmpty()){
+				String sql = "SELECT SenderId, Count(ConversationId) as ChatGCount FROM hooyah.conversationmessage where Datetime >= ? and SenderId = ? and ConversationId in (\n" +
+						"Select ConversationId from hooyah.conversation where IsGroup = 1 )";
+				Vector<Object> questionMarks = new Vector<>();
+				questionMarks.add(startDate);
+				questionMarks.add(userId);
+				return dbConn.doPreparedQuery(sql, questionMarks);
+			}
+			String sql = "SELECT SenderId, Count(ConversationId) as ChatGCount FROM hooyah.conversationmessage where Datetime >= ? and Datetime <= ? and SenderId = ? and ConversationId in (\n" +
+					"Select ConversationId from hooyah.conversation where IsGroup = 1 )";
+			Vector<Object> questionMarks = new Vector<>();
+			questionMarks.add(startDate);
+			questionMarks.add(endDate);
+			questionMarks.add(userId);
+			return dbConn.doPreparedQuery(sql, questionMarks);
+		}
 
 	}
 

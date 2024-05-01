@@ -79,25 +79,24 @@ public class DSNguoiDungDangNhap extends JTable {
         //Lúc gọi này trong mySQL phải có dạng DATETIME, sau đso nhớ chuyển về LocalDateTime
         //Nếu chỉ có ngày thì xem trong file DSNguoiDung của tao (Nói tao sửa lại neu ko biet lam)
         //Data example
-        List<Object[]> userAccountData = new ArrayList<>();
-        LocalDateTime dateTime1 = LocalDateTime.of(2023, 12, 1, 14, 30, 15);
-        LocalDateTime dateTime2 = LocalDateTime.of(2023, 12, 1, 12, 45, 30);
-        LocalDateTime dateTime3 = LocalDateTime.of(2023, 12, 2, 8, 15, 45);
-        LocalDateTime dateTime4 = LocalDateTime.of(2023, 11, 2, 8, 15, 45);
-        Object[] acc1 = {"ge", "Nguyễn Anh Khoa", dateTime1};
-        Object[] acc2 = {"23", "Nguyễn Phú Minh Bảo", dateTime2};
-        Object[] acc3 = {"asdf", "Nguyễn Phú Minh Bảo", dateTime3};
-
-        userAccountData.add(acc1);
-        userAccountData.add(acc2);
-        userAccountData.add(acc3);
-
-        //Add data to table
-        for (Object[] row: userAccountData){
-            addRowAndSort(row);
-        }
+//        List<Object[]> userAccountData = new ArrayList<>();
+//        LocalDateTime dateTime1 = LocalDateTime.of(2023, 12, 1, 14, 30, 15);
+//        LocalDateTime dateTime2 = LocalDateTime.of(2023, 12, 1, 12, 45, 30);
+//        LocalDateTime dateTime3 = LocalDateTime.of(2023, 12, 2, 8, 15, 45);
+//        LocalDateTime dateTime4 = LocalDateTime.of(2023, 11, 2, 8, 15, 45);
+//        Object[] acc1 = {"ge", "Nguyễn Anh Khoa", dateTime1};
+//        Object[] acc2 = {"23", "Nguyễn Phú Minh Bảo", dateTime2};
+//        Object[] acc3 = {"asdf", "Nguyễn Phú Minh Bảo", dateTime3};
+//
+//        userAccountData.add(acc1);
+//        userAccountData.add(acc2);
+//        userAccountData.add(acc3);
+//
+//        //Add data to table
+//        for (Object[] row: userAccountData){
+//            addRowAndSort(row);
+//        }
         startNextWorker();
-        addRowAndSort(new Object[]{"aaiasdfasdfmen", "Nguyễn Phú Minh Bảo", dateTime4});
     }
 
     protected void startNextWorker() {

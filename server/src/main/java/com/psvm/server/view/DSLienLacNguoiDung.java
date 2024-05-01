@@ -121,10 +121,10 @@ class DSLienLacNguoiDungTable extends JTable{
         // CHỖ NÀY ĐỌC KĨ VÀO CHO TAO
         // TẤT cả ngày ở mySQL phải là SQL date, khi gọi hàm ở database, nhớ chuyển nó về LocalDate để add vào data
         //startNextWorker(); // riel data
-        model.addRow(new Object[]{0,"hải",2,5});
-        model.addRow(new Object[]{1,"khoa",3,4});
-        model.addRow(new Object[]{2,"bảo1",4,6});
-        model.addRow(new Object[]{3,"bảo2",2,3});
+//        model.addRow(new Object[]{0,"hải",2,5});
+//        model.addRow(new Object[]{1,"khoa",3,4});
+//        model.addRow(new Object[]{2,"bảo1",4,6});
+//        model.addRow(new Object[]{3,"bảo2",2,3});
         startNextWorker();
         //formatting table
         setColumnWidthToFitContent();

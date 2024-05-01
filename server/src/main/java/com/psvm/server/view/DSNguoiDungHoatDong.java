@@ -1,16 +1,25 @@
 package com.psvm.server.view;
 
+import com.psvm.server.controllers.DBWrapper;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.Serial;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 class OptionPanelDSNguoiDungHoatDong extends JPanel{
@@ -162,11 +171,14 @@ class DSNguoiDungHoatDongTable extends JTable{
     // Cần dòng này để gọi dữ liệu từ database
     // Khi trả dữ về thì trả với dạng List<Object[]> (ArrayList)
     // Coi trong folder EXAMPLE, MySQLData
-    //ScheduledExecutorService service = Executors.newScheduledThreadPool(5);
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(5);
     private final DefaultTableModel model;
     private final int columnCount;
 
-    // private HashMap<String, Object> userList = new HashMap<>();
+    // private HashMap<String, Object> userList = new HashMap<>();\
+    private HashMap<String, Object> OnlineList = new HashMap<>();
+    List<Object[]> OnlineListData; // Store conID
+    static boolean isFiltering;
     int index = 1;
     DefaultTableModel getTableModel(){
         return model;
@@ -187,10 +199,11 @@ class DSNguoiDungHoatDongTable extends JTable{
         // CHỖ NÀY ĐỌC KĨ VÀO CHO TAO
         // TẤT cả ngày ở mySQL phải là SQL date, khi gọi hàm ở database, nhớ chuyển nó về LocalDate để add vào data
         //startNextWorker(); // riel data
-        model.addRow(new Object[]{0,"hải", LocalDate.of(2023,5,30),5,6,7});
-        model.addRow(new Object[]{1,"khoa",LocalDate.of(2023,6,2),8,4,3});
-        model.addRow(new Object[]{2,"bảo1",LocalDate.of(2022,11,4),6,3,5});
-        model.addRow(new Object[]{3,"bảo2",LocalDate.of(2022,5,4),2,3,7});
+//        model.addRow(new Object[]{0,"hải", LocalDate.of(2023,5,30),5,6,7});
+//        model.addRow(new Object[]{1,"khoa",LocalDate.of(2023,6,2),8,4,3});
+//        model.addRow(new Object[]{2,"bảo1",LocalDate.of(2022,11,4),6,3,5});
+//        model.addRow(new Object[]{3,"bảo2",LocalDate.of(2022,5,4),2,3,7});
+        startNextWorker("","");
         //formatting table
         setColumnWidthToFitContent();
         //add columnCount for later use
@@ -213,59 +226,54 @@ class DSNguoiDungHoatDongTable extends JTable{
 
 
     }
+    protected void startNextWorker(String startDate, String endDate) {
+        OnlineListThread userWorker = new OnlineListThread(startDate,endDate,new OnlineListThread.Observer() {
+            @Override
+            public void workerDidUpdate(HashMap<String, Object> OnlineInfo) {
+                if (!OnlineList.equals(OnlineInfo)) {
+                    OnlineListData = new ArrayList<>();
+                    OnlineInfo.forEach((userId, detail) -> {
+                        Object[] obj = new Object[5];
+                        HashMap<String, Object> castedDetail = (HashMap<String, Object>) detail;
 
-    //    protected void startNextWorker() {
-//        UserListThread userWorker = new UserListThread(new UserListThread.Observer() {
-//            @Override
-//            public void workerDidUpdate(HashMap<String, Object> userInfo) {
-//                if (!userList.equals(userInfo)) {
-//                    List<Object[]> userAccountData = new ArrayList<>();
-//                    userInfo.forEach((userId, detail) -> {
-//                        Object[] acc = new Object[8];
-//                        acc[0] = userId; // Assign row
-//                        HashMap<String, Object> castedDetail = (HashMap<String, Object>) detail;
-//                        // Loop Through to get value
-//                        castedDetail.forEach((field, value) -> {
-//                            Object obj = value;
-//                            if (obj instanceof LocalDate) {
-//                                LocalDate dateValue = (LocalDate) obj;
-//                                acc[getIndex(field)] = dateValue;
-//                            }
-//                            else if (obj instanceof String) {
-//                                String stringValue = (String) obj;
-//                                acc[getIndex(field)] = stringValue;
-//                            } else {
-//                                String gender = (Boolean) obj ? "Female" : "Male";
-//                                acc[getIndex(field)] = gender;
-//                            }
-//                        });
-//                        userAccountData.add(acc);
-//                    });
-//
-//                    resetModelRow(); // Reset new Data
-//                    index = 1;
-//                    for (Object[] row: userAccountData){
-//                        Object[] newRow = new Object[row.length + 1];
-//                        newRow[0] = index++;
-//                        System.arraycopy(row,0,newRow,1,row.length);
-//                        model.addRow(newRow);
-//                    }
-//                    userList = userInfo;
-//                }
-//            }
-//        });
-//        userWorker.addPropertyChangeListener(new PropertyChangeListener() {
-//            @Override
-//            public void propertyChange(PropertyChangeEvent evt) {
-//                if (userWorker.getState() == SwingWorker.StateValue.DONE) {
-//                    userWorker.removePropertyChangeListener(this);
-//                    startNextWorker();
-//                }
-//
-//            }
-//        });
-//        service.schedule(userWorker, 1000, TimeUnit.MILLISECONDS);
-//    }
+                        obj[0] = (String) castedDetail.get("Hoten");
+                        obj[1] = (LocalDate) castedDetail.get("LastAccessTime");
+                        obj[2] = (int) castedDetail.get("AccessCount");
+                        obj[3] = (int) castedDetail.get("ChatWithFriend");
+                        obj[4] = (int) castedDetail.get("ChatWithGroup");
+
+                        OnlineListData.add(obj);
+                    });
+
+                    resetModelRow();
+                    index = 1;
+                    for (Object[] row: OnlineListData){
+                        Object[] newRow = new Object[row.length + 1];
+                        newRow[0] = index++;
+                        System.arraycopy(row,0,newRow,1,row.length);
+                        model.addRow(newRow);
+                    }
+                    OnlineList = OnlineInfo;
+                }
+            }
+
+        });
+
+        userWorker.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (userWorker.getState() == SwingWorker.StateValue.DONE) {
+                    userWorker.removePropertyChangeListener(this);
+                    if (!isFiltering)
+                        startNextWorker(startDate, endDate);
+                    else isFiltering = false;
+
+                }
+            }
+        });
+
+        service.schedule(userWorker, 1000, TimeUnit.MILLISECONDS);
+    }
     void filterTable(String name, String dayStart, String monthStart, String yearStart, String dayEnd, String monthEnd, String yearEnd,
                      String choiceLogin, String logTime, String choiceWithFriend, String chatWFriendTime,
                      String choiceWithGroup, String chatWGroup) {
@@ -279,16 +287,26 @@ class DSNguoiDungHoatDongTable extends JTable{
                     filters.add(RowFilter.regexFilter(name, 1));
                 }
 
-                if (!monthStart.isEmpty() && !yearStart.isEmpty() && !monthEnd.isEmpty() && !yearEnd.isEmpty()) {
-                    LocalDate startDate = LocalDate.of(Integer.parseInt(yearStart), Integer.parseInt(monthStart), Integer.parseInt(dayStart));
-                    LocalDate endDate = LocalDate.of(Integer.parseInt(yearEnd), Integer.parseInt(monthEnd), Integer.parseInt(dayEnd));
+                if ((!monthStart.isEmpty() && !yearStart.isEmpty()) || (!monthEnd.isEmpty() && !yearEnd.isEmpty())) {
+                    String startDateS = "";
+                    if (!monthStart.isEmpty() && !yearStart.isEmpty()) {
+                        LocalDate startDate = LocalDate.of(Integer.parseInt(yearStart), Integer.parseInt(monthStart), Integer.parseInt(dayStart));
+                        startDateS = startDate.toString();
+                    }
 
-                    filters.add(new RowFilter<Object, Object>() {
+                    String endDateS = "";
+                    if (!monthEnd.isEmpty() && !yearEnd.isEmpty()) {
+                        LocalDate endDate = LocalDate.of(Integer.parseInt(yearEnd), Integer.parseInt(monthEnd), Integer.parseInt(dayEnd));
+                        endDateS = endDate.toString();
+                    }
+
+                    String finalStartDateS = startDateS;
+                    String finalEndDateS = endDateS;
+                    SwingUtilities.invokeLater(new Runnable() {
                         @Override
-                        public boolean include(Entry<? extends Object, ? extends Object> entry) {
-                            LocalDate date = (LocalDate) entry.getValue(2);
-
-                            return !date.isBefore(startDate) && !date.isAfter(endDate);
+                        public void run() {
+                            isFiltering = true;
+                            startNextWorker(finalStartDateS, finalEndDateS);
                         }
                     });
                 }
@@ -369,20 +387,6 @@ class DSNguoiDungHoatDongTable extends JTable{
     }
 
 
-
-
-    void refreshTable() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-//                List<Object[]> updatedData = mySQLData.getAllStudent();
-//                model.setRowCount(0);
-//                for (Object[] row : updatedData) {
-//                    model.addRow(row);
-//                }
-            }
-        });
-    }
     void resetModelRow() {
         while (model.getRowCount() > 0) {
             model.removeRow(0);
@@ -408,30 +412,107 @@ class DSNguoiDungHoatDongTable extends JTable{
         index = getRowCount() + 1;
     }
 
-//    private int getIndex(String value) {
-//        switch (value) {
-//            case "fullName":
-//                return 1;
-//
-//            case "addrs":
-//                return 2;
-//
-//            case "dob":
-//                return 3;
-//
-//            case "gender":
-//                return 4;
-//
-//            case "email":
-//                return 5;
-//
-//            case "creationDate":
-//                return 6;
-//            default:
-//                return -1;
-//        }
-//    }
-//
+}
 
+class OnlineListThread extends SwingWorker<Void, HashMap<String, Object>> {
+    private final DBWrapper db;
+    private Observer observer;
+
+    String startDate;
+    String endDate;
+
+    public interface Observer {
+        public void workerDidUpdate(HashMap<String, Object> userInfo);
+    }
+
+    public OnlineListThread(String startDate, String endDate, OnlineListThread.Observer observer) {
+        // Connect DB
+        this.db = new DBWrapper();
+        this.observer = observer;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    @Override
+    protected Void doInBackground() throws Exception {
+        // Get User List With given DateTime
+        ResultSet userNameQueryRes = db.getUserListInfo();
+
+        HashMap<String, Object> OnlineListInfo = new HashMap<>();
+        while (userNameQueryRes.next()) {
+            // Get UserId First
+            String userId = (String) userNameQueryRes.getObject(1);
+
+            HashMap<String, Object> OnlineInfo = new HashMap<>();
+
+            String Hoten = (String) userNameQueryRes.getString("Hoten");
+            LocalDate LastAccessDatetime = null;
+            int OnlineCount = 0;
+            int ChatWithFriend = 0;
+            int ChatWithGroup = 0;
+
+            // Last access
+            ResultSet getDateTimeUserId = db.getOnlineDateTimeFromUserLog(userId, startDate, endDate);
+            while (getDateTimeUserId.next()) {
+                String dateString =  getDateTimeUserId.getString("Datetime");
+
+                // Define the format of the input string
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                // Parse the string into a LocalDate object
+                LastAccessDatetime = LocalDate.parse(dateString, formatter);
+            }
+            if (LastAccessDatetime == null) continue;
+//            System.out.println(LastAccessDatetime);
+
+            // Online Count
+            ResultSet getOnlineCountOfUserId = db.getOnlineInfoFromUserLogWithSDateEDate(userId, startDate, endDate);
+            while (getOnlineCountOfUserId.next()) {
+                OnlineCount = (int)  getOnlineCountOfUserId.getInt("AccessCount");
+            }
+
+            // Chat with friend
+            ResultSet getChatFriendCount = db.getHowManyTimeUserChatWithFriend(userId, startDate, endDate);
+            while (getChatFriendCount.next()) {
+                ChatWithFriend = (int)  getChatFriendCount.getInt("ChatFCount");
+            }
+
+            // Chat with Group
+            ResultSet getChatGroupCount = db.getHowManyTimeUserChatWithGroup(userId, startDate, endDate);
+            while (getChatGroupCount.next()) {
+                ChatWithGroup = (int)  getChatGroupCount.getInt("ChatGCount");
+            }
+
+            OnlineInfo.put("Hoten", Hoten);
+            OnlineInfo.put("LastAccessTime", LastAccessDatetime);
+            OnlineInfo.put("AccessCount", OnlineCount);
+            OnlineInfo.put("ChatWithFriend", ChatWithFriend);
+            OnlineInfo.put("ChatWithGroup", ChatWithGroup);
+
+            OnlineListInfo.put(userId, OnlineInfo);
+        }
+//        System.out.println(OnlineListInfo);
+
+        publish(OnlineListInfo);
+
+        return null;
+    }
+
+
+
+    @Override
+    protected void process(List<HashMap<String, Object>> chunks) {
+        super.process(chunks);
+
+        for (HashMap<String, Object> OnlineInfo : chunks) {
+            observer.workerDidUpdate(OnlineInfo);
+        }
+    }
+
+    @Override
+    protected void done() {
+        super.done();
+        db.close();
+    }
 
 }
+

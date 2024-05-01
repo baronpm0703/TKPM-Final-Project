@@ -149,10 +149,10 @@ class DSNguoiDungDangKyMoiTable extends JTable{
         // CHỖ NÀY ĐỌC KĨ VÀO CHO TAO
         // TẤT cả ngày ở mySQL phải là SQL date, khi gọi hàm ở database, nhớ chuyển nó về LocalDate để add vào data
         //startNextWorker(); // riel data
-        model.addRow(new Object[]{0,"hải", LocalDate.of(2023,5,30)});
-        model.addRow(new Object[]{1,"khoa",LocalDate.of(2023,6,2)});
-        model.addRow(new Object[]{2,"bảo1",LocalDate.of(2022,11,4)});
-        model.addRow(new Object[]{3,"bảo2",LocalDate.of(2022,5,4)});
+//        model.addRow(new Object[]{0,"hải", LocalDate.of(2023,5,30)});
+//        model.addRow(new Object[]{1,"khoa",LocalDate.of(2023,6,2)});
+//        model.addRow(new Object[]{2,"bảo1",LocalDate.of(2022,11,4)});
+//        model.addRow(new Object[]{3,"bảo2",LocalDate.of(2022,5,4)});
         startNextWorker();
         //formatting table
         setColumnWidthToFitContent();

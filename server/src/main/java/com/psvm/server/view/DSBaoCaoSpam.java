@@ -124,28 +124,28 @@ class DSBaoCaoSpamTable extends JTable{
         // Enable sorting
         this.setAutoCreateRowSorter(true);
         //Example data
-        java.util.List<Object[]> userAccountData = new ArrayList<>();
-        Object[] acc1 = {"nhoma","sdfg","ádda"};
-        Object[] acc2 = {"nhomb","sdfg","adad"};
-        Object[] acc3 = {"nhoma","sdfg","adad"};
-        //Đống bên dưới này sửa sao cho nó hiện từ cái SQL date sang Date là được, không cần phải là String (Ngày ko phải là String mà là Date, còn lại String hết (hay sao đó tuỳ) ), vì mảng là Object[]
-        LocalDate date1 = LocalDate.of(2004,11, 5);
-        LocalDate date2 = LocalDate.of(2004,12, 3);
-        LocalDate date3 = LocalDate.of(2004,12, 4);
-        acc1[2] = date1;
-        acc2[2] = date2;
-        acc3[2] = date3;
-        userAccountData.add(acc1);
-        userAccountData.add(acc2);
-        userAccountData.add(acc3);
-
-        //Add data to table
-        for (Object[] row: userAccountData){
-            Object[] newRow = new Object[row.length + 1];
-            newRow[0] = index++;
-            System.arraycopy(row,0,newRow,1,row.length);
-            this.model.addRow(newRow);
-        }
+//        java.util.List<Object[]> userAccountData = new ArrayList<>();
+//        Object[] acc1 = {"nhoma","sdfg","ádda"};
+//        Object[] acc2 = {"nhomb","sdfg","adad"};
+//        Object[] acc3 = {"nhoma","sdfg","adad"};
+//        //Đống bên dưới này sửa sao cho nó hiện từ cái SQL date sang Date là được, không cần phải là String (Ngày ko phải là String mà là Date, còn lại String hết (hay sao đó tuỳ) ), vì mảng là Object[]
+//        LocalDate date1 = LocalDate.of(2004,11, 5);
+//        LocalDate date2 = LocalDate.of(2004,12, 3);
+//        LocalDate date3 = LocalDate.of(2004,12, 4);
+//        acc1[2] = date1;
+//        acc2[2] = date2;
+//        acc3[2] = date3;
+//        userAccountData.add(acc1);
+//        userAccountData.add(acc2);
+//        userAccountData.add(acc3);
+//
+//        //Add data to table
+//        for (Object[] row: userAccountData){
+//            Object[] newRow = new Object[row.length + 1];
+//            newRow[0] = index++;
+//            System.arraycopy(row,0,newRow,1,row.length);
+//            this.model.addRow(newRow);
+//        }
 
         startNextWorker();
         // Add a custom renderer and editor for the last column
