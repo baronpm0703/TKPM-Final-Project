@@ -287,29 +287,28 @@ class DSNguoiDungHoatDongTable extends JTable{
                     filters.add(RowFilter.regexFilter(name, 1));
                 }
 
-                if ((!monthStart.isEmpty() && !yearStart.isEmpty()) || (!monthEnd.isEmpty() && !yearEnd.isEmpty())) {
-                    String startDateS = "";
-                    if (!monthStart.isEmpty() && !yearStart.isEmpty()) {
-                        LocalDate startDate = LocalDate.of(Integer.parseInt(yearStart), Integer.parseInt(monthStart), Integer.parseInt(dayStart));
-                        startDateS = startDate.toString();
-                    }
 
-                    String endDateS = "";
-                    if (!monthEnd.isEmpty() && !yearEnd.isEmpty()) {
-                        LocalDate endDate = LocalDate.of(Integer.parseInt(yearEnd), Integer.parseInt(monthEnd), Integer.parseInt(dayEnd));
-                        endDateS = endDate.toString();
-                    }
-
-                    String finalStartDateS = startDateS;
-                    String finalEndDateS = endDateS;
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            isFiltering = true;
-                            startNextWorker(finalStartDateS, finalEndDateS);
-                        }
-                    });
+                String startDateS = "";
+                if (!monthStart.isEmpty() && !yearStart.isEmpty()) {
+                    LocalDate startDate = LocalDate.of(Integer.parseInt(yearStart), Integer.parseInt(monthStart), Integer.parseInt(dayStart));
+                    startDateS = startDate.toString();
                 }
+
+                String endDateS = "";
+                if (!monthEnd.isEmpty() && !yearEnd.isEmpty()) {
+                    LocalDate endDate = LocalDate.of(Integer.parseInt(yearEnd), Integer.parseInt(monthEnd), Integer.parseInt(dayEnd));
+                    endDateS = endDate.toString();
+                }
+
+                String finalStartDateS = startDateS;
+                String finalEndDateS = endDateS;
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        isFiltering = true;
+                        startNextWorker(finalStartDateS, finalEndDateS);
+                    }
+                });
 
                 if (!logTime.isEmpty()) {
                     try {

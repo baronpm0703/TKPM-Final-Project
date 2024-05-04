@@ -42,7 +42,7 @@ class OptionPanelBieuDoSoLuongDangKy extends JPanel{
 
 
         //number of friend field
-        String[] items = {"2022", "2023"}; //Thêm năm khác vào tùw database
+        String[] items = {"","2022", "2023", "2024"}; //Thêm năm khác vào tùw database
         JComboBox<String> dropdown = new JComboBox<>(items);
         //Filter button
         JButton filterButton = new JButton("       Xác nhận       ");
@@ -224,12 +224,9 @@ class BieuDoSoLuongDangKyPanel extends JPanel{
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (!year.isEmpty()){
-                    //vẽ ra biểu đồ
-                    isFiltering = true;
-                    startNextWorker(year);
-                }
-
+                //vẽ ra biểu đồ
+                isFiltering = true;
+                startNextWorker(year);
             }
         });
     }

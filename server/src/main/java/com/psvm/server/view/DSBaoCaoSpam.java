@@ -253,6 +253,7 @@ class DSBaoCaoSpamTable extends JTable{
                 // Đổi Icon
                 try {
                     showTableMember(selectedReport);
+                    removeReport(selectedReport);
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -263,6 +264,11 @@ class DSBaoCaoSpamTable extends JTable{
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Đổi ICon
+                try {
+                    removeReport(selectedReport);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
         popupMenu.add(lockAcc);
@@ -275,6 +281,13 @@ class DSBaoCaoSpamTable extends JTable{
        db.BanUser((String) selectedReport[1]);
        //db.UpdateUserLogBanType();
        db.close();
+    }
+
+    void removeReport(Object[] selectedReport) throws SQLException {
+        DBWrapper db = new DBWrapper();
+        db.removeReport((String) selectedReport[0],(String) selectedReport[1]);
+        //db.UpdateUserLogBanType();
+        db.close();
     }
 
     private void setColumnWidthToFitContent() {

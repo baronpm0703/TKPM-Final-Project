@@ -366,7 +366,7 @@ class DSNguoiDungTable extends JTable{
     void deleteUser(String id) throws SQLException {
         DBWrapper db = new DBWrapper();
         db.deleteUser(id);
-        System.out.println("Update successfully");
+        System.out.println("Delete successfully");
         db.close();
     }
     void unBanorBanUser(String id, int type) throws SQLException {

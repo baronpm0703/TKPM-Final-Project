@@ -64,7 +64,17 @@ public class DBWrapper {
 		questionMarks.add(id);
 		dbConn.doPreparedStatement(sql, questionMarks);
 	}
+
+	public void deleteUserLog(String id) throws SQLException {
+		String sql = "Delete from UserLog Where Userid = ?";
+
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(id);
+		dbConn.doPreparedStatement(sql, questionMarks);
+	}
 	public void deleteUser(String id) throws SQLException {
+		// Do the userlog first
+		deleteUserLog(id);
 		String sql = "Delete from User Where Username = ?";
 
 		Vector<Object> questionMarks = new Vector<>();
@@ -1213,6 +1223,14 @@ public class DBWrapper {
 		Vector<Object> questionMarks = new Vector<>();
 
 		return dbConn.doPreparedQuery(sql, questionMarks);
+	}
+	public void removeReport(String reporterId, String reportedId) throws SQLException {
+		String sql = "Delete From spamreport where ReporterId = ? and ReportedId = ?";
+		Vector<Object> questionMarks = new Vector<>();
+		questionMarks.add(reporterId);
+		questionMarks.add(reportedId);
+
+		dbConn.doPreparedStatement(sql, questionMarks);
 	}
 	public ResultSet getHighestConvId() throws SQLException {
 		String sql = "SELECT max(ConversationId) as HighestId FROM Conversation;";

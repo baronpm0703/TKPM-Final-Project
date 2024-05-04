@@ -44,7 +44,7 @@ class OptionPanelBieuDoHoatDong extends JPanel{
         //number of friend field
         String[] itemsMonth = {"","1", "2","3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}; //Thêm năm khác vào tùw database
         JComboBox<String> dropdownMonth = new JComboBox<>(itemsMonth);
-        String[] itemsYear = {"","2022", "2023"}; //Thêm năm khác vào tùw database
+        String[] itemsYear = {"","2022", "2023","2024"}; //Thêm năm khác vào tùw database
         JComboBox<String> dropdownYear = new JComboBox<>(itemsYear);
         //Filter button
         JButton filterButton = new JButton("       Xác nhận       ");
